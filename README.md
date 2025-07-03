@@ -57,3 +57,4 @@ Il sito è ottimizzato per il deploy su Cloudflare Pages:
 ## 📄 Licenza
 
 © 2024 Adele Lo Feudo. Tutti i diritti riservati.
+ 
