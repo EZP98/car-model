@@ -6,10 +6,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
 
 // Import pages
-import Home from './pages/Home';
-import About from './pages/About';
-import Portfolio from './pages/Portfolio';
-import Contact from './pages/Contact';
 import Collezione from './pages/Collezione';
 
 // Import components
@@ -81,20 +77,13 @@ const GlobalStyle = createGlobalStyle`
   }
 
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 0px;
+    background: transparent;
   }
 
-  ::-webkit-scrollbar-track {
-    background: ${props => props.theme.colors.lightGray};
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: ${props => props.theme.colors.accent};
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: ${props => props.theme.colors.primary};
+  /* Hide scrollbar for Firefox */
+  html {
+    scrollbar-width: none;
   }
 `;
 
@@ -128,9 +117,6 @@ function App() {
               <Routes>
                 <Route path="/" element={<Collezione />} />
                 <Route path="/collezione" element={<Collezione />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/portfolio" element={<Portfolio />} />
-                <Route path="/contact" element={<Contact />} />
               </Routes>
             </MainContent>
 

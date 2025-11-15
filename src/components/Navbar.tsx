@@ -20,6 +20,10 @@ const NavContainer = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  
+  @media (max-width: 768px) {
+    justify-content: space-between;
+  }
 `;
 
 const Logo = styled(Link)`
@@ -27,39 +31,20 @@ const Logo = styled(Link)`
   font-weight: bold;
   text-decoration: none;
   color: rgb(240, 45, 110);
-  font-family: 'HelveticaNeue-Bold', 'Helvetica Neue', sans-serif;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
   text-transform: uppercase;
   text-align: center;
 `;
 
-const NavLinks = styled.div<{ isOpen: boolean }>`
-  display: flex;
-  justify-content: space-between;
-  flex: 1;
-  margin-left: 4rem;
-  
-  @media (max-width: 768px) {
-    position: fixed;
-    top: 0;
-    right: ${props => props.isOpen ? '0' : '-100%'};
-    width: 300px;
-    height: 100vh;
-    background: white;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    transition: right 0.3s ease;
-    box-shadow: ${props => props.isOpen ? '-5px 0 15px rgba(0, 0, 0, 0.1)' : 'none'};
-    margin-left: 0;
-  }
-`;
+
 
 const NavLink = styled.a<{ active: boolean }>`
   text-decoration: none;
   color: rgb(240, 45, 110);
-  font-family: 'HelveticaNeue-Bold', 'Helvetica Neue', sans-serif;
-  font-size: 14px;
-  font-weight: bold;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
   text-transform: uppercase;
   text-align: center;
   line-height: 2em;
@@ -161,17 +146,15 @@ const Navbar: React.FC = () => {
         <NavContainer>
           <Logo to="/">ALF</Logo>
           
-          <NavLinks isOpen={isMobileMenuOpen}>
-            {navItems.map((item, index) => (
-              <NavLink
-                key={index}
-                onClick={() => handleNavClick(item.href)}
-                active={false}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </NavLinks>
+          {navItems.map((item, index) => (
+            <NavLink
+              key={index}
+              onClick={() => handleNavClick(item.href)}
+              active={false}
+            >
+              {item.label}
+            </NavLink>
+          ))}
           
           <MobileMenuButton
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
