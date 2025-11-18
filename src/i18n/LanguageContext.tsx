@@ -12,7 +12,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
     // Get language from localStorage or default to 'it'
     const stored = localStorage.getItem('language');
-    return (stored === 'it' || stored === 'en') ? stored : 'it';
+    const validLanguages = ['it', 'en', 'es', 'fr', 'ja', 'zh', 'zh-TW'] as const;
+    return validLanguages.includes(stored as any) ? stored as Language : 'it';
   });
 
   const setLanguage = (lang: Language) => {

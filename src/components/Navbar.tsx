@@ -15,11 +15,24 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
+
   const navItems = [
-    { href: '#sculture', label: 'Collezione' },
-    { href: '#dipinti', label: 'Collezione' },
-    { href: '#installazioni', label: 'Collezione' },
-    { href: '#opere-miste', label: 'Collezione' },
+    { href: '#collection', label: 'COLLEZIONI' },
+    { href: '#mostre', label: 'MOSTRE' },
+    { href: '#bio', label: 'CRITICA' },
+    { href: '#about', label: 'ABOUT' },
   ];
 
   const handleNavClick = (href: string) => {
@@ -51,7 +64,10 @@ const Navbar: React.FC = () => {
             <a
               key={index}
               onClick={() => handleNavClick(item.href)}
-              className="hidden md:block no-underline font-sans text-base font-bold uppercase text-center leading-8 relative cursor-pointer text-accent"
+              className="hidden md:block no-underline text-base font-bold uppercase text-center leading-8 relative cursor-pointer text-accent hover:text-white transition-colors"
+              style={{
+                fontFamily: 'Montserrat, sans-serif'
+              }}
             >
               {item.label}
             </a>
@@ -84,30 +100,48 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Menu */}
       <div
-        className={`fixed top-0 right-0 h-screen w-64 bg-secondary z-[999] transform transition-transform duration-300 md:hidden ${
-          isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed inset-0 w-full h-screen bg-background z-[999] flex items-center justify-center md:hidden transition-all duration-500 ${
+          isMobileMenuOpen
+            ? 'opacity-100 visible'
+            : 'opacity-0 invisible'
         }`}
+        style={{
+          transform: isMobileMenuOpen ? 'scale(1)' : 'scale(0.95)',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
       >
-        <div className="flex flex-col gap-6 pt-24 px-8">
+        {/* Close Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="absolute top-6 right-6 text-accent hover:text-white transition-colors z-[1002]"
+          aria-label="Close menu"
+        >
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
+
+        <div className="flex flex-col items-center justify-center gap-6">
           {navItems.map((item, index) => (
             <a
               key={index}
               onClick={() => handleNavClick(item.href)}
-              className="no-underline font-sans text-lg font-bold uppercase text-accent hover:opacity-70 transition-opacity cursor-pointer"
+              className="no-underline text-4xl md:text-5xl font-bold uppercase text-accent hover:text-white transition-all duration-300 cursor-pointer transform hover:scale-110"
+              style={{
+                fontFamily: 'Montserrat, sans-serif',
+                opacity: isMobileMenuOpen ? 1 : 0,
+                transform: isMobileMenuOpen
+                  ? 'translateY(0)'
+                  : 'translateY(20px)',
+                transition: `all 0.6s ease-out ${index * 0.1}s`,
+                letterSpacing: '0.05em'
+              }}
             >
               {item.label}
             </a>
           ))}
         </div>
       </div>
-
-      {/* Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          onClick={() => setIsMobileMenuOpen(false)}
-          className="fixed inset-0 bg-black bg-opacity-50 z-[998] md:hidden"
-        />
-      )}
     </>
   );
 };

@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 // Import pages
 import Collezione from './pages/Collezione';
+import CollezioneDetail from './pages/CollezioneDetail';
 import Content from './pages/Content';
 import OperaForm from './pages/OperaForm';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -46,14 +48,17 @@ function AppContent() {
       <div className="min-h-screen flex flex-col bg-background text-primary font-sans leading-relaxed overflow-x-hidden">
         {showNavbar && <Navbar />}
         <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<Collezione />} />
-            <Route path="/collezione" element={<Collezione />} />
-            <Route path="/content" element={<Content />} />
-            <Route path="/content/opera" element={<OperaForm />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsConditions />} />
-          </Routes>
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<Collezione />} />
+              <Route path="/collezione" element={<Collezione />} />
+              <Route path="/collezione/:id" element={<CollezioneDetail />} />
+              <Route path="/content" element={<Content />} />
+              <Route path="/content/opera" element={<OperaForm />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsConditions />} />
+            </Routes>
+          </AnimatePresence>
         </main>
       </div>
     </SmoothScroll>

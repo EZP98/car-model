@@ -20,7 +20,7 @@ const TermsConditions: React.FC = () => {
 
             <div className="space-y-8 text-white/90" style={{ fontFamily: 'Montserrat, sans-serif' }}>
               <section>
-                <p className="text-sm text-white/60 mb-8">Ultimo aggiornamento: {new Date().toLocaleDateString('it-IT')}</p>
+                <p className="text-sm text-white/60 mb-8">Ultimo aggiornamento: 18/11/2025</p>
 
                 <h2 className="text-2xl font-bold text-white mb-4">1. Oggetto</h2>
                 <p className="mb-4">
@@ -131,7 +131,7 @@ const TermsConditions: React.FC = () => {
 
             <div className="space-y-8 text-white/90" style={{ fontFamily: 'Montserrat, sans-serif' }}>
               <section>
-                <p className="text-sm text-white/60 mb-8">Last updated: {new Date().toLocaleDateString('en-US')}</p>
+                <p className="text-sm text-white/60 mb-8">Last updated: 11/18/2025</p>
 
                 <h2 className="text-2xl font-bold text-white mb-4">1. Purpose</h2>
                 <p className="mb-4">
