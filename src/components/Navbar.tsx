@@ -64,7 +64,7 @@ const Navbar: React.FC = () => {
             <a
               key={index}
               onClick={() => handleNavClick(item.href)}
-              className="hidden md:block no-underline text-base font-bold uppercase text-center leading-8 relative cursor-pointer text-accent hover:text-white transition-colors"
+              className="hidden md:block no-underline text-base font-bold uppercase text-center leading-8 relative cursor-pointer text-white hover:text-accent transition-colors"
               style={{
                 fontFamily: 'Montserrat, sans-serif'
               }}
@@ -126,7 +126,7 @@ const Navbar: React.FC = () => {
             <a
               key={index}
               onClick={() => handleNavClick(item.href)}
-              className="no-underline text-4xl md:text-5xl font-bold uppercase text-accent hover:text-white transition-all duration-300 cursor-pointer transform hover:scale-110"
+              className="no-underline text-4xl md:text-5xl font-bold uppercase text-white hover:text-accent transition-all duration-300 cursor-pointer transform hover:scale-110"
               style={{
                 fontFamily: 'Montserrat, sans-serif',
                 opacity: isMobileMenuOpen ? 1 : 0,
