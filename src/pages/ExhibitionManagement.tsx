@@ -118,15 +118,15 @@ const ExhibitionManagement: React.FC = () => {
         <div className="flex justify-between items-start mb-8">
           <div>
             <button
-              onClick={() => navigate('/content')}
+              onClick={() => navigate(-1)}
               className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
-              Torna a Gestione Contenuti
+              Indietro
             </button>
-            <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+            <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
               Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>Mostra</span>
             </h1>
           </div>
@@ -169,6 +169,7 @@ const ExhibitionManagement: React.FC = () => {
 
         {/* Form */}
         <motion.form
+          id="exhibition-form"
           onSubmit={handleSubmit}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -320,36 +321,42 @@ const ExhibitionManagement: React.FC = () => {
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
               />
             </div>
+
+            {/* Elimina Mostra */}
+            <div className="md:col-span-2 pt-8 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="px-8 py-3 font-bold uppercase text-red-400 border border-red-400 hover:bg-red-400/10 transition-colors"
+                style={{ fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
+              >
+                Elimina Mostra
+              </button>
+            </div>
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-4 mt-8 pt-8 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-8 py-3 font-bold uppercase text-white rounded-lg transition-all disabled:opacity-50 hover:opacity-90"
-              style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
-            >
-              {saving ? 'Salvataggio...' : 'Salva Modifiche'}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/content')}
-              className="px-8 py-3 font-bold uppercase text-white border rounded-lg hover:bg-white/5 transition-colors"
-              style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
-            >
-              Annulla
-            </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="ml-auto px-8 py-3 font-bold uppercase text-red-400 border border-red-400 rounded-lg hover:bg-red-400/10 transition-colors"
-              style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
-            >
-              Elimina Mostra
-            </button>
-          </div>
         </motion.form>
+
+        {/* Floating Buttons */}
+        <div className="fixed bottom-6 right-6 flex gap-3 z-50">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="px-6 py-3 font-bold uppercase text-white border hover:bg-white/5 transition-all shadow-lg"
+            style={{ borderColor: 'rgba(255, 255, 255, 0.2)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0, backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+          >
+            Annulla
+          </button>
+          <button
+            type="submit"
+            form="exhibition-form"
+            disabled={saving}
+            className="px-6 py-3 font-bold uppercase text-white transition-all disabled:opacity-50 hover:opacity-90 shadow-lg"
+            style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
+          >
+            {saving ? 'Salvataggio...' : 'Salva Modifiche'}
+          </button>
+        </div>
       </div>
     </BackofficeLayout>
   );

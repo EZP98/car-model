@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface BackofficeLayoutProps {
@@ -8,7 +8,6 @@ interface BackofficeLayoutProps {
 const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const menuItems = [
     {
@@ -63,9 +62,30 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
   ];
 
   const isActive = (itemId: string) => {
-    const params = new URLSearchParams(location.search);
-    const currentTab = params.get('tab') || 'collezioni';
-    return currentTab === itemId || location.pathname.includes(itemId);
+    // Se siamo su /content con tab query param, usa quello
+    if (location.pathname === '/content') {
+      const params = new URLSearchParams(location.search);
+      const currentTab = params.get('tab') || 'collezioni';
+      return currentTab === itemId;
+    }
+
+    // Se siamo su pagine di dettaglio/creazione, identifica la sezione dal path
+    const pathMap: { [key: string]: string } = {
+      '/content/collezione/': 'collezioni',
+      '/content/nuova-collezione': 'collezioni',
+      '/content/mostra/': 'mostre',
+      '/content/nuova-mostra': 'mostre',
+      '/content/critico/': 'critica',
+      '/content/nuovo-critico': 'critica',
+    };
+
+    for (const [pathPrefix, section] of Object.entries(pathMap)) {
+      if (location.pathname.startsWith(pathPrefix) || location.pathname === pathPrefix.slice(0, -1)) {
+        return section === itemId;
+      }
+    }
+
+    return false;
   };
 
   return (
@@ -75,59 +95,17 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
         className="bg-secondary border-r fixed h-screen transition-all duration-300"
         style={{
           borderColor: 'rgba(255, 255, 255, 0.1)',
-          width: isCollapsed ? '80px' : '256px',
+          width: '90px',
           zIndex: 40,
-          overflowY: 'auto',
-          overflowX: 'visible'
+          overflow: 'visible'
         }}
       >
         {/* Header Sidebar */}
-        {!isCollapsed ? (
-          <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-            <div className="flex items-center justify-between w-full">
-              <h1 className="text-lg font-bold text-white uppercase" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                <span style={{ color: 'rgb(240, 45, 110)' }}>ALF</span> Backoffice
-              </h1>
-              <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="p-1.5 text-white/50 hover:text-white/80 transition-colors"
-                title="Riduci sidebar"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  style={{ transition: 'transform 0.3s' }}
-                >
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 border-b flex justify-center" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-1.5 text-white/50 hover:text-white/80 transition-colors"
-              title="Espandi sidebar"
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                style={{ transform: 'rotate(180deg)', transition: 'transform 0.3s' }}
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-          </div>
-        )}
+        <div className="p-4 border-b flex justify-center" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+          <h1 className="text-lg font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif', color: 'rgb(240, 45, 110)' }}>
+            ALF
+          </h1>
+        </div>
 
         {/* Menu Items */}
         <nav className="p-6 space-y-3" style={{ overflow: 'visible' }}>
@@ -135,35 +113,32 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
             <div key={item.id} className="relative group" style={{ overflow: 'visible' }}>
               <button
                 onClick={() => navigate(item.path)}
-                className={`w-full rounded-lg transition-all font-bold uppercase text-sm tracking-wide relative flex items-center gap-3 ${
-                  isCollapsed ? 'justify-center px-4 py-4' : 'px-6 py-4'
-                } ${
+                className={`w-full rounded-lg transition-all font-bold uppercase text-sm tracking-wide relative flex items-center justify-center px-4 py-4 ${
                   isActive(item.id)
                     ? 'text-white bg-white/10'
                     : 'text-white/50 hover:text-white/80 hover:bg-white/5'
                 }`}
                 style={{
-                  fontFamily: 'Palanquin, Helvetica Neue, sans-serif',
+                  fontFamily: 'Montserrat, sans-serif',
                   letterSpacing: '0.05em'
                 }}
               >
-                {item.icon}
-                {!isCollapsed && <span>{item.label}</span>}
+                <span style={{ flexShrink: 0, width: '20px', height: '20px', display: 'inline-flex' }}>
+                  {item.icon}
+                </span>
               </button>
-              {/* Tooltip on hover when collapsed */}
-              {isCollapsed && (
-                <div
-                  className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-secondary border rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none"
-                  style={{
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
-                    zIndex: 9999
-                  }}
-                >
-                  <span className="text-white text-sm font-bold uppercase" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                    {item.label}
-                  </span>
-                </div>
-              )}
+              {/* Tooltip on hover */}
+              <div
+                className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-3 py-2 bg-secondary border rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none"
+                style={{
+                  borderColor: 'rgba(255, 255, 255, 0.2)',
+                  zIndex: 9999
+                }}
+              >
+                <span className="text-white text-sm font-bold uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                  {item.label}
+                </span>
+              </div>
             </div>
           ))}
         </nav>
@@ -172,17 +147,14 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
           <button
             onClick={() => navigate('/')}
-            className={`w-full flex items-center justify-center border rounded-lg transition-all hover:bg-white/5 font-bold uppercase text-xs tracking-wide text-white/50 hover:text-white/80 ${
-              isCollapsed ? 'px-3 py-3 gap-0' : 'px-4 py-3 gap-2'
-            }`}
-            style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
-            title={isCollapsed ? "Torna al Sito" : undefined}
+            className="w-full flex items-center justify-center border rounded-lg transition-all hover:bg-white/5 font-bold uppercase text-xs tracking-wide text-white/50 hover:text-white/80 px-3 py-3"
+            style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif' }}
+            title="Torna al Sito"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
-            {!isCollapsed && <span>Torna al Sito</span>}
           </button>
         </div>
       </aside>
@@ -190,7 +162,7 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
       {/* Main Content */}
       <main
         className="flex-1 transition-all duration-300"
-        style={{ marginLeft: isCollapsed ? '80px' : '256px' }}
+        style={{ marginLeft: '90px' }}
       >
         {children}
       </main>

@@ -153,22 +153,22 @@ const CollectionArtworks: React.FC = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <button
-              onClick={() => navigate('/content')}
+              onClick={() => navigate(-1)}
               className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
-              Torna a Gestione Contenuti
+              Indietro
             </button>
-            <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+            <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
               Opere di <span style={{ color: 'rgb(240, 45, 110)' }}>{collection.title}</span>
             </h1>
           </div>
           <button
             onClick={() => setShowAddForm(true)}
             className="px-12 py-3 font-bold uppercase text-white transition-colors"
-            style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+            style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
           >
             + Aggiungi Opera
           </button>
@@ -243,15 +243,15 @@ const CollectionArtworks: React.FC = () => {
             <div className="flex gap-4 mt-6">
               <button
                 onClick={handleAddArtwork}
-                className="px-12 py-2 font-bold uppercase text-white rounded-lg"
-                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                className="px-12 py-2 font-bold uppercase text-white"
+                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
               >
                 Aggiungi
               </button>
               <button
                 onClick={handleCancel}
-                className="px-12 py-2 font-bold uppercase text-white border rounded-lg"
-                style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                className="px-12 py-2 font-bold uppercase text-white border"
+                style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
               >
                 Annulla
               </button>
@@ -266,7 +266,7 @@ const CollectionArtworks: React.FC = () => {
             <button
               onClick={() => setShowAddForm(true)}
               className="px-12 py-3 font-bold uppercase text-white"
-              style={{ backgroundColor: 'rgb(240, 45, 110)' }}
+              style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
             >
               Aggiungi la prima opera
             </button>
@@ -336,15 +336,15 @@ const CollectionArtworks: React.FC = () => {
                     <div className="md:col-span-2 flex gap-4">
                       <button
                         onClick={() => handleUpdateArtwork(artwork.id)}
-                        className="px-12 py-2 font-bold uppercase text-white rounded-lg"
-                        style={{ backgroundColor: 'rgb(240, 45, 110)' }}
+                        className="px-12 py-2 font-bold uppercase text-white"
+                        style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
                       >
                         Salva
                       </button>
                       <button
                         onClick={handleCancel}
-                        className="px-12 py-2 font-bold uppercase text-white border rounded-lg"
-                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                        className="px-12 py-2 font-bold uppercase text-white border"
+                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
                       >
                         Annulla
                       </button>
@@ -358,7 +358,7 @@ const CollectionArtworks: React.FC = () => {
                       className="w-32 h-32 object-cover rounded-lg"
                     />
                     <div className="flex-1">
-                      <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+                      <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
                         {artwork.title}
                       </h3>
                       <div className="text-white/80 space-y-1">

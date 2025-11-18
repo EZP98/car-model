@@ -50,6 +50,7 @@ const ContentWithCollections: React.FC = () => {
   const [searchCritics, setSearchCritics] = useState('');
 
   // Stati per biografia
+  const [selectedBioEditor, setSelectedBioEditor] = useState<'alf' | 'studio' | null>(null);
   const [bioContent, setBioContent] = useState({
     alf: {
       it: {
@@ -408,7 +409,7 @@ const ContentWithCollections: React.FC = () => {
 
       <div className="max-w-5xl mx-auto py-20 px-12">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+          <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
             Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>
               {activeTab === 'collezioni' ? 'Collezioni' :
                activeTab === 'critica' ? 'Critica' :
@@ -428,7 +429,7 @@ const ContentWithCollections: React.FC = () => {
                   }}
                   placeholder="Cerca collezione..."
                   className="px-4 py-3 pr-10 bg-secondary text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif', width: '250px' }}
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', width: '250px' }}
                 />
                 <svg
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
@@ -446,7 +447,7 @@ const ContentWithCollections: React.FC = () => {
               <button
                 onClick={() => navigate('/content/collezione/new')}
                 className="px-6 py-3 font-bold uppercase text-white transition-colors"
-                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
               >
                 + Aggiungi
               </button>
@@ -464,7 +465,7 @@ const ContentWithCollections: React.FC = () => {
                   }}
                   placeholder="Cerca critico..."
                   className="px-4 py-3 pr-10 bg-secondary text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif', width: '250px' }}
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', width: '250px' }}
                 />
                 <svg
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
@@ -482,7 +483,7 @@ const ContentWithCollections: React.FC = () => {
               <button
                 onClick={handleAdd}
                 className="px-6 py-3 font-bold uppercase text-white transition-colors"
-                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
               >
                 + Aggiungi
               </button>
@@ -500,7 +501,7 @@ const ContentWithCollections: React.FC = () => {
                   }}
                   placeholder="Cerca mostra..."
                   className="px-4 py-3 pr-10 bg-secondary text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif', width: '250px' }}
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', width: '250px' }}
                 />
                 <svg
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
@@ -518,7 +519,7 @@ const ContentWithCollections: React.FC = () => {
               <button
                 onClick={handleAdd}
                 className="px-6 py-3 font-bold uppercase text-white transition-colors"
-                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
               >
                 + Aggiungi
               </button>
@@ -539,7 +540,7 @@ const ContentWithCollections: React.FC = () => {
               <button
                 onClick={() => navigate('/content/collezione/new')}
                 className="px-6 py-3 font-bold uppercase text-white"
-                style={{ backgroundColor: 'rgb(240, 45, 110)' }}
+                style={{ backgroundColor: 'rgb(240, 45, 110)', borderRadius: 0 }}
               >
                 Aggiungi la prima collezione
               </button>
@@ -558,47 +559,47 @@ const ContentWithCollections: React.FC = () => {
                     <div className="space-y-4">
                       {/* Form di modifica collezione */}
                       <div>
-                        <label className="block text-white mb-2 font-bold" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>Titolo</label>
+                        <label className="block text-white mb-2 font-bold" style={{ fontFamily: 'Montserrat, sans-serif' }}>Titolo</label>
                         <input
                           type="text"
                           value={formData.title}
                           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                           className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif' }}
                         />
                       </div>
                       <div>
-                        <label className="block text-white mb-2 font-bold" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>Descrizione</label>
+                        <label className="block text-white mb-2 font-bold" style={{ fontFamily: 'Montserrat, sans-serif' }}>Descrizione</label>
                         <textarea
                           value={formData.description}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                           rows={3}
                           className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif' }}
                         />
                       </div>
                       <div>
-                        <label className="block text-white mb-2 font-bold" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>Immagine URL</label>
+                        <label className="block text-white mb-2 font-bold" style={{ fontFamily: 'Montserrat, sans-serif' }}>Immagine URL</label>
                         <input
                           type="text"
                           value={formData.image_url}
                           onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                           className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif' }}
                         />
                       </div>
                       <div className="flex gap-4">
                         <button
                           onClick={handleSaveCollection}
                           className="px-6 py-2 font-bold uppercase text-white"
-                          style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                          style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
                         >
                           Salva
                         </button>
                         <button
                           onClick={handleCancel}
                           className="px-6 py-2 font-bold uppercase text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif' }}
                         >
                           Annulla
                         </button>
@@ -612,14 +613,14 @@ const ContentWithCollections: React.FC = () => {
                         className="w-48 h-32 object-cover rounded-lg"
                       />
                       <div className="flex-1">
-                        <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+                        <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
                           {collection.title}
                         </h3>
-                        <p className="text-white mb-2" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+                        <p className="text-white mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                           {collection.description}
                         </p>
                         <div className="flex items-center gap-4">
-                          <p className="text-gray text-sm" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+                          <p className="text-gray text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                             Link: <span className="text-white/60">/collezione/{collection.slug}</span>
                           </p>
                           {!collection.is_visible && (
@@ -628,23 +629,6 @@ const ContentWithCollections: React.FC = () => {
                             </span>
                           )}
                         </div>
-                      </div>
-                      <div className="flex gap-4">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCollection(collection.id);
-                          }}
-                          className="p-2 text-white border rounded-lg hover:text-red-400 hover:border-red-400 transition-colors"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                          title="Elimina"
-                        >
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            <line x1="10" y1="11" x2="10" y2="17" />
-                            <line x1="14" y1="11" x2="14" y2="17" />
-                          </svg>
-                        </button>
                       </div>
                     </div>
                   )}
@@ -667,13 +651,13 @@ const ContentWithCollections: React.FC = () => {
             </div>
           ) : critics.length === 0 ? (
             <div className="p-8 border text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
-              <p className="text-white text-lg mb-4" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+              <p className="text-white text-lg mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                 Nessun critico presente
               </p>
               <button
                 onClick={() => navigate('/content/critico/new')}
                 className="px-6 py-3 font-bold uppercase text-white"
-                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
               >
                 Aggiungi il primo critico
               </button>
@@ -690,7 +674,7 @@ const ContentWithCollections: React.FC = () => {
                   >
                     <div className="flex justify-between items-start p-2">
                       <div className="flex-1">
-                        <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+                        <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
                           {critic.name}
                         </h3>
                         <p className="text-white/80 mb-4">{critic.role}</p>
@@ -727,7 +711,7 @@ const ContentWithCollections: React.FC = () => {
               <button
                 onClick={() => navigate('/content/mostra/new')}
                 className="px-6 py-3 font-bold uppercase text-white"
-                style={{ backgroundColor: 'rgb(240, 45, 110)' }}
+                style={{ backgroundColor: 'rgb(240, 45, 110)', borderRadius: 0 }}
               >
                 Aggiungi la prima mostra
               </button>
@@ -751,7 +735,7 @@ const ContentWithCollections: React.FC = () => {
                         />
                       )}
                       <div className="flex-1">
-                        <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+                        <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
                           {exhibition.title}
                         </h3>
                         {exhibition.subtitle && (
@@ -789,127 +773,212 @@ const ContentWithCollections: React.FC = () => {
 
         {activeTab === 'biografia' && (
           <div className="max-w-5xl mx-auto space-y-6">
-            <h3 className="text-2xl font-bold text-white mb-6 text-center" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-              Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>Biografia</span>
-            </h3>
+            {/* Choice Screen */}
+            {!selectedBioEditor && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* ALF Card */}
+                <button
+                  onClick={() => setSelectedBioEditor('alf')}
+                  className="bg-secondary p-12 border rounded-xl hover:border-pink-500 transition-all group"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className="text-center">
+                    <svg
+                      width="64"
+                      height="64"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mx-auto mb-6 text-white/50 group-hover:text-pink-500 transition-colors"
+                    >
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <h3 className="text-3xl font-bold text-white mb-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                      <span style={{ color: 'rgb(240, 45, 110)' }}>ALF</span> Biografia
+                    </h3>
+                    <p className="text-white/60">
+                      Modifica la biografia dell'artista
+                    </p>
+                  </div>
+                </button>
 
-            {/* Card ALF */}
-            <div className="bg-secondary p-8 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-              <h3 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                <span style={{ color: 'rgb(240, 45, 110)' }}>ALF</span> Biografia
-              </h3>
+                {/* STUDIO Card */}
+                <button
+                  onClick={() => setSelectedBioEditor('studio')}
+                  className="bg-secondary p-12 border rounded-xl hover:border-pink-500 transition-all group"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className="text-center">
+                    <svg
+                      width="64"
+                      height="64"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mx-auto mb-6 text-white/50 group-hover:text-pink-500 transition-colors"
+                    >
+                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      <polyline points="9 22 9 12 15 12 15 22" />
+                    </svg>
+                    <h3 className="text-3xl font-bold text-white mb-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                      <span style={{ color: 'rgb(240, 45, 110)' }}>STUDIO</span> Descrizione
+                    </h3>
+                    <p className="text-white/60">
+                      Modifica la descrizione dello studio
+                    </p>
+                  </div>
+                </button>
+              </div>
+            )}
 
-              <div className="space-y-8">
-                {/* Sezione Italiano */}
-                <div>
-                  <h4 className="text-xl font-bold text-white mb-4">Italiano</h4>
-                  {bioContent.alf.it.paragraphs.map((paragraph, index) => (
-                    <div key={index}>
-                      <textarea
-                        value={paragraph}
-                        onChange={(e) => updateBioParagraph('alf', 'it', index, e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
-                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                        placeholder={`Paragrafo ${index + 1} in italiano...`}
-                      />
-                      {index < bioContent.alf.it.paragraphs.length - 1 && (
-                        <div className="h-px bg-white/20 my-4"></div>
-                      )}
+            {/* ALF Editor */}
+            {selectedBioEditor === 'alf' && (
+              <div>
+                <button
+                  onClick={() => setSelectedBioEditor(null)}
+                  className="text-white/60 hover:text-white mb-6 flex items-center gap-2"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                  Indietro
+                </button>
+
+                <div className="bg-secondary p-8 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                  <h3 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                    <span style={{ color: 'rgb(240, 45, 110)' }}>ALF</span> Biografia
+                  </h3>
+
+                  <div className="space-y-8">
+                    {/* Sezione Italiano */}
+                    <div>
+                      <h4 className="text-xl font-bold text-white mb-4">Italiano</h4>
+                      {bioContent.alf.it.paragraphs.map((paragraph, index) => (
+                        <div key={index}>
+                          <textarea
+                            value={paragraph}
+                            onChange={(e) => updateBioParagraph('alf', 'it', index, e.target.value)}
+                            rows={4}
+                            className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
+                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                            placeholder={`Paragrafo ${index + 1} in italiano...`}
+                          />
+                          {index < bioContent.alf.it.paragraphs.length - 1 && (
+                            <div className="h-px bg-white/20 my-4"></div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                {/* Sezione Inglese */}
-                <div className="pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  <h4 className="text-xl font-bold text-white mb-4">English</h4>
-                  {bioContent.alf.en.paragraphs.map((paragraph, index) => (
-                    <div key={index}>
-                      <textarea
-                        value={paragraph}
-                        onChange={(e) => updateBioParagraph('alf', 'en', index, e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
-                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                        placeholder={`Paragraph ${index + 1} in English...`}
-                      />
-                      {index < bioContent.alf.en.paragraphs.length - 1 && (
-                        <div className="h-px bg-white/20 my-4"></div>
-                      )}
+                    {/* Sezione Inglese */}
+                    <div className="pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                      <h4 className="text-xl font-bold text-white mb-4">English</h4>
+                      {bioContent.alf.en.paragraphs.map((paragraph, index) => (
+                        <div key={index}>
+                          <textarea
+                            value={paragraph}
+                            onChange={(e) => updateBioParagraph('alf', 'en', index, e.target.value)}
+                            rows={4}
+                            className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
+                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                            placeholder={`Paragraph ${index + 1} in English...`}
+                          />
+                          {index < bioContent.alf.en.paragraphs.length - 1 && (
+                            <div className="h-px bg-white/20 my-4"></div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                <div className="flex justify-center pt-6">
-                  <button
-                    onClick={handleSaveBio}
-                    className="px-8 py-3 font-bold uppercase text-white transition-all hover:scale-105"
-                    style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
-                  >
-                    Salva ALF
-                  </button>
+                    <div className="flex justify-center pt-6">
+                      <button
+                        onClick={handleSaveBio}
+                        className="px-8 py-3 font-bold uppercase text-white transition-all hover:scale-105"
+                        style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
+                      >
+                        Salva ALF
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Card STUDIO */}
-            <div className="bg-secondary p-8 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-              <h3 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                <span style={{ color: 'rgb(240, 45, 110)' }}>STUDIO</span> Descrizione
-              </h3>
+            {/* STUDIO Editor */}
+            {selectedBioEditor === 'studio' && (
+              <div>
+                <button
+                  onClick={() => setSelectedBioEditor(null)}
+                  className="text-white/60 hover:text-white mb-6 flex items-center gap-2"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                  Indietro
+                </button>
 
-              <div className="space-y-8">
-                {/* Sezione Italiano */}
-                <div>
-                  <h4 className="text-xl font-bold text-white mb-4">Italiano</h4>
-                  {bioContent.studio.it.paragraphs.map((paragraph, index) => (
-                    <div key={index}>
-                      <textarea
-                        value={paragraph}
-                        onChange={(e) => updateBioParagraph('studio', 'it', index, e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
-                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                        placeholder={`Paragrafo ${index + 1} in italiano...`}
-                      />
-                      {index < bioContent.studio.it.paragraphs.length - 1 && (
-                        <div className="h-px bg-white/20 my-4"></div>
-                      )}
+                <div className="bg-secondary p-8 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                  <h3 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                    <span style={{ color: 'rgb(240, 45, 110)' }}>STUDIO</span> Descrizione
+                  </h3>
+
+                  <div className="space-y-8">
+                    {/* Sezione Italiano */}
+                    <div>
+                      <h4 className="text-xl font-bold text-white mb-4">Italiano</h4>
+                      {bioContent.studio.it.paragraphs.map((paragraph, index) => (
+                        <div key={index}>
+                          <textarea
+                            value={paragraph}
+                            onChange={(e) => updateBioParagraph('studio', 'it', index, e.target.value)}
+                            rows={4}
+                            className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
+                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                            placeholder={`Paragrafo ${index + 1} in italiano...`}
+                          />
+                          {index < bioContent.studio.it.paragraphs.length - 1 && (
+                            <div className="h-px bg-white/20 my-4"></div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                {/* Sezione Inglese */}
-                <div className="pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  <h4 className="text-xl font-bold text-white mb-4">English</h4>
-                  {bioContent.studio.en.paragraphs.map((paragraph, index) => (
-                    <div key={index}>
-                      <textarea
-                        value={paragraph}
-                        onChange={(e) => updateBioParagraph('studio', 'en', index, e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
-                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                        placeholder={`Paragraph ${index + 1} in English...`}
-                      />
-                      {index < bioContent.studio.en.paragraphs.length - 1 && (
-                        <div className="h-px bg-white/20 my-4"></div>
-                      )}
+                    {/* Sezione Inglese */}
+                    <div className="pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                      <h4 className="text-xl font-bold text-white mb-4">English</h4>
+                      {bioContent.studio.en.paragraphs.map((paragraph, index) => (
+                        <div key={index}>
+                          <textarea
+                            value={paragraph}
+                            onChange={(e) => updateBioParagraph('studio', 'en', index, e.target.value)}
+                            rows={4}
+                            className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
+                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                            placeholder={`Paragraph ${index + 1} in English...`}
+                          />
+                          {index < bioContent.studio.en.paragraphs.length - 1 && (
+                            <div className="h-px bg-white/20 my-4"></div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                <div className="flex justify-center pt-6">
-                  <button
-                    onClick={handleSaveBio}
-                    className="px-8 py-3 font-bold uppercase text-white transition-all hover:scale-105"
-                    style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
-                  >
-                    Salva Studio
-                  </button>
+                    <div className="flex justify-center pt-6">
+                      <button
+                        onClick={handleSaveBio}
+                        className="px-8 py-3 font-bold uppercase text-white transition-all hover:scale-105"
+                        style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
+                      >
+                        Salva Studio
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 

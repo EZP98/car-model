@@ -189,15 +189,15 @@ const CollectionManagement: React.FC = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <button
-              onClick={() => navigate('/content')}
+              onClick={() => navigate(-1)}
               className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
-              Torna a Gestione Contenuti
+              Indietro
             </button>
-            <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+            <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
               Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>{collection.title}</span>
             </h1>
           </div>
@@ -235,7 +235,7 @@ const CollectionManagement: React.FC = () => {
                   />
                 </div>
               </div>
-              <span className="text-white font-bold" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+              <span className="text-white font-bold" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                 Visibile nel frontend
               </span>
             </label>
@@ -249,7 +249,7 @@ const CollectionManagement: React.FC = () => {
               onClick={() => setActiveTab('info')}
               className={`pb-4 px-4 font-bold uppercase text-lg transition-colors ${activeTab === 'info' ? 'border-b-4' : ''}`}
               style={{
-                fontFamily: 'Palanquin, Helvetica Neue, sans-serif',
+                fontFamily: 'Montserrat, sans-serif',
                 color: activeTab === 'info' ? 'rgb(240, 45, 110)' : 'white',
                 borderColor: activeTab === 'info' ? 'rgb(240, 45, 110)' : 'transparent'
               }}
@@ -260,7 +260,7 @@ const CollectionManagement: React.FC = () => {
               onClick={() => setActiveTab('opere')}
               className={`pb-4 px-4 font-bold uppercase text-lg transition-colors ${activeTab === 'opere' ? 'border-b-4' : ''}`}
               style={{
-                fontFamily: 'Palanquin, Helvetica Neue, sans-serif',
+                fontFamily: 'Montserrat, sans-serif',
                 color: activeTab === 'opere' ? 'rgb(240, 45, 110)' : 'white',
                 borderColor: activeTab === 'opere' ? 'rgb(240, 45, 110)' : 'transparent'
               }}
@@ -351,23 +351,6 @@ const CollectionManagement: React.FC = () => {
               )}
             </div>
 
-            <div className="flex gap-4 mt-8">
-              <button
-                onClick={handleSaveCollection}
-                disabled={saving}
-                className="px-6 py-3 font-bold uppercase text-white rounded-lg transition-opacity disabled:opacity-50"
-                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
-              >
-                {saving ? 'Salvataggio...' : 'Salva Modifiche'}
-              </button>
-              <button
-                onClick={() => navigate('/content')}
-                className="px-6 py-3 font-bold uppercase text-white border rounded-lg"
-                style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
-              >
-                Annulla
-              </button>
-            </div>
           </motion.div>
         )}
 
@@ -381,7 +364,7 @@ const CollectionManagement: React.FC = () => {
               <button
                 onClick={() => setShowAddArtwork(true)}
                 className="px-6 py-3 font-bold uppercase text-white transition-colors"
-                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
               >
                 + Aggiungi Opera
               </button>
@@ -596,6 +579,25 @@ const CollectionManagement: React.FC = () => {
             )}
           </motion.div>
         )}
+
+        {/* Floating Buttons */}
+        <div className="fixed bottom-6 right-6 flex gap-3 z-50">
+          <button
+            onClick={() => navigate(-1)}
+            className="px-6 py-3 font-bold uppercase text-white border hover:bg-white/5 transition-all shadow-lg"
+            style={{ borderColor: 'rgba(255, 255, 255, 0.2)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0, backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+          >
+            Annulla
+          </button>
+          <button
+            onClick={handleSaveCollection}
+            disabled={saving}
+            className="px-6 py-3 font-bold uppercase text-white transition-all disabled:opacity-50 hover:opacity-90 shadow-lg"
+            style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
+          >
+            {saving ? 'Salvataggio...' : 'Salva Modifiche'}
+          </button>
+        </div>
       </div>
     </BackofficeLayout>
   );
