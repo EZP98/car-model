@@ -435,7 +435,7 @@ interface TestoCriticoItemProps {
 
 const TestoCriticoItem: React.FC<TestoCriticoItemProps> = ({ nome, ruolo, testo, onClick }) => {
   // Estrae le prime 180 caratteri del testo come anteprima (aumentato per mostrare più contenuto)
-  const anteprima = testo.length > 180 ? testo.substring(0, 180) + '...' : testo;
+  const anteprima = testo && testo.length > 180 ? testo.substring(0, 180) + '...' : testo || '';
 
   return (
     <button
@@ -443,12 +443,12 @@ const TestoCriticoItem: React.FC<TestoCriticoItemProps> = ({ nome, ruolo, testo,
       className="w-[85vw] md:w-full flex-shrink-0 snap-center p-8 border border-white/20 text-left hover:border-white/40 hover:bg-white/[0.035] transition-all group rounded-[12px] min-h-[280px] flex flex-col"
     >
       <div className="flex items-start justify-between mb-4">
-        <h6 className="m-0 text-white font-body text-[20px] font-bold uppercase tracking-wide">{nome}</h6>
+        <h6 className="m-0 text-white font-body text-[20px] font-bold uppercase tracking-wide">{nome || ''}</h6>
         <svg className="flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity ml-4" width="24" height="24" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" fill="rgb(153, 153, 153)"/>
         </svg>
       </div>
-      <p className="m-0 text-white/70 font-body text-[15px] font-medium mb-4 leading-tight">{ruolo}</p>
+      <p className="m-0 text-white/70 font-body text-[15px] font-medium mb-4 leading-tight">{ruolo || ''}</p>
       <p className="m-0 text-white/50 font-body text-[14px] font-normal italic leading-relaxed flex-grow">&ldquo;{anteprima}&rdquo;</p>
     </button>
   );
