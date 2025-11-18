@@ -316,63 +316,111 @@ interface TestoCriticoModalProps {
 }
 
 const TestoCriticoModal: React.FC<TestoCriticoModalProps> = ({ isOpen, onClose, critico }) => {
+  // Block body scroll when modal is open
+  React.useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  // Split text into paragraphs for better formatting
+  const paragraphs = critico.testo.split('\n\n').filter((p: string) => p.trim());
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8"
       style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        backdropFilter: 'blur(10px)'
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        backdropFilter: 'blur(15px)'
       }}
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-6xl max-h-[90vh] md:h-[80vh] bg-background rounded-3xl flex flex-col"
+        className="relative w-full max-w-6xl max-h-[90vh] md:h-[85vh] bg-background/95 backdrop-blur rounded-3xl flex flex-col border border-white/10"
         style={{
-          fontFamily: 'Montserrat, sans-serif'
+          fontFamily: 'Montserrat, sans-serif',
+          boxShadow: '0 25px 50px -12px rgba(240, 45, 110, 0.25)'
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-6 right-6 text-white hover:text-accent transition-colors z-10"
+          className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors z-10"
         >
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         </button>
 
         {/* Scrollable Content */}
-        <div className="overflow-y-auto flex-1 p-8 md:p-12 min-h-0">
-          {/* Content - Two Column Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            {/* Left Column - Info */}
-            <div className="space-y-8">
-              {/* Header */}
-              <div className="space-y-4">
-                <h2 className="text-5xl font-bold text-white uppercase tracking-wide" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                  {critico.nome}
-                </h2>
-                <p className="text-[16px] text-white/80 uppercase">
-                  {critico.ruolo}
+        <div className="overflow-y-auto flex-1 p-8 md:p-12 min-h-0 custom-scrollbar">
+          {/* Header Section */}
+          <div className="mb-10 pb-8 border-b border-white/10">
+            <h2 className="text-4xl md:text-5xl font-bold text-white uppercase tracking-wide mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              {critico.nome}
+            </h2>
+            <p className="text-[18px] text-accent font-medium">
+              {critico.ruolo}
+            </p>
+          </div>
+
+          {/* Text Content */}
+          <div className="space-y-6 max-w-4xl mx-auto">
+            {paragraphs.length > 1 ? (
+              paragraphs.map((paragraph: string, index: number) => (
+                <p key={index} className="text-[16px] md:text-[17px] leading-relaxed text-white/85 font-light" style={{ lineHeight: '1.8' }}>
+                  {index === 0 && <span className="text-accent text-[24px] mr-1">"</span>}
+                  {paragraph}
+                  {index === paragraphs.length - 1 && <span className="text-accent text-[24px] ml-1">"</span>}
                 </p>
-              </div>
-
-              {/* Divider */}
-              <div className="h-px bg-gradient-to-r from-accent to-transparent opacity-50"></div>
-            </div>
-
-            {/* Right Column - Text */}
-            <div className="space-y-6">
-              <p className="text-[16px] leading-relaxed text-white/90 italic uppercase">
-                "{critico.testo}"
+              ))
+            ) : (
+              <p className="text-[16px] md:text-[17px] leading-relaxed text-white/85 font-light italic" style={{ lineHeight: '1.8' }}>
+                <span className="text-accent text-[32px] leading-none align-text-top">"</span>
+                {critico.testo}
+                <span className="text-accent text-[32px] leading-none align-text-bottom">"</span>
               </p>
-            </div>
+            )}
           </div>
         </div>
       </div>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(240, 45, 110, 0.5);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(240, 45, 110, 0.7);
+        }
+      `}</style>
     </div>
   );
 };
