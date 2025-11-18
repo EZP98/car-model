@@ -4,55 +4,45 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n/LanguageContext';
 import Navbar from '../components/Navbar';
-
-// Definizione delle collezioni con le loro opere
-const collezioni = {
-  'opera-5': {
-    id: 'opera-5',
-    titolo: 'OPERA 5',
-    sottotitolo: 'Opere scultoree che esplorano la materia e la forma attraverso l\'arte contemporanea',
-    immagini: [
-      { id: 1, src: '/DSCF9079.jpg', titolo: 'Senza Titolo #1', anno: '2023', tecnica: 'Olio su tela', dimensioni: '100x120 cm' },
-      { id: 2, src: '/DSCF2012.jpg', titolo: 'Senza Titolo #2', anno: '2023', tecnica: 'Olio su tela', dimensioni: '80x100 cm' },
-      { id: 3, src: '/DSCF3759.jpg', titolo: 'Senza Titolo #3', anno: '2023', tecnica: 'Olio su tela', dimensioni: '120x150 cm' },
-    ]
-  },
-  'opera-6': {
-    id: 'opera-6',
-    titolo: 'OPERA 6',
-    sottotitolo: 'Opere scultoree che esplorano la materia e la forma attraverso l\'arte contemporanea',
-    immagini: [
-      { id: 1, src: '/DSCF2012.jpg', titolo: 'Ritratto #1', anno: '2023', tecnica: 'Olio su tela', dimensioni: '100x120 cm' },
-      { id: 2, src: '/DSCF9079.jpg', titolo: 'Ritratto #2', anno: '2023', tecnica: 'Olio su tela', dimensioni: '80x100 cm' },
-    ]
-  },
-  'opera-7': {
-    id: 'opera-7',
-    titolo: 'OPERA 7',
-    sottotitolo: 'Opere scultoree che esplorano la materia e la forma attraverso l\'arte contemporanea',
-    immagini: [
-      { id: 1, src: '/DSCF3759.jpg', titolo: 'Composizione #1', anno: '2024', tecnica: 'Tecnica mista', dimensioni: '100x100 cm' },
-      { id: 2, src: '/DSCF2104.jpg', titolo: 'Composizione #2', anno: '2024', tecnica: 'Tecnica mista', dimensioni: '100x100 cm' },
-    ]
-  },
-  'opera-8': {
-    id: 'opera-8',
-    titolo: 'OPERA 8',
-    sottotitolo: 'Opere scultoree che esplorano la materia e la forma attraverso l\'arte contemporanea',
-    immagini: [
-      { id: 1, src: '/DSCF2104.jpg', titolo: 'Studio #1', anno: '2024', tecnica: 'Acrilico su tela', dimensioni: '150x150 cm' },
-      { id: 2, src: '/DSCF3759.jpg', titolo: 'Studio #2', anno: '2024', tecnica: 'Acrilico su tela', dimensioni: '150x150 cm' },
-    ]
-  },
-};
+import { getCollection, getCollectionArtworks, Collection, Artwork } from '../services/collections-api';
 
 const CollezioneDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { language } = useLanguage();
   const [selectedImage, setSelectedImage] = useState(0);
+  const [collection, setCollection] = useState<Collection | null>(null);
+  const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const collezione = id ? collezioni[id as keyof typeof collezioni] : null;
+  // Fetch collection and artworks data
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!id) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Fetch collection details
+        const collectionData = await getCollection(id);
+        setCollection(collectionData);
+
+        // Fetch artworks for this collection
+        const artworksData = await getCollectionArtworks(collectionData.id);
+        setArtworks(artworksData);
+      } catch (err) {
+        console.error('Error fetching collection data:', err);
+        setError('Failed to load collection');
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id, navigate]);
 
   // Scroll to top quando la pagina viene caricata
   useEffect(() => {
@@ -93,23 +83,30 @@ const CollezioneDetail: React.FC = () => {
     return () => timers.forEach(timer => clearTimeout(timer));
   }, [id]); // Aggiungi id come dipendenza per re-triggere quando cambia collezione
 
-  useEffect(() => {
-    if (!collezione) {
-      navigate('/');
-    }
-  }, [collezione, navigate]);
+  // Loading state
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen bg-background pt-24 px-6 flex items-center justify-center">
+          <div className="text-white">Loading...</div>
+        </div>
+      </>
+    );
+  }
 
-  if (!collezione) {
+  // Error or no collection found
+  if (!collection) {
     return null;
   }
 
-  const currentImage = collezione.immagini[selectedImage];
+  const currentImage = artworks[selectedImage];
 
   return (
     <>
       <Helmet>
-        <title>{collezione.titolo} - Adele Lo Feudo</title>
-        <meta name="description" content={collezione.sottotitolo} />
+        <title>{collection.title} - Adele Lo Feudo</title>
+        <meta name="description" content={collection.description} />
       </Helmet>
 
       <Navbar />
@@ -130,10 +127,10 @@ const CollezioneDetail: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <h1 className="text-[42px] font-bold text-white uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              {collezione.titolo}
+              {collection.title}
             </h1>
             <p className="text-white/60 text-[16px]">
-              {collezione.sottotitolo}
+              {collection.description}
             </p>
           </motion.div>
 
@@ -147,8 +144,8 @@ const CollezioneDetail: React.FC = () => {
             <div className="border border-white/10 rounded-[12px] overflow-hidden">
               <div className="aspect-[2/1]">
                 <img
-                  src={collezione.immagini[0].src}
-                  alt={`Copertina ${collezione.titolo}`}
+                  src={collection.image_url}
+                  alt={`Copertina ${collection.title}`}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -195,36 +192,42 @@ const CollezioneDetail: React.FC = () => {
             </motion.h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {collezione.immagini.map((opera, index) => (
-                <motion.div
-                  key={opera.id}
-                  className="space-y-4"
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.6,
-                    delay: 0.6 + index * 0.1,
-                    ease: "easeOut"
-                  }}
-                >
-                  <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                    <div className="aspect-square">
-                      <img
-                        src={opera.src}
-                        alt={opera.titolo}
-                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      />
+              {artworks.length > 0 ? (
+                artworks.map((artwork, index) => (
+                  <motion.div
+                    key={artwork.id}
+                    className="space-y-4"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.6,
+                      delay: 0.6 + index * 0.1,
+                      ease: "easeOut"
+                    }}
+                  >
+                    <div className="border border-white/10 rounded-[12px] overflow-hidden">
+                      <div className="aspect-square">
+                        <img
+                          src={artwork.image_url || '/placeholder-artwork.jpg'}
+                          alt={artwork.title}
+                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="text-center space-y-2">
-                    <h4 className="text-lg font-bold text-white">{opera.titolo}</h4>
-                    <p className="text-white/60 text-sm">{opera.anno}</p>
-                    <p className="text-white/60 text-sm">{opera.tecnica}</p>
-                    <p className="text-white/60 text-sm">{opera.dimensioni}</p>
-                  </div>
-                </motion.div>
-              ))}
+                    <div className="text-center space-y-2">
+                      <h4 className="text-lg font-bold text-white">{artwork.title}</h4>
+                      {artwork.year && <p className="text-white/60 text-sm">{artwork.year}</p>}
+                      {artwork.technique && <p className="text-white/60 text-sm">{artwork.technique}</p>}
+                      {artwork.dimensions && <p className="text-white/60 text-sm">{artwork.dimensions}</p>}
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="col-span-2 text-center py-8">
+                  <p className="text-white/60">Nessuna opera disponibile per questa collezione.</p>
+                </div>
+              )}
             </div>
           </motion.div>
 

@@ -592,7 +592,9 @@ const Collezione: React.FC = () => {
         console.log('Exhibitions loaded:', exhibitionsData);
         console.log('Critics loaded:', criticsData);
         setArtworks(artworksData);
-        setCollections(collectionsData);
+        // Filtra solo le collezioni visibili
+        const visibleCollections = collectionsData.filter(c => c.is_visible);
+        setCollections(visibleCollections);
         setExhibitions(exhibitionsData);
         setCritics(criticsData);
       } catch (error) {

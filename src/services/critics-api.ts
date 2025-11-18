@@ -1,0 +1,70 @@
+/**
+ * Critics (Critica) API Service
+ * Gestisce le recensioni e i critici
+ */
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+
+export interface Critic {
+  id: number;
+  name: string;
+  role: string;
+  text: string;
+  text_it?: string;
+  text_en?: string;
+  order_index: number;
+  is_visible: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getCritics(showAll = false): Promise<Critic[]> {
+  try {
+    const url = showAll
+      ? `${API_BASE_URL}/api/critics?all=true`
+      : `${API_BASE_URL}/api/critics`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch critics');
+    const data = await response.json() as { critics: Critic[] };
+    return data.critics;
+  } catch (error) {
+    console.error('Error fetching critics:', error);
+    return [];
+  }
+}
+
+export async function getCritic(id: number): Promise<Critic> {
+  const response = await fetch(`${API_BASE_URL}/api/critics/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch critic');
+  const data = await response.json() as { critic: Critic };
+  return data.critic;
+}
+
+export async function createCritic(critic: Omit<Critic, 'id' | 'created_at' | 'updated_at'>): Promise<Critic> {
+  const response = await fetch(`${API_BASE_URL}/api/critics`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(critic),
+  });
+  if (!response.ok) throw new Error('Failed to create critic');
+  const data = await response.json() as { critic: Critic };
+  return data.critic;
+}
+
+export async function updateCritic(id: number, updates: Partial<Critic>): Promise<Critic> {
+  const response = await fetch(`${API_BASE_URL}/api/critics/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+  if (!response.ok) throw new Error('Failed to update critic');
+  const data = await response.json() as { critic: Critic };
+  return data.critic;
+}
+
+export async function deleteCritic(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/critics/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error('Failed to delete critic');
+}

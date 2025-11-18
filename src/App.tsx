@@ -9,6 +9,13 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Collezione from './pages/Collezione';
 import CollezioneDetail from './pages/CollezioneDetail';
 import Content from './pages/Content';
+import CollectionArtworks from './pages/CollectionArtworks';
+import CollectionManagement from './pages/CollectionManagement';
+import NewCollection from './pages/NewCollection';
+import ExhibitionManagement from './pages/ExhibitionManagement';
+import NewExhibition from './pages/NewExhibition';
+import CriticManagement from './pages/CriticManagement';
+import NewCritic from './pages/NewCritic';
 import OperaForm from './pages/OperaForm';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
@@ -149,6 +156,13 @@ function AppContent() {
                 <Route path="/collezione" element={<Collezione />} />
                 <Route path="/collezione/:id" element={<CollezioneDetail />} />
                 <Route path="/content" element={<Content />} />
+                <Route path="/content/collezione/new" element={<NewCollection />} />
+                <Route path="/content/collezione/:collectionId" element={<CollectionManagement />} />
+                <Route path="/content/collezione/:collectionId/opere" element={<CollectionArtworks />} />
+                <Route path="/content/mostra/new" element={<NewExhibition />} />
+                <Route path="/content/mostra/:exhibitionId" element={<ExhibitionManagement />} />
+                <Route path="/content/critico/new" element={<NewCritic />} />
+                <Route path="/content/critico/:criticId" element={<CriticManagement />} />
                 <Route path="/content/opera" element={<OperaForm />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsConditions />} />

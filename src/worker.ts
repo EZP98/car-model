@@ -44,13 +44,19 @@ export default {
 
       // GET /api/artworks - Lista tutte le opere
       if (path === '/api/artworks' && method === 'GET') {
-        const sectionId = url.searchParams.get('section_id');
+        const collectionId = url.searchParams.get('collection_id');
+        const sectionId = url.searchParams.get('section_id'); // Keep for backward compatibility
         let query = 'SELECT * FROM artworks';
         const params: any[] = [];
 
-        if (sectionId) {
+        if (collectionId) {
+          query += ' WHERE collection_id = ? AND is_visible = 1';
+          params.push(collectionId);
+        } else if (sectionId) {
           query += ' WHERE section_id = ?';
           params.push(sectionId);
+        } else {
+          query += ' WHERE is_visible = 1';
         }
 
         query += ' ORDER BY order_index ASC';
@@ -80,28 +86,35 @@ export default {
       if (path === '/api/artworks' && method === 'POST') {
         const body = await request.json() as {
           title: string;
-          description?: string;
+          year?: number;
+          technique?: string;
+          dimensions?: string;
           image_url?: string;
-          section_id: number;
+          collection_id?: number;
+          section_id?: number; // Keep for backward compatibility
           order_index?: number;
+          is_visible?: boolean;
         };
 
-        const { title, description, image_url, section_id, order_index } = body;
+        const { title, year, technique, dimensions, image_url, collection_id, section_id, order_index, is_visible } = body;
 
-        if (!title || !section_id) {
-          return jsonResponse({ error: 'Title and section_id are required' }, 400);
+        if (!title || (!collection_id && !section_id)) {
+          return jsonResponse({ error: 'Title and collection_id are required' }, 400);
         }
 
         const result = await env.DB.prepare(
-          `INSERT INTO artworks (title, description, image_url, section_id, order_index)
-           VALUES (?, ?, ?, ?, ?)
+          `INSERT INTO artworks (title, year, technique, dimensions, image_url, collection_id, order_index, is_visible)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
            RETURNING *`
         ).bind(
           title,
-          description || null,
+          year || null,
+          technique || null,
+          dimensions || null,
           image_url || null,
-          section_id,
-          order_index || 0
+          collection_id || section_id || null,
+          order_index || 0,
+          is_visible !== undefined ? (is_visible ? 1 : 0) : 1
         ).first();
 
         return jsonResponse({ artwork: result }, 201);
@@ -112,30 +125,40 @@ export default {
         const id = path.split('/').pop();
         const body = await request.json() as {
           title?: string;
-          description?: string;
+          year?: number;
+          technique?: string;
+          dimensions?: string;
           image_url?: string;
+          collection_id?: number;
           section_id?: number;
           order_index?: number;
+          is_visible?: boolean;
         };
 
-        const { title, description, image_url, section_id, order_index } = body;
+        const { title, year, technique, dimensions, image_url, collection_id, section_id, order_index, is_visible } = body;
 
         const result = await env.DB.prepare(
           `UPDATE artworks
            SET title = COALESCE(?, title),
-               description = COALESCE(?, description),
+               year = COALESCE(?, year),
+               technique = COALESCE(?, technique),
+               dimensions = COALESCE(?, dimensions),
                image_url = COALESCE(?, image_url),
-               section_id = COALESCE(?, section_id),
+               collection_id = COALESCE(?, collection_id),
                order_index = COALESCE(?, order_index),
+               is_visible = COALESCE(?, is_visible),
                updated_at = CURRENT_TIMESTAMP
            WHERE id = ?
            RETURNING *`
         ).bind(
           title || null,
-          description || null,
+          year || null,
+          technique || null,
+          dimensions || null,
           image_url || null,
-          section_id || null,
+          collection_id || section_id || null,
           order_index || null,
+          is_visible !== undefined ? (is_visible ? 1 : 0) : null,
           id
         ).first();
 
@@ -274,6 +297,399 @@ export default {
         }
 
         return jsonResponse({ message: 'Section deleted', section: result });
+      }
+
+      // ========== COLLECTIONS ==========
+
+      // GET /api/collections - Lista tutte le collezioni
+      if (path === '/api/collections' && method === 'GET') {
+        const showAll = url.searchParams.get('all') === 'true';
+
+        const query = showAll
+          ? 'SELECT * FROM collections ORDER BY order_index ASC'
+          : 'SELECT * FROM collections WHERE is_visible = 1 ORDER BY order_index ASC';
+
+        const { results } = await env.DB.prepare(query).all();
+
+        return jsonResponse({ collections: results });
+      }
+
+      // GET /api/collections/:slug - Singola collezione
+      if (path.match(/^\/api\/collections\/[a-z0-9-]+$/) && method === 'GET') {
+        const slug = path.split('/').pop();
+        const { results } = await env.DB.prepare(
+          'SELECT * FROM collections WHERE slug = ?'
+        ).bind(slug).all();
+
+        if (results.length === 0) {
+          return jsonResponse({ error: 'Collection not found' }, 404);
+        }
+
+        return jsonResponse({ collection: results[0] });
+      }
+
+      // POST /api/collections - Crea nuova collezione
+      if (path === '/api/collections' && method === 'POST') {
+        const body = await request.json() as {
+          title: string;
+          slug: string;
+          description?: string;
+          image_url?: string;
+          order_index?: number;
+          is_visible?: boolean;
+        };
+
+        const { title, slug, description, image_url, order_index, is_visible } = body;
+
+        if (!title || !slug) {
+          return jsonResponse({ error: 'Title and slug are required' }, 400);
+        }
+
+        const result = await env.DB.prepare(
+          `INSERT INTO collections (title, slug, description, image_url, order_index, is_visible)
+           VALUES (?, ?, ?, ?, ?, ?)
+           RETURNING *`
+        ).bind(
+          title,
+          slug,
+          description || null,
+          image_url || null,
+          order_index || 0,
+          is_visible !== undefined ? (is_visible ? 1 : 0) : 1
+        ).first();
+
+        return jsonResponse({ collection: result }, 201);
+      }
+
+      // PUT /api/collections/:id - Aggiorna collezione
+      if (path.match(/^\/api\/collections\/\d+$/) && method === 'PUT') {
+        const id = path.split('/').pop();
+        const body = await request.json() as {
+          title?: string;
+          slug?: string;
+          description?: string;
+          image_url?: string;
+          order_index?: number;
+          is_visible?: boolean;
+        };
+
+        const { title, slug, description, image_url, order_index, is_visible } = body;
+
+        const result = await env.DB.prepare(
+          `UPDATE collections
+           SET title = COALESCE(?, title),
+               slug = COALESCE(?, slug),
+               description = COALESCE(?, description),
+               image_url = COALESCE(?, image_url),
+               order_index = COALESCE(?, order_index),
+               is_visible = COALESCE(?, is_visible),
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?
+           RETURNING *`
+        ).bind(
+          title || null,
+          slug || null,
+          description || null,
+          image_url || null,
+          order_index || null,
+          is_visible !== undefined ? (is_visible ? 1 : 0) : null,
+          id
+        ).first();
+
+        if (!result) {
+          return jsonResponse({ error: 'Collection not found' }, 404);
+        }
+
+        return jsonResponse({ collection: result });
+      }
+
+      // DELETE /api/collections/:id - Elimina collezione
+      if (path.match(/^\/api\/collections\/\d+$/) && method === 'DELETE') {
+        const id = path.split('/').pop();
+
+        const result = await env.DB.prepare(
+          'DELETE FROM collections WHERE id = ? RETURNING *'
+        ).bind(id).first();
+
+        if (!result) {
+          return jsonResponse({ error: 'Collection not found' }, 404);
+        }
+
+        return jsonResponse({ message: 'Collection deleted', collection: result });
+      }
+
+      // ========== EXHIBITIONS ==========
+
+      // GET /api/exhibitions - Lista tutte le mostre
+      if (path === '/api/exhibitions' && method === 'GET') {
+        const { results } = await env.DB.prepare(
+          'SELECT * FROM exhibitions ORDER BY date DESC'
+        ).all();
+
+        return jsonResponse({ exhibitions: results });
+      }
+
+      // GET /api/exhibitions/:id - Singola mostra per ID
+      if (path.match(/^\/api\/exhibitions\/\d+$/) && method === 'GET') {
+        const id = path.split('/').pop();
+        const { results } = await env.DB.prepare(
+          'SELECT * FROM exhibitions WHERE id = ?'
+        ).bind(id).all();
+
+        if (results.length === 0) {
+          return jsonResponse({ error: 'Exhibition not found' }, 404);
+        }
+
+        return jsonResponse({ exhibition: results[0] });
+      }
+
+      // GET /api/exhibitions/:slug - Singola mostra per slug
+      if (path.match(/^\/api\/exhibitions\/[a-z0-9-]+$/) && method === 'GET') {
+        const slug = path.split('/').pop();
+        const { results } = await env.DB.prepare(
+          'SELECT * FROM exhibitions WHERE slug = ?'
+        ).bind(slug).all();
+
+        if (results.length === 0) {
+          return jsonResponse({ error: 'Exhibition not found' }, 404);
+        }
+
+        return jsonResponse({ exhibition: results[0] });
+      }
+
+      // POST /api/exhibitions - Crea nuova mostra
+      if (path === '/api/exhibitions' && method === 'POST') {
+        const body = await request.json() as {
+          title: string;
+          subtitle?: string;
+          location: string;
+          date: string;
+          description?: string;
+          info?: string;
+          website?: string;
+          image_url?: string;
+          slug: string;
+          order_index?: number;
+          is_visible?: boolean;
+        };
+
+        const { title, subtitle, location, date, description, info, website, image_url, slug, order_index, is_visible } = body;
+
+        if (!title || !slug || !location || !date) {
+          return jsonResponse({ error: 'Title, slug, location and date are required' }, 400);
+        }
+
+        const result = await env.DB.prepare(
+          `INSERT INTO exhibitions (title, subtitle, location, date, description, info, website, image_url, slug, order_index, is_visible)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           RETURNING *`
+        ).bind(
+          title,
+          subtitle || null,
+          location,
+          date,
+          description || null,
+          info || null,
+          website || null,
+          image_url || null,
+          slug,
+          order_index || 0,
+          is_visible !== undefined ? (is_visible ? 1 : 0) : 1
+        ).first();
+
+        return jsonResponse({ exhibition: result }, 201);
+      }
+
+      // PUT /api/exhibitions/:id - Aggiorna mostra
+      if (path.match(/^\/api\/exhibitions\/\d+$/) && method === 'PUT') {
+        const id = path.split('/').pop();
+        const body = await request.json() as {
+          title?: string;
+          subtitle?: string;
+          location?: string;
+          date?: string;
+          description?: string;
+          info?: string;
+          website?: string;
+          image_url?: string;
+          slug?: string;
+          order_index?: number;
+          is_visible?: boolean;
+        };
+
+        const { title, subtitle, location, date, description, info, website, image_url, slug, order_index, is_visible } = body;
+
+        const result = await env.DB.prepare(
+          `UPDATE exhibitions
+           SET title = COALESCE(?, title),
+               subtitle = COALESCE(?, subtitle),
+               location = COALESCE(?, location),
+               date = COALESCE(?, date),
+               description = COALESCE(?, description),
+               info = COALESCE(?, info),
+               website = COALESCE(?, website),
+               image_url = COALESCE(?, image_url),
+               slug = COALESCE(?, slug),
+               order_index = COALESCE(?, order_index),
+               is_visible = COALESCE(?, is_visible),
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?
+           RETURNING *`
+        ).bind(
+          title || null,
+          subtitle || null,
+          location || null,
+          date || null,
+          description || null,
+          info || null,
+          website || null,
+          image_url || null,
+          slug || null,
+          order_index || null,
+          is_visible !== undefined ? (is_visible ? 1 : 0) : null,
+          id
+        ).first();
+
+        if (!result) {
+          return jsonResponse({ error: 'Exhibition not found' }, 404);
+        }
+
+        return jsonResponse({ exhibition: result });
+      }
+
+      // DELETE /api/exhibitions/:id - Elimina mostra
+      if (path.match(/^\/api\/exhibitions\/\d+$/) && method === 'DELETE') {
+        const id = path.split('/').pop();
+
+        const result = await env.DB.prepare(
+          'DELETE FROM exhibitions WHERE id = ? RETURNING *'
+        ).bind(id).first();
+
+        if (!result) {
+          return jsonResponse({ error: 'Exhibition not found' }, 404);
+        }
+
+        return jsonResponse({ message: 'Exhibition deleted', exhibition: result });
+      }
+
+      // ========== CRITICS ==========
+
+      // GET /api/critics - Lista tutti i critici
+      if (path === '/api/critics' && method === 'GET') {
+        const { results } = await env.DB.prepare(
+          'SELECT * FROM critics ORDER BY id ASC'
+        ).all();
+
+        return jsonResponse({ critics: results });
+      }
+
+      // GET /api/critics/:id - Singolo critico
+      if (path.match(/^\/api\/critics\/\d+$/) && method === 'GET') {
+        const id = path.split('/').pop();
+        const { results } = await env.DB.prepare(
+          'SELECT * FROM critics WHERE id = ?'
+        ).bind(id).all();
+
+        if (results.length === 0) {
+          return jsonResponse({ error: 'Critic not found' }, 404);
+        }
+
+        return jsonResponse({ critic: results[0] });
+      }
+
+      // POST /api/critics - Crea nuovo critico
+      if (path === '/api/critics' && method === 'POST') {
+        const body = await request.json() as {
+          name: string;
+          role: string;
+          text: string;
+          text_it?: string;
+          text_en?: string;
+          order_index?: number;
+          is_visible?: boolean;
+        };
+
+        const { name, role, text, text_it, text_en, order_index, is_visible } = body;
+
+        if (!name || !role || !text) {
+          return jsonResponse({ error: 'Name, role and text are required' }, 400);
+        }
+
+        const result = await env.DB.prepare(
+          `INSERT INTO critics (name, role, text, text_it, text_en, order_index, is_visible)
+           VALUES (?, ?, ?, ?, ?, ?, ?)
+           RETURNING *`
+        ).bind(
+          name,
+          role,
+          text,
+          text_it || null,
+          text_en || null,
+          order_index || 0,
+          is_visible !== undefined ? (is_visible ? 1 : 0) : 1
+        ).first();
+
+        return jsonResponse({ critic: result }, 201);
+      }
+
+      // PUT /api/critics/:id - Aggiorna critico
+      if (path.match(/^\/api\/critics\/\d+$/) && method === 'PUT') {
+        const id = path.split('/').pop();
+        const body = await request.json() as {
+          name?: string;
+          role?: string;
+          text?: string;
+          text_it?: string;
+          text_en?: string;
+          order_index?: number;
+          is_visible?: boolean;
+        };
+
+        const { name, role, text, text_it, text_en, order_index, is_visible } = body;
+
+        const result = await env.DB.prepare(
+          `UPDATE critics
+           SET name = COALESCE(?, name),
+               role = COALESCE(?, role),
+               text = COALESCE(?, text),
+               text_it = COALESCE(?, text_it),
+               text_en = COALESCE(?, text_en),
+               order_index = COALESCE(?, order_index),
+               is_visible = COALESCE(?, is_visible),
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = ?
+           RETURNING *`
+        ).bind(
+          name || null,
+          role || null,
+          text || null,
+          text_it || null,
+          text_en || null,
+          order_index || null,
+          is_visible !== undefined ? (is_visible ? 1 : 0) : null,
+          id
+        ).first();
+
+        if (!result) {
+          return jsonResponse({ error: 'Critic not found' }, 404);
+        }
+
+        return jsonResponse({ critic: result });
+      }
+
+      // DELETE /api/critics/:id - Elimina critico
+      if (path.match(/^\/api\/critics\/\d+$/) && method === 'DELETE') {
+        const id = path.split('/').pop();
+
+        const result = await env.DB.prepare(
+          'DELETE FROM critics WHERE id = ? RETURNING *'
+        ).bind(id).first();
+
+        if (!result) {
+          return jsonResponse({ error: 'Critic not found' }, 404);
+        }
+
+        return jsonResponse({ message: 'Critic deleted', critic: result });
       }
 
       // ========== CONTENT BLOCKS ==========
