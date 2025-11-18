@@ -1003,8 +1003,6 @@ const Collezione: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <Link to="/collezione/opera-5" className="group cursor-pointer block">
                 <div className="flex flex-col gap-1 mb-4">
@@ -1017,7 +1015,7 @@ const Collezione: React.FC = () => {
                   <div className="aspect-[3/2]">
                     <img
                       alt="OPERA 5"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       src="/DSCF3759.jpg"
                     />
                   </div>
@@ -1031,8 +1029,6 @@ const Collezione: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <Link to="/collezione/opera-6" className="group cursor-pointer block">
                 <div className="flex flex-col gap-1 mb-4">
@@ -1045,7 +1041,7 @@ const Collezione: React.FC = () => {
                   <div className="aspect-[3/2]">
                     <img
                       alt="OPERA 6"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       src="/DSCF9079.jpg"
                     />
                   </div>
@@ -1059,8 +1055,6 @@ const Collezione: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <Link to="/collezione/opera-7" className="group cursor-pointer block">
                 <div className="flex flex-col gap-1 mb-4">
@@ -1073,7 +1067,7 @@ const Collezione: React.FC = () => {
                   <div className="aspect-[3/2]">
                     <img
                       alt="OPERA 7"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       src="/DSCF2104.jpg"
                     />
                   </div>
@@ -1087,8 +1081,6 @@ const Collezione: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <Link to="/collezione/opera-8" className="group cursor-pointer block">
                 <div className="flex flex-col gap-1 mb-4">
@@ -1101,7 +1093,7 @@ const Collezione: React.FC = () => {
                   <div className="aspect-[3/2]">
                     <img
                       alt="OPERA 8"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       src="/DSCF2012.jpg"
                     />
                   </div>
@@ -1199,108 +1191,108 @@ const Collezione: React.FC = () => {
             {/* Testo Critico 1 - Angelo Leidi */}
             <TestoCriticoItem
               nome="Angelo Leidi"
-              ruolo={t('critics').angeloLeidi.role}
-              testo={t('critics').angeloLeidi.text}
+              ruolo={t('critics.angeloLeidi.role')}
+              testo={t('critics.angeloLeidi.text')}
               onClick={() => openCriticoModal({
                 nome: 'Angelo Leidi',
-                ruolo: t('critics').angeloLeidi.role,
-                testo: t('critics').angeloLeidi.text
+                ruolo: t('critics.angeloLeidi.role'),
+                testo: t('critics.angeloLeidi.text')
               })}
             />
 
             {/* Testo Critico 2 - Leonardo Varasano */}
             <TestoCriticoItem
               nome="Leonardo Varasano"
-              ruolo={t('critics').leonardoVarasano.role}
-              testo={t('critics').leonardoVarasano.text}
+              ruolo={t('critics.leonardoVarasano.role')}
+              testo={t('critics.leonardoVarasano.text')}
               onClick={() => openCriticoModal({
                 nome: 'Leonardo Varasano',
-                ruolo: t('critics').leonardoVarasano.role,
-                testo: t('critics').leonardoVarasano.text
+                ruolo: t('critics.leonardoVarasano.role'),
+                testo: t('critics.leonardoVarasano.text')
               })}
             />
 
             {/* Testo Critico 3 - Celeste Morè */}
             <TestoCriticoItem
               nome="Celeste Morè"
-              ruolo={t('critics').celesteMore.role}
-              testo={t('critics').celesteMore.text}
+              ruolo={t('critics.celesteMore.role')}
+              testo={t('critics.celesteMore.text')}
               onClick={() => openCriticoModal({
                 nome: 'Celeste Morè',
-                ruolo: t('critics').celesteMore.role,
-                testo: t('critics').celesteMore.text
+                ruolo: t('critics.celesteMore.role'),
+                testo: t('critics.celesteMore.text')
               })}
             />
 
             {/* Testo Critico 4 - Marco Botti */}
             <TestoCriticoItem
               nome="Marco Botti"
-              ruolo={t('critics').marcoBotti.role}
-              testo={t('critics').marcoBotti.text}
+              ruolo={t('critics.marcoBotti.role')}
+              testo={t('critics.marcoBotti.text')}
               onClick={() => openCriticoModal({
                 nome: 'Marco Botti',
-                ruolo: t('critics').marcoBotti.role,
-                testo: t('critics').marcoBotti.text
+                ruolo: t('critics.marcoBotti.role'),
+                testo: t('critics.marcoBotti.text')
               })}
             />
 
             {/* Testo Critico 5 - Helen Pankhurst */}
             <TestoCriticoItem
               nome="Helen Pankhurst"
-              ruolo={t('critics').helenPankhurst.role}
-              testo={t('critics').helenPankhurst.text}
+              ruolo={t('critics.helenPankhurst.role')}
+              testo={t('critics.helenPankhurst.text')}
               onClick={() => openCriticoModal({
                 nome: 'Helen Pankhurst',
-                ruolo: t('critics').helenPankhurst.role,
-                testo: t('critics').helenPankhurst.text
+                ruolo: t('critics.helenPankhurst.role'),
+                testo: t('critics.helenPankhurst.text')
               })}
             />
 
             {/* Testo Critico 6 - Alessandra Boldreghini */}
             <TestoCriticoItem
               nome="Alessandra Boldreghini"
-              ruolo={t('critics').alessandraBoldreghini.role}
-              testo={t('critics').alessandraBoldreghini.text}
+              ruolo={t('critics.alessandraBoldreghini.role')}
+              testo={t('critics.alessandraBoldreghini.text')}
               onClick={() => openCriticoModal({
                 nome: 'Alessandra Boldreghini',
-                ruolo: t('critics').alessandraBoldreghini.role,
-                testo: t('critics').alessandraBoldreghini.text
+                ruolo: t('critics.alessandraBoldreghini.role'),
+                testo: t('critics.alessandraBoldreghini.text')
               })}
             />
 
             {/* Testo Critico 7 - Donato Loscalzo */}
             <TestoCriticoItem
               nome="Donato Antonio Loscalzo"
-              ruolo={t('critics').donatoLoscalzo.role}
-              testo={t('critics').donatoLoscalzo.text}
+              ruolo={t('critics.donatoLoscalzo.role')}
+              testo={t('critics.donatoLoscalzo.text')}
               onClick={() => openCriticoModal({
                 nome: 'Donato Antonio Loscalzo',
-                ruolo: t('critics').donatoLoscalzo.role,
-                testo: t('critics').donatoLoscalzo.text
+                ruolo: t('critics.donatoLoscalzo.role'),
+                testo: t('critics.donatoLoscalzo.text')
               })}
             />
 
             {/* Testo Critico 8 - Alessandra Primicerio */}
             <TestoCriticoItem
               nome="Alessandra Primicerio"
-              ruolo={t('critics').alessandraPrimicerio.role}
-              testo={t('critics').alessandraPrimicerio.text}
+              ruolo={t('critics.alessandraPrimicerio.role')}
+              testo={t('critics.alessandraPrimicerio.text')}
               onClick={() => openCriticoModal({
                 nome: 'Alessandra Primicerio',
-                ruolo: t('critics').alessandraPrimicerio.role,
-                testo: t('critics').alessandraPrimicerio.text
+                ruolo: t('critics.alessandraPrimicerio.role'),
+                testo: t('critics.alessandraPrimicerio.text')
               })}
             />
 
             {/* Testo Critico 9 - Emidio De Albentiis */}
             <TestoCriticoItem
               nome="Emidio De Albentiis"
-              ruolo={t('critics').emidioDeAlbentiis.role}
-              testo={t('critics').emidioDeAlbentiis.text}
+              ruolo={t('critics.emidioDeAlbentiis.role')}
+              testo={t('critics.emidioDeAlbentiis.text')}
               onClick={() => openCriticoModal({
                 nome: 'Emidio De Albentiis',
-                ruolo: t('critics').emidioDeAlbentiis.role,
-                testo: t('critics').emidioDeAlbentiis.text
+                ruolo: t('critics.emidioDeAlbentiis.role'),
+                testo: t('critics.emidioDeAlbentiis.text')
               })}
             />
             </div>
