@@ -54,6 +54,45 @@ const CollezioneDetail: React.FC = () => {
 
   const collezione = id ? collezioni[id as keyof typeof collezioni] : null;
 
+  // Scroll to top quando la pagina viene caricata
+  useEffect(() => {
+    // Forza lo scroll immediato
+    const scrollToTop = () => {
+      // Reset native scroll
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+
+      // Reset Lenis scroll if available (the smooth scroll library)
+      const lenis = (window as any).lenis;
+      if (lenis) {
+        lenis.scrollTo(0, { immediate: true, force: true, lock: true });
+      }
+
+      // Forza anche eventuali container con scroll
+      const containers = document.querySelectorAll('.smooth-scroll-container, [data-scroll-container]');
+      containers.forEach(container => {
+        if (container) {
+          container.scrollTop = 0;
+          (container as any).scrollTo?.(0, 0);
+        }
+      });
+    };
+
+    // Esegui immediatamente
+    scrollToTop();
+
+    // Riprova dopo un breve delay per assicurarsi che funzioni
+    const timers = [
+      setTimeout(scrollToTop, 0),
+      setTimeout(scrollToTop, 50),
+      setTimeout(scrollToTop, 100),
+      setTimeout(scrollToTop, 200)
+    ];
+
+    return () => timers.forEach(timer => clearTimeout(timer));
+  }, [id]); // Aggiungi id come dipendenza per re-triggere quando cambia collezione
+
   useEffect(() => {
     if (!collezione) {
       navigate('/');

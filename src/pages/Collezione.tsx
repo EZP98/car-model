@@ -466,7 +466,6 @@ const Collezione: React.FC = () => {
   const [mostreVisibili, setMostreVisibili] = useState(4);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isSignedUp, setIsSignedUp] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedCritico, setSelectedCritico] = useState<any>(null);
   const [isCriticoModalOpen, setIsCriticoModalOpen] = useState(false);
   const [aboutView, setAboutView] = useState<'alf' | 'studio'>('alf');
@@ -777,18 +776,8 @@ const Collezione: React.FC = () => {
     loadData();
   }, []);
 
-  // Nascondi loading screen dopo il caricamento
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000); // 3 secondi
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    // Avvia le animazioni solo dopo il loading screen
-    if (isLoading) return;
+    // Avvia le animazioni
 
     const ctx = gsap.context(() => {
       // Hero animations
@@ -885,7 +874,7 @@ const Collezione: React.FC = () => {
     });
 
     return () => ctx.revert();
-  }, [artworks, isLoading]);
+  }, [artworks]);
 
   // Usa i dati dalla sezione se disponibili, altrimenti fallback
   const currentSection = sections.length > 0 ? sections[0] : null;
@@ -897,69 +886,6 @@ const Collezione: React.FC = () => {
         <meta name="description" content="Adele Lo Feudo - L'artista italiana che esplora l'anima attraverso la materia. Scopri le opere d'arte contemporanea." />
       </Helmet>
 
-      {/* Loading Screen */}
-      {isLoading && (
-        <div
-          className="fixed inset-0 z-[1100] flex items-center justify-center bg-background"
-          style={{
-            animation: 'fadeOut 0.5s ease-out 2.5s forwards'
-          }}
-        >
-          <style>{`
-            @keyframes fadeOut {
-              from { opacity: 1; }
-              to { opacity: 0; pointer-events: none; }
-            }
-            @keyframes loadBar {
-              from { width: 0; }
-              to { width: 100%; }
-            }
-            @keyframes sparkle {
-              0%, 100% {
-                opacity: 1;
-                transform: scaleX(1);
-              }
-              50% {
-                opacity: 0.8;
-                transform: scaleX(1.5);
-              }
-            }
-          `}</style>
-          <div className="text-center">
-            <h1
-              className="text-[48px] font-bold text-white uppercase tracking-wide mb-6"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
-            >
-              ALF
-            </h1>
-            <div className="w-[200px] h-[3px] mx-auto bg-white/10 rounded-full overflow-visible relative">
-              <div
-                className="h-full rounded-full relative"
-                style={{
-                  background: 'linear-gradient(90deg, rgb(176, 16, 80) 0%, rgb(208, 18, 87) 25%, rgb(240, 45, 110) 50%, rgb(255, 107, 157) 75%, rgb(255, 179, 209) 100%)',
-                  animation: 'loadBar 2.5s ease-out forwards',
-                  boxShadow: '0 0 15px rgba(240, 45, 110, 0.8)'
-                }}
-              >
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '-3px',
-                    right: '-4px',
-                    width: '8px',
-                    height: '8px',
-                    background: 'radial-gradient(circle, white 0%, rgb(255, 255, 255) 30%, rgba(255, 255, 255, 0.4) 60%, transparent 100%)',
-                    borderRadius: '50%',
-                    filter: 'blur(0.5px)',
-                    boxShadow: '0 0 12px rgb(255, 255, 255), 0 0 20px rgba(255, 255, 255, 0.9), 0 0 28px rgb(240, 45, 110), 0 0 36px rgba(240, 45, 110, 0.7)',
-                    animation: 'sparkle 0.8s ease-in-out infinite'
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Hero Section */}
       <section ref={heroRef} className="min-h-screen flex flex-col justify-center p-0 w-screen -ml-[calc(50vw-50%)] mb-0" style={{ scrollSnapAlign: 'start' }}>
