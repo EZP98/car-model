@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import BackofficeLayout from '../components/BackofficeLayout';
 import { getCollections, getCollectionArtworks, Collection, Artwork } from '../services/collections-api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
@@ -128,7 +129,7 @@ const CollectionArtworks: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pt-24 px-6 flex items-center justify-center">
+      <div className="min-h-screen bg-background pt-24 px-12 flex items-center justify-center">
         <div className="text-white">Caricamento...</div>
       </div>
     );
@@ -136,19 +137,19 @@ const CollectionArtworks: React.FC = () => {
 
   if (!collection) {
     return (
-      <div className="min-h-screen bg-background pt-24 px-6">
+      <div className="min-h-screen bg-background pt-24 px-12">
         <div className="text-white">Collezione non trovata</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <BackofficeLayout>
       <Helmet>
         <title>Gestione Opere - {collection.title} - Adele Lo Feudo</title>
       </Helmet>
 
-      <div className="max-w-6xl mx-auto py-20 px-6">
+      <div className="max-w-5xl mx-auto py-20 px-12">
         <div className="flex justify-between items-center mb-8">
           <div>
             <button
@@ -166,7 +167,7 @@ const CollectionArtworks: React.FC = () => {
           </div>
           <button
             onClick={() => setShowAddForm(true)}
-            className="px-6 py-3 font-bold uppercase text-white transition-colors"
+            className="px-12 py-3 font-bold uppercase text-white transition-colors"
             style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
           >
             + Aggiungi Opera
@@ -242,14 +243,14 @@ const CollectionArtworks: React.FC = () => {
             <div className="flex gap-4 mt-6">
               <button
                 onClick={handleAddArtwork}
-                className="px-6 py-2 font-bold uppercase text-white rounded-lg"
+                className="px-12 py-2 font-bold uppercase text-white rounded-lg"
                 style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
               >
                 Aggiungi
               </button>
               <button
                 onClick={handleCancel}
-                className="px-6 py-2 font-bold uppercase text-white border rounded-lg"
+                className="px-12 py-2 font-bold uppercase text-white border rounded-lg"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
               >
                 Annulla
@@ -264,7 +265,7 @@ const CollectionArtworks: React.FC = () => {
             <p className="text-white text-lg mb-4">Nessuna opera presente in questa collezione</p>
             <button
               onClick={() => setShowAddForm(true)}
-              className="px-6 py-3 font-bold uppercase text-white"
+              className="px-12 py-3 font-bold uppercase text-white"
               style={{ backgroundColor: 'rgb(240, 45, 110)' }}
             >
               Aggiungi la prima opera
@@ -335,14 +336,14 @@ const CollectionArtworks: React.FC = () => {
                     <div className="md:col-span-2 flex gap-4">
                       <button
                         onClick={() => handleUpdateArtwork(artwork.id)}
-                        className="px-6 py-2 font-bold uppercase text-white rounded-lg"
+                        className="px-12 py-2 font-bold uppercase text-white rounded-lg"
                         style={{ backgroundColor: 'rgb(240, 45, 110)' }}
                       >
                         Salva
                       </button>
                       <button
                         onClick={handleCancel}
-                        className="px-6 py-2 font-bold uppercase text-white border rounded-lg"
+                        className="px-12 py-2 font-bold uppercase text-white border rounded-lg"
                         style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                       >
                         Annulla
@@ -398,7 +399,7 @@ const CollectionArtworks: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
+    </BackofficeLayout>
   );
 };
 

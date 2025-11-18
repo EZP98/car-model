@@ -885,7 +885,11 @@ const Collezione: React.FC = () => {
                 .map((critic) => {
                   // Get the text for the current language
                   const currentLang = localStorage.getItem('preferredLanguage') || 'it';
-                  const criticText = critic.texts && critic.texts[currentLang] ? critic.texts[currentLang] : critic.text || '';
+                  const criticText = currentLang === 'en' && critic.text_en
+                    ? critic.text_en
+                    : currentLang === 'it' && critic.text_it
+                    ? critic.text_it
+                    : critic.text || '';
 
                   return (
                     <TestoCriticoItem

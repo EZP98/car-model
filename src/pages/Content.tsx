@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import BackofficeLayout from '../components/BackofficeLayout';
 import {
   getCollections,
   updateCollection,
@@ -28,13 +29,25 @@ type TabType = 'collezioni' | 'critica' | 'biografia' | 'mostre';
 const ContentWithCollections: React.FC = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const [activeTab, setActiveTab] = useState<TabType>('collezioni');
+  const [searchParams] = useSearchParams();
+  const activeTab = (searchParams.get('tab') as TabType) || 'collezioni';
   const [collections, setCollections] = useState<Collection[]>([]);
   const [critics, setCritics] = useState<Critic[]>([]);
   const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Paginazione
+  const [currentPageExhibitions, setCurrentPageExhibitions] = useState(1);
+  const [currentPageCritics, setCurrentPageCritics] = useState(1);
+  const [currentPageCollections, setCurrentPageCollections] = useState(1);
+  const itemsPerPage = 5;
+
+  // Ricerca
+  const [searchCollections, setSearchCollections] = useState('');
+  const [searchExhibitions, setSearchExhibitions] = useState('');
+  const [searchCritics, setSearchCritics] = useState('');
 
   // Stati per biografia
   const [bioContent, setBioContent] = useState({
@@ -55,7 +68,6 @@ const ContentWithCollections: React.FC = () => {
       }
     }
   });
-  const [bioView, setBioView] = useState<'alf' | 'studio'>('alf');
 
   // Carica i dati all'avvio
   useEffect(() => {
@@ -281,6 +293,99 @@ const ContentWithCollections: React.FC = () => {
     }
   };
 
+  // Funzioni helper per ricerca
+  const filterCollections = (collections: Collection[]) => {
+    if (!searchCollections.trim()) return collections;
+    const searchLower = searchCollections.toLowerCase();
+    return collections.filter(c =>
+      (c.title || '').toLowerCase().includes(searchLower) ||
+      (c.description || '').toLowerCase().includes(searchLower)
+    );
+  };
+
+  const filterExhibitions = (exhibitions: Exhibition[]) => {
+    if (!searchExhibitions.trim()) return exhibitions;
+    const searchLower = searchExhibitions.toLowerCase();
+    return exhibitions.filter(e =>
+      (e.title || '').toLowerCase().includes(searchLower) ||
+      (e.subtitle || '').toLowerCase().includes(searchLower) ||
+      (e.location || '').toLowerCase().includes(searchLower)
+    );
+  };
+
+  const filterCritics = (critics: Critic[]) => {
+    if (!searchCritics.trim()) return critics;
+    const searchLower = searchCritics.toLowerCase();
+    return critics.filter(c =>
+      (c.name || '').toLowerCase().includes(searchLower) ||
+      (c.role || '').toLowerCase().includes(searchLower) ||
+      (c.text || '').toLowerCase().includes(searchLower)
+    );
+  };
+
+  // Funzioni helper per paginazione
+  const getPaginatedItems = <T,>(items: T[], currentPage: number) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return items.slice(startIndex, endIndex);
+  };
+
+  const getTotalPages = (totalItems: number) => {
+    return Math.ceil(totalItems / itemsPerPage);
+  };
+
+  // Componente Paginatore
+  const Paginator = ({
+    currentPage,
+    totalItems,
+    onPageChange
+  }: {
+    currentPage: number;
+    totalItems: number;
+    onPageChange: (page: number) => void;
+  }) => {
+    const totalPages = getTotalPages(totalItems);
+
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex justify-center items-center gap-2 mt-8">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-4 py-2 font-bold text-white border rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5"
+          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+        >
+          ←
+        </button>
+
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            className="px-4 py-2 font-bold text-white rounded-lg transition-all hover:bg-white/5"
+            style={{
+              backgroundColor: currentPage === page ? 'rgb(240, 45, 110)' : 'transparent',
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              border: currentPage === page ? 'none' : '1px solid rgba(255, 255, 255, 0.1)'
+            }}
+          >
+            {page}
+          </button>
+        ))}
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 font-bold text-white border rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5"
+          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+        >
+          →
+        </button>
+      </div>
+    );
+  };
+
 
   // Handler per biografia
   const handleSaveBio = () => {
@@ -296,12 +401,12 @@ const ContentWithCollections: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <BackofficeLayout>
       <Helmet>
         <title>Gestione Contenuti - Adele Lo Feudo</title>
       </Helmet>
 
-      <div className="max-w-6xl mx-auto py-20 px-6">
+      <div className="max-w-5xl mx-auto py-20 px-12">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
             Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>
@@ -312,44 +417,115 @@ const ContentWithCollections: React.FC = () => {
             </span>
           </h1>
           {activeTab === 'collezioni' && (
-            <button
-              onClick={() => navigate('/content/collezione/new')}
-              className="px-6 py-3 font-bold uppercase text-white transition-colors"
-              style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
-            >
-              + Aggiungi Collezione
-            </button>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchCollections}
+                  onChange={(e) => {
+                    setSearchCollections(e.target.value);
+                    setCurrentPageCollections(1);
+                  }}
+                  placeholder="Cerca collezione..."
+                  className="px-4 py-3 pr-10 bg-secondary text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif', width: '250px' }}
+                />
+                <svg
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+              </div>
+              <button
+                onClick={() => navigate('/content/collezione/new')}
+                className="px-6 py-3 font-bold uppercase text-white transition-colors"
+                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+              >
+                + Aggiungi
+              </button>
+            </div>
           )}
-          {(activeTab === 'critica' || activeTab === 'mostre') && (
-            <button
-              onClick={handleAdd}
-              className="px-6 py-3 font-bold uppercase text-white transition-colors"
-              style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
-            >
-              + Aggiungi {activeTab === 'critica' ? 'Critico' : 'Mostra'}
-            </button>
+          {activeTab === 'critica' && (
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchCritics}
+                  onChange={(e) => {
+                    setSearchCritics(e.target.value);
+                    setCurrentPageCritics(1);
+                  }}
+                  placeholder="Cerca critico..."
+                  className="px-4 py-3 pr-10 bg-secondary text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif', width: '250px' }}
+                />
+                <svg
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+              </div>
+              <button
+                onClick={handleAdd}
+                className="px-6 py-3 font-bold uppercase text-white transition-colors"
+                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+              >
+                + Aggiungi
+              </button>
+            </div>
+          )}
+          {activeTab === 'mostre' && (
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchExhibitions}
+                  onChange={(e) => {
+                    setSearchExhibitions(e.target.value);
+                    setCurrentPageExhibitions(1);
+                  }}
+                  placeholder="Cerca mostra..."
+                  className="px-4 py-3 pr-10 bg-secondary text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif', width: '250px' }}
+                />
+                <svg
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+              </div>
+              <button
+                onClick={handleAdd}
+                className="px-6 py-3 font-bold uppercase text-white transition-colors"
+                style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+              >
+                + Aggiungi
+              </button>
+            </div>
           )}
         </div>
 
-        {/* Tab Navigation */}
-        <div className="mb-12 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-          <div className="flex gap-8 overflow-x-auto">
-            {(['collezioni', 'mostre', 'critica', 'biografia'] as TabType[]).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`pb-4 px-4 font-bold uppercase text-lg transition-colors whitespace-nowrap ${activeTab === tab ? 'border-b-4' : ''}`}
-                style={{
-                  fontFamily: 'Palanquin, Helvetica Neue, sans-serif',
-                  color: activeTab === tab ? 'rgb(240, 45, 110)' : 'white',
-                  borderColor: activeTab === tab ? 'rgb(240, 45, 110)' : 'transparent'
-                }}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Tab Content */}
         {activeTab === 'collezioni' && (
@@ -369,8 +545,9 @@ const ContentWithCollections: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="grid gap-6">
-              {collections.map((collection) => (
+            <>
+              <div className="grid gap-6">
+                {getPaginatedItems(filterCollections(collections), currentPageCollections).map((collection) => (
                 <div
                   key={collection.id}
                   className={`bg-secondary border rounded-xl transition-all ${editingId === collection.id ? 'p-6' : 'p-4 hover:bg-white/5 cursor-pointer'}`}
@@ -472,8 +649,14 @@ const ContentWithCollections: React.FC = () => {
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <Paginator
+                currentPage={currentPageCollections}
+                totalItems={filterCollections(collections).length}
+                onPageChange={setCurrentPageCollections}
+              />
+            </>
           )
         )}
 
@@ -496,33 +679,40 @@ const ContentWithCollections: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="grid gap-6">
-              {critics.map((critic) => (
-                <div
-                  key={critic.id}
-                  className="bg-secondary p-4 border rounded-xl hover:bg-white/5 cursor-pointer transition-all"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                  onClick={() => navigate(`/content/critico/${critic.id}`)}
-                >
-                  <div className="flex justify-between items-start p-2">
-                    <div className="flex-1">
-                      <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                        {critic.name}
-                      </h3>
-                      <p className="text-white/80 mb-4">{critic.role}</p>
-                      <p className="text-white/60 italic" style={{ maxWidth: '800px' }}>
-                        {critic.text ? `"${critic.text.substring(0, 200)}..."` : 'Testo non disponibile'}
-                      </p>
-                      {!critic.is_visible && (
-                        <span className="inline-block mt-2 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg font-bold">
-                          NASCOSTO
-                        </span>
-                      )}
+            <>
+              <div className="grid gap-6">
+                {getPaginatedItems(filterCritics(critics), currentPageCritics).map((critic) => (
+                  <div
+                    key={critic.id}
+                    className="bg-secondary p-4 border rounded-xl hover:bg-white/5 cursor-pointer transition-all"
+                    style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                    onClick={() => navigate(`/content/critico/${critic.id}`)}
+                  >
+                    <div className="flex justify-between items-start p-2">
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+                          {critic.name}
+                        </h3>
+                        <p className="text-white/80 mb-4">{critic.role}</p>
+                        <p className="text-white/60 italic" style={{ maxWidth: '800px' }}>
+                          {critic.text ? `"${critic.text.substring(0, 200)}..."` : 'Testo non disponibile'}
+                        </p>
+                        {!critic.is_visible && (
+                          <span className="inline-block mt-2 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg font-bold">
+                            NASCOSTO
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <Paginator
+                currentPage={currentPageCritics}
+                totalItems={filterCritics(critics).length}
+                onPageChange={setCurrentPageCritics}
+              />
+            </>
           )
         )}
 
@@ -543,103 +733,87 @@ const ContentWithCollections: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="grid gap-6">
-              {exhibitions.map((exhibition) => (
-                <div
-                  key={exhibition.id}
-                  className="bg-secondary p-4 border rounded-xl hover:bg-white/5 cursor-pointer transition-all"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                  onClick={() => navigate(`/content/mostra/${exhibition.id}`)}
-                >
-                  <div className="flex items-start gap-6 p-2">
-                    {exhibition.image_url && (
-                      <img
-                        src={exhibition.image_url}
-                        alt={exhibition.title}
-                        className="w-48 h-32 object-cover rounded-lg"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                        {exhibition.title}
-                      </h3>
-                      {exhibition.subtitle && (
-                        <p className="text-white/80 mb-2">{exhibition.subtitle}</p>
+            <>
+              <div className="grid gap-6">
+                {getPaginatedItems(filterExhibitions(exhibitions), currentPageExhibitions).map((exhibition) => (
+                  <div
+                    key={exhibition.id}
+                    className="bg-secondary p-4 border rounded-xl hover:bg-white/5 cursor-pointer transition-all"
+                    style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                    onClick={() => navigate(`/content/mostra/${exhibition.id}`)}
+                  >
+                    <div className="flex items-start gap-6 p-2">
+                      {exhibition.image_url && (
+                        <img
+                          src={exhibition.image_url}
+                          alt={exhibition.title}
+                          className="w-48 h-32 object-cover rounded-lg"
+                        />
                       )}
-                      <p className="text-white/60 mb-2">
-                        📍 {exhibition.location}
-                      </p>
-                      <p className="text-white/60 mb-2">
-                        📅 {exhibition.date}
-                      </p>
-                      {exhibition.description && (
-                        <p className="text-white/60 italic mt-2">
-                          {exhibition.description.substring(0, 150)}...
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+                          {exhibition.title}
+                        </h3>
+                        {exhibition.subtitle && (
+                          <p className="text-white/80 mb-2">{exhibition.subtitle}</p>
+                        )}
+                        <p className="text-white/60 mb-2">
+                          📍 {exhibition.location}
                         </p>
-                      )}
-                      {!exhibition.is_visible && (
-                        <span className="inline-block mt-2 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg font-bold">
-                          NASCOSTA
-                        </span>
-                      )}
+                        <p className="text-white/60 mb-2">
+                          📅 {exhibition.date}
+                        </p>
+                        {exhibition.description && (
+                          <p className="text-white/60 italic mt-2">
+                            {exhibition.description.substring(0, 150)}...
+                          </p>
+                        )}
+                        {!exhibition.is_visible && (
+                          <span className="inline-block mt-2 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg font-bold">
+                            NASCOSTA
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <Paginator
+                currentPage={currentPageExhibitions}
+                totalItems={filterExhibitions(exhibitions).length}
+                onPageChange={setCurrentPageExhibitions}
+              />
+            </>
           )
         )}
 
         {activeTab === 'biografia' && (
-          <div className="max-w-5xl mx-auto">
-            <div className="bg-secondary p-8 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-              <h3 className="text-2xl font-bold text-white mb-6 text-center" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>Biografia</span>
-              </h3>
+          <div className="max-w-5xl mx-auto space-y-6">
+            <h3 className="text-2xl font-bold text-white mb-6 text-center" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+              Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>Biografia</span>
+            </h3>
 
-              {/* Toggle ALF / Studio */}
-              <div className="flex justify-center mb-8">
-                <div className="inline-flex gap-2 p-1 bg-black/30 rounded-full">
-                  <button
-                    onClick={() => setBioView('alf')}
-                    className={`px-6 py-2 rounded-full transition-all font-bold uppercase text-sm ${
-                      bioView === 'alf'
-                        ? 'bg-accent text-white'
-                        : 'text-white/60 hover:text-white'
-                    }`}
-                  >
-                    ALF
-                  </button>
-                  <button
-                    onClick={() => setBioView('studio')}
-                    className={`px-6 py-2 rounded-full transition-all font-bold uppercase text-sm ${
-                      bioView === 'studio'
-                        ? 'bg-accent text-white'
-                        : 'text-white/60 hover:text-white'
-                    }`}
-                  >
-                    Studio
-                  </button>
-                </div>
-              </div>
+            {/* Card ALF */}
+            <div className="bg-secondary p-8 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+              <h3 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+                <span style={{ color: 'rgb(240, 45, 110)' }}>ALF</span> Biografia
+              </h3>
 
               <div className="space-y-8">
                 {/* Sezione Italiano */}
                 <div>
-                  <h4 className="text-xl font-bold text-white mb-4">
-                    {bioView === 'alf' ? 'Biografia ALF' : 'Descrizione Studio'} - Italiano
-                  </h4>
-                  {bioContent[bioView].it.paragraphs.map((paragraph, index) => (
+                  <h4 className="text-xl font-bold text-white mb-4">Italiano</h4>
+                  {bioContent.alf.it.paragraphs.map((paragraph, index) => (
                     <div key={index}>
                       <textarea
                         value={paragraph}
-                        onChange={(e) => updateBioParagraph(bioView, 'it', index, e.target.value)}
+                        onChange={(e) => updateBioParagraph('alf', 'it', index, e.target.value)}
                         rows={4}
                         className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
                         style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         placeholder={`Paragrafo ${index + 1} in italiano...`}
                       />
-                      {index < bioContent[bioView].it.paragraphs.length - 1 && (
+                      {index < bioContent.alf.it.paragraphs.length - 1 && (
                         <div className="h-px bg-white/20 my-4"></div>
                       )}
                     </div>
@@ -648,20 +822,18 @@ const ContentWithCollections: React.FC = () => {
 
                 {/* Sezione Inglese */}
                 <div className="pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  <h4 className="text-xl font-bold text-white mb-4">
-                    {bioView === 'alf' ? 'Biography ALF' : 'Studio Description'} - English
-                  </h4>
-                  {bioContent[bioView].en.paragraphs.map((paragraph, index) => (
+                  <h4 className="text-xl font-bold text-white mb-4">English</h4>
+                  {bioContent.alf.en.paragraphs.map((paragraph, index) => (
                     <div key={index}>
                       <textarea
                         value={paragraph}
-                        onChange={(e) => updateBioParagraph(bioView, 'en', index, e.target.value)}
+                        onChange={(e) => updateBioParagraph('alf', 'en', index, e.target.value)}
                         rows={4}
                         className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
                         style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         placeholder={`Paragraph ${index + 1} in English...`}
                       />
-                      {index < bioContent[bioView].en.paragraphs.length - 1 && (
+                      {index < bioContent.alf.en.paragraphs.length - 1 && (
                         <div className="h-px bg-white/20 my-4"></div>
                       )}
                     </div>
@@ -674,7 +846,66 @@ const ContentWithCollections: React.FC = () => {
                     className="px-8 py-3 font-bold uppercase text-white transition-all hover:scale-105"
                     style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
                   >
-                    Salva Biografia
+                    Salva ALF
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Card STUDIO */}
+            <div className="bg-secondary p-8 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+              <h3 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
+                <span style={{ color: 'rgb(240, 45, 110)' }}>STUDIO</span> Descrizione
+              </h3>
+
+              <div className="space-y-8">
+                {/* Sezione Italiano */}
+                <div>
+                  <h4 className="text-xl font-bold text-white mb-4">Italiano</h4>
+                  {bioContent.studio.it.paragraphs.map((paragraph, index) => (
+                    <div key={index}>
+                      <textarea
+                        value={paragraph}
+                        onChange={(e) => updateBioParagraph('studio', 'it', index, e.target.value)}
+                        rows={4}
+                        className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
+                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                        placeholder={`Paragrafo ${index + 1} in italiano...`}
+                      />
+                      {index < bioContent.studio.it.paragraphs.length - 1 && (
+                        <div className="h-px bg-white/20 my-4"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Sezione Inglese */}
+                <div className="pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                  <h4 className="text-xl font-bold text-white mb-4">English</h4>
+                  {bioContent.studio.en.paragraphs.map((paragraph, index) => (
+                    <div key={index}>
+                      <textarea
+                        value={paragraph}
+                        onChange={(e) => updateBioParagraph('studio', 'en', index, e.target.value)}
+                        rows={4}
+                        className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
+                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                        placeholder={`Paragraph ${index + 1} in English...`}
+                      />
+                      {index < bioContent.studio.en.paragraphs.length - 1 && (
+                        <div className="h-px bg-white/20 my-4"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-center pt-6">
+                  <button
+                    onClick={handleSaveBio}
+                    className="px-8 py-3 font-bold uppercase text-white transition-all hover:scale-105"
+                    style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                  >
+                    Salva Studio
                   </button>
                 </div>
               </div>
@@ -682,145 +913,8 @@ const ContentWithCollections: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'mostre' && (
-          loading ? (
-            <div className="text-center py-20">
-              <p className="text-white text-xl">Caricamento...</p>
-            </div>
-          ) : exhibitions.length === 0 ? (
-            <div className="p-8 border text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
-              <p className="text-white text-lg mb-4">Nessuna mostra presente</p>
-              <button
-                onClick={() => alert('Form per aggiungere mostre in sviluppo...')}
-                className="px-6 py-3 font-bold uppercase text-white"
-                style={{ backgroundColor: 'rgb(240, 45, 110)' }}
-              >
-                Aggiungi la prima mostra
-              </button>
-            </div>
-          ) : (
-            <div className="grid gap-6">
-              {exhibitions.map((exhibition) => (
-                <div key={exhibition.id} className="bg-secondary p-6 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  {editingId === exhibition.id && formData ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-white mb-2 font-bold">Titolo</label>
-                          <input
-                            type="text"
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-white mb-2 font-bold">Sottotitolo</label>
-                          <input
-                            type="text"
-                            value={formData.subtitle || ''}
-                            onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                            className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-white mb-2 font-bold">Luogo</label>
-                          <input
-                            type="text"
-                            value={formData.location}
-                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-white mb-2 font-bold">Data</label>
-                          <input
-                            type="text"
-                            value={formData.date}
-                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-white mb-2 font-bold">Descrizione</label>
-                        <textarea
-                          value={formData.description || ''}
-                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                          rows={3}
-                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                        />
-                      </div>
-                      <div className="flex gap-4">
-                        <button
-                          onClick={handleSaveExhibition}
-                          className="px-6 py-2 font-bold uppercase text-white"
-                          style={{ backgroundColor: 'rgb(240, 45, 110)' }}
-                        >
-                          Salva
-                        </button>
-                        <button
-                          onClick={handleCancel}
-                          className="px-6 py-2 font-bold uppercase text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                        >
-                          Annulla
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)' }}>
-                          {exhibition.title}
-                        </h3>
-                        <p className="text-white/80 mb-2">{exhibition.subtitle}</p>
-                        <p className="text-white/60">{exhibition.location} • {exhibition.date}</p>
-                        {exhibition.description && (
-                          <p className="text-white/60 mt-3 italic">{exhibition.description}</p>
-                        )}
-                      </div>
-                      <div className="flex gap-4 ml-4">
-                        <button
-                          onClick={() => handleEditExhibition(exhibition)}
-                          className="p-2 text-white hover:opacity-80 transition-opacity"
-                          title="Modifica"
-                          style={{ backgroundColor: 'rgb(240, 45, 110)' }}
-                        >
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteExhibition(exhibition.id)}
-                          className="px-4 py-2 font-bold uppercase text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                        >
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            <line x1="10" y1="11" x2="10" y2="17" />
-                            <line x1="14" y1="11" x2="14" y2="17" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )
-        )}
-
       </div>
-    </div>
+    </BackofficeLayout>
   );
 };
 

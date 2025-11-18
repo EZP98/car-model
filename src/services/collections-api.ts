@@ -3,7 +3,9 @@
  * Gestisce le collezioni (OPERA 5-8) che si vedono nel frontend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+const API_BASE_URL = import.meta.env.PROD
+  ? 'https://alf-portfolio-api.eziopappalardo98.workers.dev'
+  : 'http://localhost:8787';
 
 export interface Collection {
   id: number;

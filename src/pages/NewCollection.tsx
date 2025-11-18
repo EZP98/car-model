@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import BackofficeLayout from '../components/BackofficeLayout';
 import { createCollection } from '../services/collections-api';
 
 const NewCollection: React.FC = () => {
@@ -60,12 +61,12 @@ const NewCollection: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <BackofficeLayout>
       <Helmet>
         <title>Nuova Collezione - Gestione Backoffice</title>
       </Helmet>
 
-      <div className="max-w-4xl mx-auto py-20 px-6">
+      <div className="max-w-4xl mx-auto py-20 px-12">
         {/* Header */}
         <div className="mb-8">
           <button
@@ -267,7 +268,7 @@ const NewCollection: React.FC = () => {
           </ul>
         </div>
       </div>
-    </div>
+    </BackofficeLayout>
   );
 };
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import BackofficeLayout from '../components/BackofficeLayout';
 import { createExhibition } from '../services/exhibitions-api';
 
 const NewExhibition: React.FC = () => {
@@ -79,12 +80,12 @@ const NewExhibition: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <BackofficeLayout>
       <Helmet>
         <title>Nuova Mostra - Gestione Backoffice</title>
       </Helmet>
 
-      <div className="max-w-4xl mx-auto py-20 px-6">
+      <div className="max-w-4xl mx-auto py-20 px-12">
         {/* Header */}
         <div className="mb-8">
           <button
@@ -359,7 +360,7 @@ const NewExhibition: React.FC = () => {
           </ul>
         </div>
       </div>
-    </div>
+    </BackofficeLayout>
   );
 };
 

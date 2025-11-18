@@ -208,9 +208,9 @@ const ContentWithCollections: React.FC = () => {
       await createCritic({
         name,
         role,
-        texts: {
-          [language]: text
-        }
+        text: language === 'it' || !language ? text : '',
+        text_it: language === 'it' ? text : undefined,
+        text_en: language === 'en' ? text : undefined
       });
       await loadData();
       alert('Critico aggiunto con successo!');

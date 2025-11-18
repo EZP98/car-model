@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import BackofficeLayout from '../components/BackofficeLayout';
 import { getCollections, updateCollection, Collection, Artwork, getCollectionArtworks } from '../services/collections-api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
@@ -178,12 +179,12 @@ const CollectionManagement: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <BackofficeLayout>
       <Helmet>
         <title>Dettaglio {collection.title} - Gestione Backoffice</title>
       </Helmet>
 
-      <div className="max-w-6xl mx-auto py-20 px-6">
+      <div className="max-w-5xl mx-auto py-20 px-12">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -596,7 +597,7 @@ const CollectionManagement: React.FC = () => {
           </motion.div>
         )}
       </div>
-    </div>
+    </BackofficeLayout>
   );
 };
 

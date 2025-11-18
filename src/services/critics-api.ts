@@ -3,7 +3,9 @@
  * Gestisce le recensioni e i critici
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+const API_BASE_URL = import.meta.env.PROD
+  ? 'https://alf-portfolio-api.eziopappalardo98.workers.dev'
+  : 'http://localhost:8787';
 
 export interface Critic {
   id: number;

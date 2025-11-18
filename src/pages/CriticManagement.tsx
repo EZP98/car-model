@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import BackofficeLayout from '../components/BackofficeLayout';
 import { getCritic, updateCritic, deleteCritic } from '../services/critics-api';
 
 const CriticManagement: React.FC = () => {
@@ -91,12 +92,12 @@ const CriticManagement: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <BackofficeLayout>
       <Helmet>
         <title>Gestione Critico - {formData.name} - Backoffice</title>
       </Helmet>
 
-      <div className="max-w-6xl mx-auto py-20 px-6">
+      <div className="max-w-5xl mx-auto py-20 px-12">
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
@@ -298,7 +299,7 @@ const CriticManagement: React.FC = () => {
           </div>
         </motion.form>
       </div>
-    </div>
+    </BackofficeLayout>
   );
 };
 
