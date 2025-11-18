@@ -573,7 +573,7 @@ const Collezione: React.FC = () => {
       }
 
       // Se stesso anno, ordina per mese
-      return getMonth(b.date) - getMonth(a.date);
+      return getMonth(b.data) - getMonth(a.data);
     });
 
   // Carica dati dalle API
@@ -581,12 +581,16 @@ const Collezione: React.FC = () => {
     const loadData = async () => {
       try {
         setLoadingCollections(true);
+        console.log('Loading data...');
         const [artworksData, collectionsData, exhibitionsData, criticsData] = await Promise.all([
           getArtworks(),
           getCollections(),
           getExhibitions(),
           getCritics()
         ]);
+        console.log('Collections loaded:', collectionsData);
+        console.log('Exhibitions loaded:', exhibitionsData);
+        console.log('Critics loaded:', criticsData);
         setArtworks(artworksData);
         setCollections(collectionsData);
         setExhibitions(exhibitionsData);
