@@ -345,7 +345,7 @@ const ContentWithCollections: React.FC = () => {
               className="px-6 py-3 font-bold uppercase text-white transition-colors"
               style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
             >
-              + Aggiungi {activeTab === 'collezioni' ? 'Opera' : activeTab === 'critica' ? 'Critico' : 'Mostra'}
+              + Aggiungi {activeTab === 'collezioni' ? 'Collezione' : activeTab === 'critica' ? 'Critico' : 'Mostra'}
             </button>
           )}
         </div>
