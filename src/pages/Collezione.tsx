@@ -5,7 +5,9 @@ import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ReactComponent as AdeleSVG } from '../assets/images/adele.svg';
-import { getSections, getArtworks, subscribeToNewsletter, type Section, type Artwork } from '../services/api';
+import { getArtworks, subscribeToNewsletter, type Artwork } from '../services/api';
+import { getCollections, type Collection } from '../services/collections-api';
+import { getExhibitions, type Exhibition, getCritics, type Critic } from '../services/content-api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTranslation } from '../i18n/useTranslation';
 import { Language } from '../i18n/translations';
@@ -459,8 +461,10 @@ const Collezione: React.FC = () => {
   const heroRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
-  const [sections, setSections] = useState<Section[]>([]);
   const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
+  const [critics, setCritics] = useState<Critic[]>([]);
   const [selectedMostra, setSelectedMostra] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mostreVisibili, setMostreVisibili] = useState(4);
@@ -469,6 +473,7 @@ const Collezione: React.FC = () => {
   const [selectedCritico, setSelectedCritico] = useState<any>(null);
   const [isCriticoModalOpen, setIsCriticoModalOpen] = useState(false);
   const [aboutView, setAboutView] = useState<'alf' | 'studio'>('alf');
+  const [loadingCollections, setLoadingCollections] = useState(true);
 
   const openMostraModal = (mostra: any) => {
     setSelectedMostra(mostra);
@@ -492,7 +497,7 @@ const Collezione: React.FC = () => {
 
   const mostraAltre = () => {
     const previousCount = mostreVisibili;
-    const newCount = Math.min(mostreVisibili + 4, mostreOrdinate.length);
+    const newCount = Math.min(mostreVisibili + 4, exhibitionsOrdered.length);
     setMostreVisibili(newCount);
 
     // Anima le nuove mostre dopo che sono state renderizzate
@@ -523,253 +528,73 @@ const Collezione: React.FC = () => {
     }
   };
 
-  // Dati mostre
-  const mostre = [
-    {
-      id: 'unisono',
-      titolo: 'UNISONO',
-      sottotitolo: 'Personale di Adele Lo Feudo',
-      luogo: 'Loggia dei Lanari, Piazza Matteotti 18, Perugia',
-      data: '14/03/2024 - 30/03/2024',
-      descrizione: 'Una mostra che esplora l\'unità tra l\'artista e la sua opera, dove ogni pezzo racconta una storia di armonia e connessione profonda con la materia.',
-      info: 'Inaugurazione della mostra Giovedì 14 Marzo 2024, ore 18:00. Sarà presente l\'Assessore alla Cultura del Comune di Perugia, Leonardo Varasano. Orari di apertura 15:30 - 19:30. Sabato e Domenica 10:30 - 13:30 / 16:00 - 19:30'
-    },
-    {
-      id: 'ritorno',
-      titolo: 'RITORNO',
-      sottotitolo: 'Personale di Adele Lo Feudo',
-      luogo: 'Museo a Cielo Aperto di Camo (CN)',
-      data: '3-24 Agosto 2025',
-      descrizione: 'R I T O R N O dopo nove anni, con grande gioia, a Camo, presso il Museo a Cielo Aperto, che già mi accolse nel 2016 con la personale di pittura Presenze/Assenze:Io sono! Il merito era ed è ancora di Claudio Lorenzoni, Direttore artistico, di rara umanità e sensibilità, mosso da un vero e disinteressato amore per l\'Arte che parla ai cuori. La mia ultima fatica artistica, "R I T O R N O", è composta da 49 foglie realizzate in sedici mesi su tela e dipinte in tecnica acrilica. Le foglie nascondono un messaggio in cui chiunque potrebbe rivedersi. Un messaggio di memoria, amore per la vita, l\'altro e l\'arte. Spero che il visitatore possa far rivivere nella sua memoria un pezzetto di quel suo passato che magari ha dimenticato e che gli sta particolarmente a cuore.',
-      info: 'Vernissage 3 agosto, ore 10:30. In esposizione fino al 24 agosto 2025',
-      website: 'https://ritorno.adelelofeudo.com/'
-    },
-    {
-      id: 'fornace',
-      titolo: 'Fornace Pasquinucci',
-      sottotitolo: 'Mostra Personale',
-      luogo: 'Fornace Pasquinucci, Capraia e Limite',
-      data: 'Dicembre 2024',
-      descrizione: 'Una mostra che celebra la tradizione ceramica toscana attraverso opere che dialogano con lo spazio industriale della storica fornace.'
-    },
-    {
-      id: 'amaci',
-      titolo: 'AMACI Giornata del Contemporaneo',
-      sottotitolo: 'Ventesima Edizione',
-      luogo: 'Italia',
-      data: '12 Ottobre 2024',
-      descrizione: 'Partecipazione alla ventesima edizione della Giornata del Contemporaneo, evento nazionale dedicato all\'arte contemporanea italiana.'
-    },
-    {
-      id: 'amor',
-      titolo: 'Amor',
-      sottotitolo: 'Basilica di San Domenico',
-      luogo: 'Basilica di San Domenico, Perugia',
-      data: 'Maggio 2024',
-      descrizione: 'Una riflessione sull\'amore nelle sue molteplici forme, presentata nello spazio sacro della Basilica di San Domenico.'
-    },
-    {
-      id: 'negli-occhi',
-      titolo: 'Negli occhi delle donne',
-      sottotitolo: 'Casa Museo Antonio Ligabue',
-      luogo: 'Casa Museo Antonio Ligabue, Gualtieri',
-      data: '5-27 Agosto 2023',
-      descrizione: 'Un omaggio alla figura femminile, esposto nella casa dove il grande maestro Ligabue trovava rifugio. Uno sguardo intimo sull\'universo femminile attraverso ritratti intensi e materici.'
-    },
-    {
-      id: 'fragileforte',
-      titolo: 'FragileForte',
-      sottotitolo: 'Ex Chiesa della Misericordia',
-      luogo: 'Ex Chiesa della Misericordia, Perugia',
-      data: '4-15 Marzo 2023',
-      descrizione: 'Un\'esplorazione della dualità umana tra fragilità e forza, dove ogni opera rappresenta la tensione tra vulnerabilità e resilienza.'
-    },
-    {
-      id: 'personale-bergamo',
-      titolo: 'Mostra Personale',
-      sottotitolo: 'Ex Ateneo',
-      luogo: 'Ex Ateneo, Bergamo',
-      data: '25 Nov - 11 Dic 2022',
-      descrizione: 'Una retrospettiva delle opere più significative dell\'artista, presentata nello storico spazio dell\'Ex Ateneo di Bergamo.'
-    },
-    {
-      id: 'amore-vita',
-      titolo: 'Amore e Vita',
-      sottotitolo: 'Casa Museo Antonio Ligabue',
-      luogo: 'Casa Museo Antonio Ligabue, Gualtieri',
-      data: '6 Ago - 4 Set 2022',
-      descrizione: 'Una celebrazione della vita e dell\'amore attraverso opere che esplorano i temi universali dell\'esistenza umana.'
-    },
-    {
-      id: 'un-cuore-solo',
-      titolo: 'Un cuore solo',
-      sottotitolo: 'Sala Cannoniera - Rocca Paolina',
-      luogo: 'Sala Cannoniera - Rocca Paolina, Perugia',
-      data: '31 Ott - 14 Nov 2020',
-      descrizione: 'Una mostra che parla di unità e connessione, presentata durante il periodo pandemico come messaggio di speranza e solidarietà.'
-    },
-    {
-      id: 'varese-1902',
-      titolo: 'Varese 1902 - Storie di donne',
-      sottotitolo: 'Battistero di Velate',
-      luogo: 'Battistero di Velate, Varese',
-      data: '23 Nov - 8 Dic 2019',
-      descrizione: 'Storie di donne del passato rivivono attraverso l\'arte, in un dialogo tra memoria storica e contemporaneità.'
-    },
-    {
-      id: 'al-di-sopra',
-      titolo: 'Al di sopra degli stagni',
-      sottotitolo: 'Archivio di Stato',
-      luogo: 'Archivio di Stato, Pesaro',
-      data: '14 Ott - 3 Nov 2018',
-      descrizione: 'Un\'esplorazione poetica della natura e della sua relazione con l\'anima umana.'
-    },
-    {
-      id: 'columbus',
-      titolo: 'Columbus Day Gala',
-      sottotitolo: 'Manhattan Midtown Hilton',
-      luogo: 'Manhattan Midtown Hilton, New York',
-      data: '7 Ottobre 2017',
-      descrizione: 'Partecipazione al prestigioso Columbus Day Gala a New York, portando l\'arte italiana nel cuore di Manhattan.'
-    },
-    {
-      id: 'per-giungere',
-      titolo: 'Per giungere fino a te',
-      sottotitolo: 'Ex Chiesa della Misericordia',
-      luogo: 'Ex Chiesa della Misericordia, Perugia',
-      data: '23 Set - 4 Ott 2017',
-      descrizione: 'Un viaggio artistico verso l\'altro, un percorso di ricerca e incontro attraverso la materia pittorica.'
-    },
-    {
-      id: 'i-maccaturi',
-      titolo: 'I Maccaturi',
-      sottotitolo: 'Museo Civico',
-      luogo: 'Museo Civico, Altomonte',
-      data: '15 Ott - 30 Nov 2016',
-      descrizione: 'Una mostra dedicata alle tradizioni e alla cultura calabrese, riscoperte attraverso uno sguardo contemporaneo.'
-    },
-    {
-      id: 'presenze-assenze',
-      titolo: 'Presenze / Assenze Io Sono!',
-      sottotitolo: 'Museo a Cielo Aperto',
-      luogo: 'Museo a Cielo Aperto, Camo',
-      data: '26 Giu - 26 Lug 2016',
-      descrizione: 'Un\'indagine sulla presenza e l\'assenza, sull\'essere e il non essere, attraverso installazioni e opere pittoriche.'
-    },
-    {
-      id: 'human-rights',
-      titolo: 'Human Rights?',
-      sottotitolo: 'Fondazione Opera Campana dei Caduti',
-      luogo: 'Fondazione Opera Campana dei Caduti, Rovereto',
-      data: 'Mag - Set 2016',
-      descrizione: 'Una riflessione sui diritti umani attraverso l\'arte, in uno dei luoghi simbolo della memoria italiana.'
-    },
-    {
-      id: 'arte-laguna',
-      titolo: 'Arte a confronto in laguna',
-      sottotitolo: 'JW Marriott Venice Resort',
-      luogo: 'JW Marriott Venice Resort, Venezia',
-      data: '2 Apr - 2 Mag 2016',
-      descrizione: 'Un dialogo artistico nella suggestiva cornice veneziana, dove l\'arte contemporanea incontra la tradizione.'
-    },
-    {
-      id: 'messi-nudo',
-      titolo: 'Messi a Nudo',
-      sottotitolo: 'Galleria Spazio Monticini',
-      luogo: 'Galleria Spazio Monticini, Montevarchi',
-      data: 'Dicembre 2015',
-      descrizione: 'Un\'esposizione che svela l\'essenza umana, togliendo i veli e le maschere sociali.'
-    },
-    {
-      id: 'forma-imago',
-      titolo: 'Forma et Imago',
-      sottotitolo: 'Palazzo Ducale',
-      luogo: 'Palazzo Ducale, Revere',
-      data: 'Giugno 2015',
-      descrizione: 'Un\'esplorazione del rapporto tra forma e immagine, tra materia e rappresentazione.'
-    },
-    {
-      id: 'motus-terrae',
-      titolo: 'Motus Terrae',
-      sottotitolo: 'Museo Parco Archeologico Compsa',
-      luogo: 'Museo Parco Archeologico Compsa, Conza della Campania',
-      data: 'Dicembre 2014',
-      descrizione: 'Un omaggio alla terra e alle sue forze primordiali, in dialogo con il patrimonio archeologico.'
-    },
-    {
-      id: 'qui-non-si-muore',
-      titolo: 'Qui non si muore!',
-      sottotitolo: 'Galleria Via Cavour 85',
-      luogo: 'Galleria Via Cavour 85, Arezzo',
-      data: 'Novembre 2014',
-      descrizione: 'Un messaggio di vita e speranza attraverso l\'arte, un inno alla resilienza dell\'anima umana.'
-    },
-    {
-      id: 'petalo-rosa',
-      titolo: 'Un petalo rosa',
-      sottotitolo: 'La Casa di Roberta',
-      luogo: 'Perugia e Cosenza',
-      data: 'Ott 2013 Perugia / Nov-Dic 2013 Cosenza',
-      descrizione: 'Una mostra itinerante dedicata alla sensibilizzazione contro la violenza sulle donne.'
-    },
-    {
-      id: 'riflessioni',
-      titolo: 'Riflessioni',
-      sottotitolo: 'Archidoro Luoghi d\'Arte',
-      luogo: 'Archidoro Luoghi d\'Arte, Cetona',
-      data: 'Settembre 2013',
-      descrizione: 'Un momento di riflessione attraverso l\'arte, dove ogni opera diventa specchio dell\'anima.'
-    }
-  ];
+  // Ordina le mostre fetchate per anno e mese (dalla più recente alla più vecchia)
+  const exhibitionsOrdered = [...exhibitions]
+    .filter(e => e.is_visible)
+    .map(e => ({
+      id: e.slug,
+      titolo: e.title,
+      sottotitolo: e.subtitle || '',
+      luogo: e.location,
+      data: e.date,
+      descrizione: e.description || '',
+      info: e.info,
+      website: e.website
+    }))
+    .sort((a, b) => {
+      // Estrae l'anno dalla stringa data
+      const getYear = (dataStr: string) => {
+        const match = dataStr.match(/\d{4}/);
+        return match ? parseInt(match[0]) : 0;
+      };
 
-  // Ordina le mostre per anno e mese (dalla più recente alla più vecchia)
-  const mostreOrdinate = [...mostre].sort((a, b) => {
-    // Estrae l'anno dalla stringa data
-    const getYear = (dataStr: string) => {
-      const match = dataStr.match(/\d{4}/);
-      return match ? parseInt(match[0]) : 0;
-    };
+      // Estrae il mese (se disponibile)
+      const getMonth = (dataStr: string) => {
+        const mesi = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
+                      'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
 
-    // Estrae il mese (se disponibile)
-    const getMonth = (dataStr: string) => {
-      const mesi = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
-                    'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+        // Cerca il nome del mese
+        const meseTrovato = mesi.findIndex(m => dataStr.toLowerCase().includes(m));
+        if (meseTrovato !== -1) return meseTrovato;
 
-      // Cerca il nome del mese
-      const meseTrovato = mesi.findIndex(m => dataStr.toLowerCase().includes(m));
-      if (meseTrovato !== -1) return meseTrovato;
+        // Cerca il numero del mese nel formato gg/mm/aaaa
+        const match = dataStr.match(/\d{1,2}\/(\d{1,2})\/\d{4}/);
+        if (match) return parseInt(match[1]) - 1;
 
-      // Cerca il numero del mese nel formato gg/mm/aaaa
-      const match = dataStr.match(/\d{1,2}\/(\d{1,2})\/\d{4}/);
-      if (match) return parseInt(match[1]) - 1;
+        return 0;
+      };
 
-      return 0;
-    };
+      const yearA = getYear(a.data);
+      const yearB = getYear(b.data);
 
-    const yearA = getYear(a.data);
-    const yearB = getYear(b.data);
+      // Prima ordina per anno
+      if (yearA !== yearB) {
+        return yearB - yearA;
+      }
 
-    // Prima ordina per anno
-    if (yearA !== yearB) {
-      return yearB - yearA;
-    }
-
-    // Se stesso anno, ordina per mese
-    return getMonth(b.data) - getMonth(a.data);
-  });
+      // Se stesso anno, ordina per mese
+      return getMonth(b.date) - getMonth(a.date);
+    });
 
   // Carica dati dalle API
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [sectionsData, artworksData] = await Promise.all([
-          getSections(),
-          getArtworks()
+        setLoadingCollections(true);
+        const [artworksData, collectionsData, exhibitionsData, criticsData] = await Promise.all([
+          getArtworks(),
+          getCollections(),
+          getExhibitions(),
+          getCritics()
         ]);
-        setSections(sectionsData);
         setArtworks(artworksData);
+        setCollections(collectionsData);
+        setExhibitions(exhibitionsData);
+        setCritics(criticsData);
       } catch (error) {
         console.error('Error loading data:', error);
+      } finally {
+        setLoadingCollections(false);
       }
     };
 
@@ -876,9 +701,6 @@ const Collezione: React.FC = () => {
     return () => ctx.revert();
   }, [artworks]);
 
-  // Usa i dati dalla sezione se disponibili, altrimenti fallback
-  const currentSection = sections.length > 0 ? sections[0] : null;
-
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
@@ -923,109 +745,46 @@ const Collezione: React.FC = () => {
           <h2 className="text-[42px] font-bold text-accent uppercase mb-8" style={{fontFamily: 'Montserrat, sans-serif'}}>Collezioni</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-            {/* OPERA 5 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-            >
-              <Link to="/collezione/opera-5" className="group cursor-pointer block">
-                <div className="flex flex-col gap-1 mb-4">
-                  <h4 className="font-body text-[16px] font-bold text-white uppercase">OPERA 5</h4>
-                  <p className="font-body text-[14px] text-white/60">
-                    Opere scultoree che esplorano la materia e la forma attraverso l'arte contemporanea
-                  </p>
-                </div>
-                <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                  <div className="aspect-[3/2]">
-                    <img
-                      alt="OPERA 5"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      src="/DSCF3759.jpg"
-                    />
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* OPERA 6 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-            >
-              <Link to="/collezione/opera-6" className="group cursor-pointer block">
-                <div className="flex flex-col gap-1 mb-4">
-                  <h4 className="font-body text-[16px] font-bold text-white uppercase">OPERA 6</h4>
-                  <p className="font-body text-[14px] text-white/60">
-                    Opere scultoree che esplorano la materia e la forma attraverso l'arte contemporanea
-                  </p>
-                </div>
-                <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                  <div className="aspect-[3/2]">
-                    <img
-                      alt="OPERA 6"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      src="/DSCF9079.jpg"
-                    />
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* OPERA 7 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-            >
-              <Link to="/collezione/opera-7" className="group cursor-pointer block">
-                <div className="flex flex-col gap-1 mb-4">
-                  <h4 className="font-body text-[16px] font-bold text-white uppercase">OPERA 7</h4>
-                  <p className="font-body text-[14px] text-white/60">
-                    Opere scultoree che esplorano la materia e la forma attraverso l'arte contemporanea
-                  </p>
-                </div>
-                <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                  <div className="aspect-[3/2]">
-                    <img
-                      alt="OPERA 7"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      src="/DSCF2104.jpg"
-                    />
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* OPERA 8 */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
-            >
-              <Link to="/collezione/opera-8" className="group cursor-pointer block">
-                <div className="flex flex-col gap-1 mb-4">
-                  <h4 className="font-body text-[16px] font-bold text-white uppercase">OPERA 8</h4>
-                  <p className="font-body text-[14px] text-white/60">
-                    Opere scultoree che esplorano la materia e la forma attraverso l'arte contemporanea
-                  </p>
-                </div>
-                <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                  <div className="aspect-[3/2]">
-                    <img
-                      alt="OPERA 8"
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      src="/DSCF2012.jpg"
-                    />
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
+            {loadingCollections ? (
+              <div className="col-span-2 text-center py-12">
+                <p className="text-white text-xl">Caricamento collezioni...</p>
+              </div>
+            ) : collections.length === 0 ? (
+              <div className="col-span-2 text-center py-12">
+                <p className="text-white/60">Nessuna collezione disponibile</p>
+              </div>
+            ) : (
+              collections
+                .filter(collection => collection.is_visible)
+                .sort((a, b) => a.order_index - b.order_index)
+                .map((collection, index) => (
+                  <motion.div
+                    key={collection.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.3 }}
+                    transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
+                  >
+                    <Link to={`/collezione/${collection.slug}`} className="group cursor-pointer block">
+                      <div className="flex flex-col gap-1 mb-4">
+                        <h4 className="font-body text-[16px] font-bold text-white uppercase">{collection.title}</h4>
+                        <p className="font-body text-[14px] text-white/60">
+                          {collection.description}
+                        </p>
+                      </div>
+                      <div className="border border-white/10 rounded-[12px] overflow-hidden">
+                        <div className="aspect-[3/2]">
+                          <img
+                            alt={collection.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            src={collection.image_url || '/opera.png'}
+                          />
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))
+            )}
           </div>
         </div>
       </section>
@@ -1036,7 +795,7 @@ const Collezione: React.FC = () => {
           <h2 className="text-[42px] font-bold text-accent uppercase mb-8" style={{fontFamily: 'Montserrat, sans-serif'}}>Mostre</h2>
 
           <div className="border-t border-white/20">
-            {mostreOrdinate.slice(0, mostreVisibili).map((mostra, index) => {
+            {exhibitionsOrdered.slice(0, mostreVisibili).map((mostra, index) => {
               return (
                 <div
                   key={mostra.id}
@@ -1058,7 +817,7 @@ const Collezione: React.FC = () => {
           </div>
 
           {/* Pulsante Mostra Altre */}
-          {mostreVisibili < mostreOrdinate.length && (
+          {mostreVisibili < exhibitionsOrdered.length && (
             <div className="mt-12 flex justify-center">
               <button
                 onClick={mostraAltre}
@@ -1114,113 +873,29 @@ const Collezione: React.FC = () => {
           <div className="w-full">
             {/* Testi Critici */}
             <div className="flex md:grid overflow-x-scroll md:overflow-visible gap-6 px-6 md:px-0 md:grid-cols-2 lg:grid-cols-3 snap-x snap-mandatory md:snap-none" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
-            {/* Testo Critico 1 - Angelo Leidi */}
-            <TestoCriticoItem
-              nome="Angelo Leidi"
-              ruolo={(t('critics') as any)?.angeloLeidi?.role}
-              testo={(t('critics') as any)?.angeloLeidi?.text}
-              onClick={() => openCriticoModal({
-                nome: 'Angelo Leidi',
-                ruolo: (t('critics') as any)?.angeloLeidi?.role,
-                testo: (t('critics') as any)?.angeloLeidi?.text
-              })}
-            />
+              {critics
+                .filter(critic => critic.is_visible)
+                .sort((a, b) => a.order_index - b.order_index)
+                .map((critic) => {
+                  // Get the text for the current language
+                  const currentLang = localStorage.getItem('preferredLanguage') || 'it';
+                  const criticText = critic.texts && critic.texts[currentLang] ? critic.texts[currentLang] : critic.text || '';
 
-            {/* Testo Critico 2 - Leonardo Varasano */}
-            <TestoCriticoItem
-              nome="Leonardo Varasano"
-              ruolo={(t('critics') as any)?.leonardoVarasano?.role}
-              testo={(t('critics') as any)?.leonardoVarasano?.text}
-              onClick={() => openCriticoModal({
-                nome: 'Leonardo Varasano',
-                ruolo: (t('critics') as any)?.leonardoVarasano?.role,
-                testo: (t('critics') as any)?.leonardoVarasano?.text
-              })}
-            />
-
-            {/* Testo Critico 3 - Celeste Morè */}
-            <TestoCriticoItem
-              nome="Celeste Morè"
-              ruolo={(t('critics') as any)?.celesteMore?.role}
-              testo={(t('critics') as any)?.celesteMore?.text}
-              onClick={() => openCriticoModal({
-                nome: 'Celeste Morè',
-                ruolo: (t('critics') as any)?.celesteMore?.role,
-                testo: (t('critics') as any)?.celesteMore?.text
-              })}
-            />
-
-            {/* Testo Critico 4 - Marco Botti */}
-            <TestoCriticoItem
-              nome="Marco Botti"
-              ruolo={(t('critics') as any)?.marcoBotti?.role}
-              testo={(t('critics') as any)?.marcoBotti?.text}
-              onClick={() => openCriticoModal({
-                nome: 'Marco Botti',
-                ruolo: (t('critics') as any)?.marcoBotti?.role,
-                testo: (t('critics') as any)?.marcoBotti?.text
-              })}
-            />
-
-            {/* Testo Critico 5 - Helen Pankhurst */}
-            <TestoCriticoItem
-              nome="Helen Pankhurst"
-              ruolo={(t('critics') as any)?.helenPankhurst?.role}
-              testo={(t('critics') as any)?.helenPankhurst?.text}
-              onClick={() => openCriticoModal({
-                nome: 'Helen Pankhurst',
-                ruolo: (t('critics') as any)?.helenPankhurst?.role,
-                testo: (t('critics') as any)?.helenPankhurst?.text
-              })}
-            />
-
-            {/* Testo Critico 6 - Alessandra Boldreghini */}
-            <TestoCriticoItem
-              nome="Alessandra Boldreghini"
-              ruolo={(t('critics') as any)?.alessandraBoldreghini?.role}
-              testo={(t('critics') as any)?.alessandraBoldreghini?.text}
-              onClick={() => openCriticoModal({
-                nome: 'Alessandra Boldreghini',
-                ruolo: (t('critics') as any)?.alessandraBoldreghini?.role,
-                testo: (t('critics') as any)?.alessandraBoldreghini?.text
-              })}
-            />
-
-            {/* Testo Critico 7 - Donato Loscalzo */}
-            <TestoCriticoItem
-              nome="Donato Antonio Loscalzo"
-              ruolo={(t('critics') as any)?.donatoLoscalzo?.role}
-              testo={(t('critics') as any)?.donatoLoscalzo?.text}
-              onClick={() => openCriticoModal({
-                nome: 'Donato Antonio Loscalzo',
-                ruolo: (t('critics') as any)?.donatoLoscalzo?.role,
-                testo: (t('critics') as any)?.donatoLoscalzo?.text
-              })}
-            />
-
-            {/* Testo Critico 8 - Alessandra Primicerio */}
-            <TestoCriticoItem
-              nome="Alessandra Primicerio"
-              ruolo={(t('critics') as any)?.alessandraPrimicerio?.role}
-              testo={(t('critics') as any)?.alessandraPrimicerio?.text}
-              onClick={() => openCriticoModal({
-                nome: 'Alessandra Primicerio',
-                ruolo: (t('critics') as any)?.alessandraPrimicerio?.role,
-                testo: (t('critics') as any)?.alessandraPrimicerio?.text
-              })}
-            />
-
-            {/* Testo Critico 9 - Emidio De Albentiis */}
-            <TestoCriticoItem
-              nome="Emidio De Albentiis"
-              ruolo={(t('critics') as any)?.emidioDeAlbentiis?.role}
-              testo={(t('critics') as any)?.emidioDeAlbentiis?.text}
-              onClick={() => openCriticoModal({
-                nome: 'Emidio De Albentiis',
-                ruolo: (t('critics') as any)?.emidioDeAlbentiis?.role,
-                testo: (t('critics') as any)?.emidioDeAlbentiis?.text
-              })}
-            />
+                  return (
+                    <TestoCriticoItem
+                      key={critic.id}
+                      nome={critic.name}
+                      ruolo={critic.role}
+                      testo={criticText}
+                      onClick={() => openCriticoModal({
+                        nome: critic.name,
+                        ruolo: critic.role,
+                        testo: criticText
+                      })}
+                    />
+                  );
+                })
+              }
             </div>
           </div>
         </div>

@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import {
-  getSections,
-  type Section
-} from '../services/api';
-import {
   getCollections,
   createCollection,
   updateCollection,
@@ -26,14 +22,13 @@ import {
 } from '../services/content-api';
 import { useLanguage } from '../i18n/LanguageContext';
 
-type TabType = 'collezioni' | 'sezioni' | 'critica' | 'biografia' | 'mostre';
+type TabType = 'collezioni' | 'critica' | 'biografia' | 'mostre';
 
 const ContentWithCollections: React.FC = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabType>('collezioni');
   const [collections, setCollections] = useState<Collection[]>([]);
-  const [sections, setSections] = useState<Section[]>([]);
   const [critics, setCritics] = useState<Critic[]>([]);
   const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -73,9 +68,6 @@ const ContentWithCollections: React.FC = () => {
       if (activeTab === 'collezioni') {
         const collectionsData = await getCollections();
         setCollections(collectionsData);
-      } else if (activeTab === 'sezioni') {
-        const sectionsData = await getSections();
-        setSections(sectionsData);
       } else if (activeTab === 'critica') {
         const criticsData = await getCritics(language);
         setCritics(criticsData);
@@ -342,7 +334,6 @@ const ContentWithCollections: React.FC = () => {
           <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
             Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>
               {activeTab === 'collezioni' ? 'Collezioni' :
-               activeTab === 'sezioni' ? 'Sezioni' :
                activeTab === 'critica' ? 'Critica' :
                activeTab === 'mostre' ? 'Mostre' :
                'Biografia'}
@@ -360,9 +351,9 @@ const ContentWithCollections: React.FC = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="mb-12 border-b-2" style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}>
+        <div className="mb-12 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
           <div className="flex gap-8 overflow-x-auto">
-            {(['collezioni', 'sezioni', 'mostre', 'critica', 'biografia'] as TabType[]).map((tab) => (
+            {(['collezioni', 'mostre', 'critica', 'biografia'] as TabType[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -399,7 +390,7 @@ const ContentWithCollections: React.FC = () => {
           ) : (
             <div className="grid gap-6">
               {collections.map((collection) => (
-                <div key={collection.id} className="bg-secondary p-6 border-2" style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}>
+                <div key={collection.id} className="bg-secondary p-6 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
                   {editingId === collection.id && formData ? (
                     <div className="space-y-4">
                       {/* Form di modifica collezione */}
@@ -409,8 +400,8 @@ const ContentWithCollections: React.FC = () => {
                           type="text"
                           value={formData.title}
                           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                          className="w-full px-4 py-2 bg-background text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
                         />
                       </div>
                       <div>
@@ -419,8 +410,8 @@ const ContentWithCollections: React.FC = () => {
                           value={formData.description}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                           rows={3}
-                          className="w-full px-4 py-2 bg-background text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
                         />
                       </div>
                       <div>
@@ -429,8 +420,8 @@ const ContentWithCollections: React.FC = () => {
                           type="text"
                           value={formData.image_url}
                           onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                          className="w-full px-4 py-2 bg-background text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
                         />
                       </div>
                       <div className="flex gap-4">
@@ -443,8 +434,8 @@ const ContentWithCollections: React.FC = () => {
                         </button>
                         <button
                           onClick={handleCancel}
-                          className="px-6 py-2 font-bold uppercase text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                          className="px-6 py-2 font-bold uppercase text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
                         >
                           Annulla
                         </button>
@@ -478,8 +469,8 @@ const ContentWithCollections: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleDeleteCollection(collection.id)}
-                          className="px-4 py-2 font-bold uppercase text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
+                          className="px-4 py-2 font-bold uppercase text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}
                         >
                           Elimina
                         </button>
@@ -513,7 +504,7 @@ const ContentWithCollections: React.FC = () => {
           ) : (
             <div className="grid gap-6">
               {critics.map((critic) => (
-                <div key={critic.id} className="bg-secondary p-6 border-2" style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}>
+                <div key={critic.id} className="bg-secondary p-6 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
                   {editingId === critic.id && formData ? (
                     <div className="space-y-4">
                       <div>
@@ -522,8 +513,8 @@ const ContentWithCollections: React.FC = () => {
                           type="text"
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-4 py-2 bg-background text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         />
                       </div>
                       <div>
@@ -532,8 +523,8 @@ const ContentWithCollections: React.FC = () => {
                           type="text"
                           value={formData.role}
                           onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                          className="w-full px-4 py-2 bg-background text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         />
                       </div>
                       <div>
@@ -542,8 +533,8 @@ const ContentWithCollections: React.FC = () => {
                           value={formData.text || ''}
                           onChange={(e) => setFormData({ ...formData, text: e.target.value })}
                           rows={8}
-                          className="w-full px-4 py-2 bg-background text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         />
                       </div>
                       <div className="flex gap-4">
@@ -556,8 +547,8 @@ const ContentWithCollections: React.FC = () => {
                         </button>
                         <button
                           onClick={handleCancel}
-                          className="px-6 py-2 font-bold uppercase text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                          className="px-6 py-2 font-bold uppercase text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         >
                           Annulla
                         </button>
@@ -584,8 +575,8 @@ const ContentWithCollections: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleDeleteCritic(critic.id)}
-                          className="px-4 py-2 font-bold uppercase text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                          className="px-4 py-2 font-bold uppercase text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         >
                           Elimina
                         </button>
@@ -600,7 +591,7 @@ const ContentWithCollections: React.FC = () => {
 
         {activeTab === 'biografia' && (
           <div className="max-w-5xl mx-auto">
-            <div className="bg-secondary p-8 border-2" style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}>
+            <div className="bg-secondary p-8 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
               <h3 className="text-2xl font-bold text-white mb-6 text-center" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
                 Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>Biografia</span>
               </h3>
@@ -643,8 +634,8 @@ const ContentWithCollections: React.FC = () => {
                         value={paragraph}
                         onChange={(e) => updateBioParagraph(bioView, 'it', index, e.target.value)}
                         rows={4}
-                        className="w-full px-4 py-3 bg-background text-white border-2 mb-2"
-                        style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                        className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
+                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         placeholder={`Paragrafo ${index + 1} in italiano...`}
                       />
                       {index < bioContent[bioView].it.paragraphs.length - 1 && (
@@ -655,7 +646,7 @@ const ContentWithCollections: React.FC = () => {
                 </div>
 
                 {/* Sezione Inglese */}
-                <div className="pt-6 border-t-2" style={{ borderColor: 'rgba(240, 45, 110, 0.2)' }}>
+                <div className="pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
                   <h4 className="text-xl font-bold text-white mb-4">
                     {bioView === 'alf' ? 'Biography ALF' : 'Studio Description'} - English
                   </h4>
@@ -665,8 +656,8 @@ const ContentWithCollections: React.FC = () => {
                         value={paragraph}
                         onChange={(e) => updateBioParagraph(bioView, 'en', index, e.target.value)}
                         rows={4}
-                        className="w-full px-4 py-3 bg-background text-white border-2 mb-2"
-                        style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                        className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
+                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         placeholder={`Paragraph ${index + 1} in English...`}
                       />
                       {index < bioContent[bioView].en.paragraphs.length - 1 && (
@@ -709,7 +700,7 @@ const ContentWithCollections: React.FC = () => {
           ) : (
             <div className="grid gap-6">
               {exhibitions.map((exhibition) => (
-                <div key={exhibition.id} className="bg-secondary p-6 border-2" style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}>
+                <div key={exhibition.id} className="bg-secondary p-6 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
                   {editingId === exhibition.id && formData ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
@@ -719,8 +710,8 @@ const ContentWithCollections: React.FC = () => {
                             type="text"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full px-4 py-2 bg-background text-white border-2"
-                            style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                            className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                           />
                         </div>
                         <div>
@@ -729,8 +720,8 @@ const ContentWithCollections: React.FC = () => {
                             type="text"
                             value={formData.subtitle || ''}
                             onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                            className="w-full px-4 py-2 bg-background text-white border-2"
-                            style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                            className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                           />
                         </div>
                       </div>
@@ -741,8 +732,8 @@ const ContentWithCollections: React.FC = () => {
                             type="text"
                             value={formData.location}
                             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            className="w-full px-4 py-2 bg-background text-white border-2"
-                            style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                            className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                           />
                         </div>
                         <div>
@@ -751,8 +742,8 @@ const ContentWithCollections: React.FC = () => {
                             type="text"
                             value={formData.date}
                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            className="w-full px-4 py-2 bg-background text-white border-2"
-                            style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                            className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                           />
                         </div>
                       </div>
@@ -762,8 +753,8 @@ const ContentWithCollections: React.FC = () => {
                           value={formData.description || ''}
                           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                           rows={3}
-                          className="w-full px-4 py-2 bg-background text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         />
                       </div>
                       <div className="flex gap-4">
@@ -776,8 +767,8 @@ const ContentWithCollections: React.FC = () => {
                         </button>
                         <button
                           onClick={handleCancel}
-                          className="px-6 py-2 font-bold uppercase text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                          className="px-6 py-2 font-bold uppercase text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         >
                           Annulla
                         </button>
@@ -805,8 +796,8 @@ const ContentWithCollections: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleDeleteExhibition(exhibition.id)}
-                          className="px-4 py-2 font-bold uppercase text-white border-2"
-                          style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                          className="px-4 py-2 font-bold uppercase text-white border rounded-lg"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         >
                           Elimina
                         </button>
@@ -817,19 +808,6 @@ const ContentWithCollections: React.FC = () => {
               ))}
             </div>
           )
-        )}
-
-        {activeTab === 'sezioni' && (
-          <div className="grid gap-6">
-            <div className="bg-secondary p-8 border-2 text-center" style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}>
-              <p className="text-white text-lg" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                Gestione sezioni in arrivo...
-              </p>
-              <p className="text-gray mt-4" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                Qui potrai creare e modificare le sezioni (Name series, etc.)
-              </p>
-            </div>
-          </div>
         )}
 
       </div>
