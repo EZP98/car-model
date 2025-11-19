@@ -371,11 +371,14 @@ const MediaStorage: React.FC = () => {
                 />
                 <label
                   htmlFor="file-upload-button"
-                  className="inline-block px-6 py-3 font-bold uppercase text-white cursor-pointer transition-all hover:opacity-90"
-                  style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
+                  className="inline-flex items-center justify-center p-3 text-white cursor-pointer transition-all hover:opacity-90"
+                  style={{ backgroundColor: 'rgb(240, 45, 110)', borderRadius: 0 }}
                   aria-label="Carica nuova immagine"
+                  title="Carica immagine"
                 >
-                  + Carica
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
                 </label>
               </div>
             </div>
@@ -658,32 +661,19 @@ const MediaStorage: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* URL Display */}
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={`${API_BASE_URL}${image.url}`}
-                        readOnly
-                        className="flex-1 px-3 py-2 bg-black/20 text-white/80 text-xs border border-white/10 focus:outline-none"
-                        style={{ borderRadius: 0 }}
-                      />
-                      <button
-                        onClick={() => copyToClipboard(image.url)}
-                        className="px-3 py-2 border border-white/20 hover:bg-white/5 transition-colors"
-                        style={{ borderRadius: 0 }}
-                        title="Copia URL"
-                      >
-                        {copiedUrl === image.url ? (
-                          <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : (
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                          </svg>
-                        )}
-                      </button>
-                    </div>
+                    {/* URL Display - Click to copy */}
+                    <button
+                      onClick={() => copyToClipboard(image.url)}
+                      className="w-full px-3 py-2 bg-black/20 text-white/80 text-xs border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all cursor-pointer text-left truncate"
+                      style={{ borderRadius: 0 }}
+                      title={copiedUrl === image.url ? "Copiato!" : "Clicca per copiare URL"}
+                    >
+                      {copiedUrl === image.url ? (
+                        <span className="text-green-500">✓ Copiato!</span>
+                      ) : (
+                        `${API_BASE_URL}${image.url}`
+                      )}
+                    </button>
                   </div>
                 </div>
               );
