@@ -882,26 +882,6 @@ const ContentWithCollections: React.FC = () => {
                       ))}
                     </div>
 
-                    {/* Sezione Inglese */}
-                    <div className="pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                      <h4 className="text-xl font-bold text-white mb-4">English</h4>
-                      {bioContent.alf.en.paragraphs.map((paragraph, index) => (
-                        <div key={index}>
-                          <textarea
-                            value={paragraph}
-                            onChange={(e) => updateBioParagraph('alf', 'en', index, e.target.value)}
-                            rows={4}
-                            className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
-                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                            placeholder={`Paragraph ${index + 1} in English...`}
-                          />
-                          {index < bioContent.alf.en.paragraphs.length - 1 && (
-                            <div className="h-px bg-white/20 my-4"></div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
                     <div className="flex justify-center pt-6">
                       <button
                         onClick={handleSaveBio}
@@ -949,26 +929,6 @@ const ContentWithCollections: React.FC = () => {
                             placeholder={`Paragrafo ${index + 1} in italiano...`}
                           />
                           {index < bioContent.studio.it.paragraphs.length - 1 && (
-                            <div className="h-px bg-white/20 my-4"></div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Sezione Inglese */}
-                    <div className="pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                      <h4 className="text-xl font-bold text-white mb-4">English</h4>
-                      {bioContent.studio.en.paragraphs.map((paragraph, index) => (
-                        <div key={index}>
-                          <textarea
-                            value={paragraph}
-                            onChange={(e) => updateBioParagraph('studio', 'en', index, e.target.value)}
-                            rows={4}
-                            className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
-                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                            placeholder={`Paragraph ${index + 1} in English...`}
-                          />
-                          {index < bioContent.studio.en.paragraphs.length - 1 && (
                             <div className="h-px bg-white/20 my-4"></div>
                           )}
                         </div>
