@@ -5,7 +5,7 @@
 
 interface Env {
   DB: D1Database;
-  ARTWORKS?: R2Bucket;
+  IMAGES?: R2Bucket;
 }
 
 // Funzioni helper per CORS
@@ -754,7 +754,7 @@ export default {
 
       // POST /api/upload - Upload immagine su R2
       if (path === '/api/upload' && method === 'POST') {
-        if (!env.ARTWORKS) {
+        if (!env.IMAGES) {
           return jsonResponse({ error: 'R2 storage not configured' }, 503);
         }
 
@@ -770,7 +770,7 @@ export default {
         const filename = `${timestamp}-${file.name}`;
 
         // Upload su R2
-        await env.ARTWORKS.put(filename, file.stream(), {
+        await env.IMAGES.put(filename, file.stream(), {
           httpMetadata: {
             contentType: file.type,
           },
@@ -785,14 +785,31 @@ export default {
         }, 201);
       }
 
+      // GET /api/media - Lista tutte le immagini in R2
+      if (path === '/api/media' && method === 'GET') {
+        if (!env.IMAGES) {
+          return jsonResponse({ error: 'R2 storage not configured' }, 503);
+        }
+
+        const listed = await env.IMAGES.list();
+        const images = listed.objects.map(obj => ({
+          filename: obj.key,
+          url: `/images/${obj.key}`,
+          size: obj.size,
+          uploaded: obj.uploaded.toISOString()
+        }));
+
+        return jsonResponse({ images });
+      }
+
       // GET /images/:filename - Serve immagine da R2
       if (path.match(/^\/images\/.+$/) && method === 'GET') {
-        if (!env.ARTWORKS) {
+        if (!env.IMAGES) {
           return jsonResponse({ error: 'R2 storage not configured' }, 503);
         }
 
         const filename = path.replace('/images/', '');
-        const object = await env.ARTWORKS.get(filename);
+        const object = await env.IMAGES.get(filename);
 
         if (!object) {
           return jsonResponse({ error: 'Image not found' }, 404);

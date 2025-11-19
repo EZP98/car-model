@@ -8,7 +8,7 @@ binding = "DB"
 database_name = "alf-portfolio-db"
 database_id = "01e7645a-dc0f-4eba-83e5-2ccd116808ef"
 
-# R2 Bucket (verrà abilitato dopo)
-# [[r2_buckets]]
-# binding = "ARTWORKS"
-# bucket_name = "alf-artworks"
+# R2 Bucket for images
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "adele-lo-feudo-images"

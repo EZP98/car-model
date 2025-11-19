@@ -40,14 +40,25 @@ export interface ContentBlock {
 // ========== ARTWORKS ==========
 
 export async function getArtworks(sectionId?: number): Promise<Artwork[]> {
-  const url = sectionId
-    ? `${API_BASE_URL}/api/artworks?section_id=${sectionId}`
-    : `${API_BASE_URL}/api/artworks`;
+  try {
+    const url = sectionId
+      ? `${API_BASE_URL}/api/artworks?section_id=${sectionId}`
+      : `${API_BASE_URL}/api/artworks`;
 
-  const response = await fetch(url);
-  if (!response.ok) throw new Error('Failed to fetch artworks');
-  const data = await response.json() as { artworks: Artwork[] };
-  return data.artworks;
+    const response = await fetch(url, {
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    if (!response.ok) throw new Error('Failed to fetch artworks');
+    const data = await response.json() as { artworks: Artwork[] };
+    console.log('[api] Artworks loaded:', data.artworks?.length || 0);
+    return data.artworks;
+  } catch (error) {
+    console.error('[api] Error fetching artworks:', error);
+    return [];
+  }
 }
 
 export async function getArtwork(id: number): Promise<Artwork> {

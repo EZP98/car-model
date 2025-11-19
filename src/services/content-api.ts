@@ -49,6 +49,8 @@ async function fetchAPI(endpoint: string, options?: RequestInit): Promise<any> {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
       ...options?.headers,
     },
   });
@@ -64,8 +66,14 @@ async function fetchAPI(endpoint: string, options?: RequestInit): Promise<any> {
 // ========== CRITICS API ==========
 
 export async function getCritics(language?: string): Promise<Critic[]> {
-  const data = await fetchAPI('/api/critics');
-  return data.critics || [];
+  try {
+    const data = await fetchAPI('/api/critics');
+    console.log('[content-api] Critics loaded:', data.critics?.length || 0);
+    return data.critics || [];
+  } catch (error) {
+    console.error('[content-api] Error fetching critics:', error);
+    return [];
+  }
 }
 
 export async function getCritic(id: number, language?: string): Promise<Critic> {
@@ -114,8 +122,14 @@ export async function deleteCritic(id: number): Promise<void> {
 // ========== EXHIBITIONS API ==========
 
 export async function getExhibitions(): Promise<Exhibition[]> {
-  const data = await fetchAPI('/api/exhibitions');
-  return data.exhibitions || [];
+  try {
+    const data = await fetchAPI('/api/exhibitions');
+    console.log('[content-api] Exhibitions loaded:', data.exhibitions?.length || 0);
+    return data.exhibitions || [];
+  } catch (error) {
+    console.error('[content-api] Error fetching exhibitions:', error);
+    return [];
+  }
 }
 
 export async function getExhibition(slug: string): Promise<Exhibition> {
