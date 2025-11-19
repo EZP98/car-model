@@ -327,11 +327,11 @@ const CollectionManagement: React.FC = () => {
                 <input
                   type="text"
                   value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                  readOnly
+                  className="w-full px-4 py-2 bg-background/50 text-white/70 border rounded-lg cursor-not-allowed"
                   style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                 />
-                <p className="text-white/60 text-sm mt-1">URL: /collezione/{formData.slug}</p>
+                <p className="text-white/60 text-sm mt-1">⚠️ Non modificabile | URL: /collezione/{formData.slug}</p>
               </div>
 
               <div className="md:col-span-2">
@@ -361,11 +361,15 @@ const CollectionManagement: React.FC = () => {
                 <label className="block text-white mb-2 font-bold">Ordine di visualizzazione</label>
                 <input
                   type="number"
+                  min="0"
                   value={formData.order_index}
                   onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 0 })}
                   className="w-full px-4 py-2 bg-background text-white border rounded-lg"
                   style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                 />
+                <p className="text-white/60 text-sm mt-1">
+                  Numero più basso = mostra prima
+                </p>
               </div>
 
               {formData.image_url && (

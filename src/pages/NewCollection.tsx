@@ -127,19 +127,18 @@ const NewCollection: React.FC = () => {
             {/* Slug */}
             <div>
               <label className="block text-white mb-2 font-bold">
-                Slug (URL) *
+                Slug (URL)
               </label>
               <input
                 type="text"
                 value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
+                readOnly
+                className="w-full px-4 py-3 bg-background/50 text-white/70 border rounded-lg cursor-not-allowed"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                placeholder="es. opera-9"
-                required
+                placeholder="Generato automaticamente dal titolo"
               />
               <p className="text-white/60 text-sm mt-1">
-                URL: /collezione/{formData.slug || 'slug'}
+                ✓ Generato automaticamente | URL: /collezione/{formData.slug || 'slug'}
               </p>
             </div>
 
@@ -180,12 +179,16 @@ const NewCollection: React.FC = () => {
               </label>
               <input
                 type="number"
+                min="0"
                 value={formData.order_index}
                 onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 0 })}
                 className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                placeholder="0"
+                placeholder="1"
               />
+              <p className="text-white/60 text-sm mt-1">
+                Numero più basso = mostra prima
+              </p>
             </div>
 
             {/* Anteprima immagine */}
