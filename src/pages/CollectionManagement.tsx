@@ -225,6 +225,26 @@ const CollectionManagement: React.FC = () => {
     }
   };
 
+  const handleToggleArtworkVisibility = async (artwork: Artwork) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/artworks/${artwork.id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          is_visible: !artwork.is_visible
+        })
+      });
+
+      if (response.ok) {
+        showSuccess(`Opera ${!artwork.is_visible ? 'visibile' : 'nascosta'} con successo`);
+        loadData();
+      }
+    } catch (error) {
+      console.error('Error toggling artwork visibility:', error);
+      showError('Errore nell\'aggiornamento della visibilità');
+    }
+  };
+
   const handleEditArtwork = (artwork: Artwork) => {
     setEditingArtworkId(artwork.id);
     setArtworkFormData({
@@ -637,7 +657,39 @@ const CollectionManagement: React.FC = () => {
                             {artwork.dimensions && <p>Dimensioni: {artwork.dimensions}</p>}
                           </div>
                         </div>
-                        <div className="flex gap-4">
+                        <div className="flex items-center gap-4">
+                          {/* Toggle Visibilità */}
+                          <button
+                            onClick={() => handleToggleArtworkVisibility(artwork)}
+                            className="relative"
+                            title={artwork.is_visible ? 'Nascondi nel frontend' : 'Mostra nel frontend'}
+                          >
+                            <div
+                              style={{
+                                width: '56px',
+                                height: '28px',
+                                borderRadius: '14px',
+                                backgroundColor: artwork.is_visible ? 'rgb(240, 45, 110)' : '#4B5563',
+                                transition: 'background-color 0.3s',
+                                position: 'relative'
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '12px',
+                                  backgroundColor: 'white',
+                                  position: 'absolute',
+                                  top: '2px',
+                                  left: artwork.is_visible ? '30px' : '2px',
+                                  transition: 'left 0.3s',
+                                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                }}
+                              />
+                            </div>
+                          </button>
+
                           <button
                             onClick={() => handleEditArtwork(artwork)}
                             className="p-2 text-white rounded-lg hover:opacity-80 transition-opacity"
