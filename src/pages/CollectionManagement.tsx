@@ -85,22 +85,6 @@ const CollectionManagement: React.FC = () => {
     loadImages();
   }, [collectionId]);
 
-  // Block body scroll when modal is open
-  useEffect(() => {
-    if (showImagePicker) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    };
-  }, [showImagePicker]);
-
   const loadImages = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/media`);
@@ -605,6 +589,7 @@ const CollectionManagement: React.FC = () => {
 
                   {/* Content - Scrollable */}
                   <div className="flex-1 overflow-y-auto px-8 pb-8 scrollbar-hide">
+                    <div className="space-y-6">
                     {/* Drag & Drop Upload Zone */}
                     <div
                     className={`mb-6 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
@@ -689,6 +674,7 @@ const CollectionManagement: React.FC = () => {
                         ))}
                       </div>
                     )}
+                    </div>
                   </div>
                 </div>
               </div>
