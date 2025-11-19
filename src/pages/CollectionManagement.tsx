@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { createPortal } from 'react-dom';
 import BackofficeLayout from '../components/BackofficeLayout';
 import { getCollections, updateCollection, deleteCollection, Collection, Artwork, getCollectionArtworks } from '../services/collections-api';
 import { useToast } from '../components/Toast';
@@ -77,6 +78,7 @@ const CollectionManagement: React.FC = () => {
   const [showAddArtwork, setShowAddArtwork] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [availableImages, setAvailableImages] = useState<Array<{ filename: string; url: string }>>([]);
+  const [allImages, setAllImages] = useState<Array<{ filename: string; url: string }>>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -85,12 +87,29 @@ const CollectionManagement: React.FC = () => {
     loadImages();
   }, [collectionId]);
 
+  // Disable Lenis when modal is open
+  useEffect(() => {
+    if (showImagePicker) {
+      const lenis = (window as any).lenis;
+      if (lenis) {
+        lenis.stop();
+      }
+    } else {
+      const lenis = (window as any).lenis;
+      if (lenis) {
+        lenis.start();
+      }
+    }
+  }, [showImagePicker]);
+
   const loadImages = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/media`);
       if (response.ok) {
         const data = await response.json() as { images?: Array<{ filename: string; url: string }> };
-        // Filter out thumbnails - show only originals
+        // Keep all images (originals + thumbnails) for finding thumbnails
+        setAllImages(data.images || []);
+        // Filter out thumbnails - show only originals in the picker
         const originals = (data.images || []).filter(img => !img.filename.includes('_thumb'));
         setAvailableImages(originals);
       }
@@ -560,8 +579,8 @@ const CollectionManagement: React.FC = () => {
             </div>
 
             {/* Image Picker Modal */}
-            {showImagePicker && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {showImagePicker && createPortal(
+              <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
                 {/* Backdrop */}
                 <div
                   className="absolute inset-0 bg-black/80 backdrop-blur-sm"
@@ -588,7 +607,11 @@ const CollectionManagement: React.FC = () => {
                   </div>
 
                   {/* Content - Scrollable */}
-                  <div className="flex-1 overflow-y-auto px-8 pb-8 scrollbar-hide">
+                  <div
+                    className="flex-1 overflow-y-auto px-8 pb-8 scrollbar-hide"
+                    onWheel={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
+                  >
                     <div className="space-y-6">
                     {/* Drag & Drop Upload Zone */}
                     <div
@@ -652,32 +675,40 @@ const CollectionManagement: React.FC = () => {
                       <p className="text-white/60 text-center py-8">Nessuna immagine disponibile nello storage</p>
                     ) : (
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {availableImages.map((image) => (
-                          <div
-                            key={image.filename}
-                            className="cursor-pointer group"
-                            onClick={() => {
-                              // Set the ORIGINAL high-quality image URL
-                              setFormData({ ...formData, image_url: image.url });
-                              setShowImagePicker(false);
-                            }}
-                          >
-                            <div className="aspect-video bg-background rounded-lg overflow-hidden border-2 border-transparent group-hover:border-accent transition-colors">
-                              <img
-                                src={getImageUrl(getThumbnailUrl(image.url))}
-                                alt={image.filename}
-                                className="w-full h-full object-cover"
-                              />
+                        {availableImages.map((image) => {
+                          // Find corresponding thumbnail - same logic as MediaStorage
+                          const thumbnailFilename = image.filename.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '_thumb.$1');
+                          const thumbnail = allImages.find(img => img.filename === thumbnailFilename);
+                          const displayUrl = thumbnail ? thumbnail.url : image.url;
+
+                          return (
+                            <div
+                              key={image.filename}
+                              className="cursor-pointer group"
+                              onClick={() => {
+                                // Set the ORIGINAL high-quality image URL
+                                setFormData({ ...formData, image_url: image.url });
+                                setShowImagePicker(false);
+                              }}
+                            >
+                              <div className="aspect-video bg-background rounded-lg overflow-hidden border-2 border-transparent group-hover:border-accent transition-colors">
+                                <img
+                                  src={`${API_BASE_URL}${displayUrl}`}
+                                  alt={image.filename}
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <p className="text-white/60 text-sm mt-2 truncate">{image.filename}</p>
                             </div>
-                            <p className="text-white/60 text-sm mt-2 truncate">{image.filename}</p>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>,
+              document.body
             )}
           </motion.div>
         )}

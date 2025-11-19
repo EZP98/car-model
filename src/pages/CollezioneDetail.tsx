@@ -15,6 +15,7 @@ const CollezioneDetail: React.FC = () => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTestModal, setShowTestModal] = useState(false);
 
   // Fetch collection and artworks data
   useEffect(() => {
@@ -232,7 +233,7 @@ const CollezioneDetail: React.FC = () => {
           </motion.div>
 
           {/* Torna alla collezione */}
-          <div className="mt-16 pb-16">
+          <div className="mt-16 pb-16 flex justify-between items-center">
             <button
               onClick={() => navigate('/')}
               className="text-white/60 hover:text-white transition-colors flex items-center gap-2"
@@ -242,9 +243,77 @@ const CollezioneDetail: React.FC = () => {
               </svg>
               <span>Torna alla Collezione</span>
             </button>
+
+            <button
+              onClick={() => setShowTestModal(true)}
+              className="px-6 py-3 bg-accent text-white rounded-lg font-bold hover:opacity-90"
+            >
+              TEST MODALE
+            </button>
           </div>
         </div>
       </motion.div>
+
+      {/* TEST MODAL - EXACT structure from QRCodeModal */}
+      {showTestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowTestModal(false)}
+          />
+
+          <div className="relative bg-secondary rounded-3xl max-w-xl w-full shadow-2xl border border-white/10 max-h-[90vh] flex flex-col">
+            <div className="p-6 pb-0">
+              <button
+                onClick={() => setShowTestModal(false)}
+                className="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-xl transition-all hover:scale-110"
+              >
+                <span className="text-white text-2xl">×</span>
+              </button>
+
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-bold text-white">
+                  Test Scroll Modale
+                </h2>
+                <p className="text-sm text-white/60 mt-1">Scorri dentro questa modale</p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-6 pb-6 scrollbar-hide">
+              <div className="space-y-6">
+                {/* Content with lots of items to test scroll */}
+                {[...Array(20)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-background/50 p-6 rounded-xl border border-white/10"
+                  >
+                    <h3 className="text-white font-bold text-lg mb-2">
+                      Item {i + 1}
+                    </h3>
+                    <p className="text-white/70">
+                      Questo è un contenuto di test per verificare che lo scroll funzioni
+                      correttamente DENTRO la modale e NON faccia scrollare la pagina sotto.
+                    </p>
+                    <p className="text-white/50 text-sm mt-2">
+                      Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                      Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    </p>
+                  </div>
+                ))}
+
+                <div className="pt-4">
+                  <button
+                    onClick={() => setShowTestModal(false)}
+                    className="w-full px-6 py-3 bg-accent text-white rounded-lg font-bold hover:opacity-90"
+                  >
+                    Chiudi
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

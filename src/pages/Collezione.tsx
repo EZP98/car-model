@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -101,38 +102,24 @@ interface MostraModalProps {
 }
 
 const MostraModal: React.FC<MostraModalProps> = ({ isOpen, onClose, mostra }) => {
-  // Previene lo scroll del body quando il modale è aperto
+  // Stop Lenis when modal is open
   React.useEffect(() => {
     if (isOpen) {
-      // Salva la posizione corrente dello scroll
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
+      const lenis = (window as any).lenis;
+      if (lenis) {
+        lenis.stop();
+      }
     } else {
-      // Ripristina lo scroll
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      const lenis = (window as any).lenis;
+      if (lenis) {
+        lenis.start();
       }
     }
-
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8"
       style={{
@@ -161,7 +148,7 @@ const MostraModal: React.FC<MostraModalProps> = ({ isOpen, onClose, mostra }) =>
         {/* Two Column Layout with Independent Scroll */}
         <div className="flex flex-col md:flex-row w-full h-full">
           {/* Left Column - Info (Fixed) */}
-          <div className="w-full md:w-2/5 p-8 md:p-12 overflow-y-auto border-r border-white/10 flex-shrink-0">
+          <div className="w-full md:w-2/5 p-8 md:p-12 overflow-y-auto border-r border-white/10 flex-shrink-0 scrollbar-hide">
             <div className="space-y-8">
               {/* Header */}
               <div className="space-y-4">
@@ -201,7 +188,11 @@ const MostraModal: React.FC<MostraModalProps> = ({ isOpen, onClose, mostra }) =>
           </div>
 
           {/* Right Column - Content (Scrollable) */}
-          <div className="w-full md:w-3/5 p-8 md:p-12 overflow-y-auto flex-grow">
+          <div
+            className="w-full md:w-3/5 p-8 md:p-12 overflow-y-auto flex-grow scrollbar-hide"
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+          >
             <div className="space-y-8">
               {/* Description */}
               <p className="text-[16px] leading-loose text-white/90">
@@ -232,7 +223,8 @@ const MostraModal: React.FC<MostraModalProps> = ({ isOpen, onClose, mostra }) =>
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -344,28 +336,19 @@ interface TestoCriticoModalProps {
 }
 
 const TestoCriticoModal: React.FC<TestoCriticoModalProps> = ({ isOpen, onClose, critico }) => {
-  // Block body scroll when modal is open
+  // Stop Lenis when modal is open
   React.useEffect(() => {
     if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
+      const lenis = (window as any).lenis;
+      if (lenis) {
+        lenis.stop();
+      }
     } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      const lenis = (window as any).lenis;
+      if (lenis) {
+        lenis.start();
+      }
     }
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -373,7 +356,7 @@ const TestoCriticoModal: React.FC<TestoCriticoModalProps> = ({ isOpen, onClose, 
   // Split text into paragraphs for better formatting
   const paragraphs = critico.testo.split('\n\n').filter((p: string) => p.trim());
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8"
       style={{
@@ -401,7 +384,11 @@ const TestoCriticoModal: React.FC<TestoCriticoModalProps> = ({ isOpen, onClose, 
         </button>
 
         {/* Scrollable Content */}
-        <div className="overflow-y-auto flex-1 p-8 md:p-12 min-h-0 custom-scrollbar">
+        <div
+          className="overflow-y-auto flex-1 p-8 md:p-12 min-h-0 scrollbar-hide"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+        >
           {/* Header Section */}
           <div className="mb-10 pb-8 border-b border-white/10">
             <h2 className="text-4xl md:text-5xl font-bold text-white uppercase tracking-wide mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
@@ -432,24 +419,8 @@ const TestoCriticoModal: React.FC<TestoCriticoModalProps> = ({ isOpen, onClose, 
           </div>
         </div>
       </div>
-
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.05);
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(240, 45, 110, 0.5);
-          border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(240, 45, 110, 0.7);
-        }
-      `}</style>
-    </div>
+    </div>,
+    document.body
   );
 };
 

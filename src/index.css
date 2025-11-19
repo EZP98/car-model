@@ -63,6 +63,16 @@
     width: 0px;
     background: transparent;
   }
+
+  /* Specific class for components that need scrollbar hidden */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 @layer components {
