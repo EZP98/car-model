@@ -127,8 +127,8 @@ export default {
         }
 
         const result = await env.DB.prepare(
-          `INSERT INTO artworks (title, year, technique, dimensions, image_url, collection_id, section_id, order_index, is_visible)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO artworks (title, year, technique, dimensions, image_url, collection_id, order_index, is_visible)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
            RETURNING *`
         ).bind(
           title,
@@ -137,7 +137,6 @@ export default {
           dimensions || null,
           image_url || null,
           collection_id || section_id || null,
-          1, // Always use section_id=1 to satisfy NOT NULL and FOREIGN KEY constraints
           order_index !== undefined ? order_index : 0,
           is_visible !== undefined ? (is_visible ? 1 : 0) : 1
         ).first();
