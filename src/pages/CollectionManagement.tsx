@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
-import { getCollections, updateCollection, Collection, Artwork, getCollectionArtworks } from '../services/collections-api';
+import { getCollections, updateCollection, deleteCollection, Collection, Artwork, getCollectionArtworks } from '../services/collections-api';
 import { useToast } from '../components/Toast';
 
 const API_BASE_URL = import.meta.env.PROD
@@ -114,6 +114,28 @@ const CollectionManagement: React.FC = () => {
       showError('Errore nell\'aggiornamento della collezione');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteCollection = async () => {
+    if (!collection) return;
+
+    const confirmDelete = window.confirm(
+      `Sei sicuro di voler eliminare la collezione "${collection.title}"?\n\n` +
+      'Questa azione eliminerà anche tutte le opere associate e non può essere annullata.'
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteCollection(collection.id);
+      showSuccess('Collezione eliminata con successo!');
+      setTimeout(() => {
+        navigate('/content?tab=collezioni');
+      }, 1000);
+    } catch (error) {
+      console.error('Error deleting collection:', error);
+      showError('Errore nell\'eliminazione della collezione');
     }
   };
 
@@ -269,6 +291,18 @@ const CollectionManagement: React.FC = () => {
                 Visibile nel frontend
               </span>
             </label>
+
+            {/* Delete Button */}
+            <button
+              onClick={handleDeleteCollection}
+              className="px-4 py-2 font-bold uppercase text-white border border-red-500/30 hover:bg-red-500/10 hover:border-red-500 transition-colors"
+              style={{ fontFamily: 'Montserrat, sans-serif', borderRadius: '8px' }}
+              title="Elimina collezione"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
         </div>
 
