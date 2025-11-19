@@ -276,7 +276,7 @@ const MediaStorage: React.FC = () => {
           // Upload thumbnail
           const thumbFilename = filename.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '_thumb.$1');
           const formData = new FormData();
-          formData.append('image', thumbnail, thumbFilename);
+          formData.append('file', thumbnail, thumbFilename);
 
           const uploadResponse = await fetch(`${API_BASE_URL}/api/upload`, {
             method: 'POST',
