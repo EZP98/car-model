@@ -23,9 +23,9 @@
   }
 
   /* Disable snap scroll for backoffice */
-  body.no-snap-scroll html,
-  body.no-snap-scroll html.lenis {
-    scroll-snap-type: none;
+  html:has(body.no-snap-scroll),
+  html.lenis:has(body.no-snap-scroll) {
+    scroll-snap-type: none !important;
   }
 
   .lenis.lenis-smooth {
