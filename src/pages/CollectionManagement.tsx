@@ -653,38 +653,38 @@ const CollectionManagement: React.FC = () => {
                         </label>
                       </>
                     )}
-                  </div>
-
-                  <div className="border-t border-white/10 pt-6 mb-4">
-                    <h4 className="text-white font-bold mb-4">Oppure scegli da Storage:</h4>
-                  </div>
-
-                  {availableImages.length === 0 ? (
-                    <p className="text-white/60 text-center py-8">Nessuna immagine disponibile nello storage</p>
-                  ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {availableImages.map((image) => (
-                        <div
-                          key={image.filename}
-                          className="cursor-pointer group"
-                          onClick={() => {
-                            // Set the ORIGINAL high-quality image URL
-                            setFormData({ ...formData, image_url: image.url });
-                            setShowImagePicker(false);
-                          }}
-                        >
-                          <div className="aspect-video bg-background rounded-lg overflow-hidden border-2 border-transparent group-hover:border-accent transition-colors">
-                            <img
-                              src={getImageUrl(getThumbnailUrl(image.url))}
-                              alt={image.filename}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <p className="text-white/60 text-sm mt-2 truncate">{image.filename}</p>
-                        </div>
-                      ))}
                     </div>
-                  )}
+
+                    <div className="border-t border-white/10 pt-6 mb-4">
+                      <h4 className="text-white font-bold mb-4">Oppure scegli da Storage:</h4>
+                    </div>
+
+                    {availableImages.length === 0 ? (
+                      <p className="text-white/60 text-center py-8">Nessuna immagine disponibile nello storage</p>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {availableImages.map((image) => (
+                          <div
+                            key={image.filename}
+                            className="cursor-pointer group"
+                            onClick={() => {
+                              // Set the ORIGINAL high-quality image URL
+                              setFormData({ ...formData, image_url: image.url });
+                              setShowImagePicker(false);
+                            }}
+                          >
+                            <div className="aspect-video bg-background rounded-lg overflow-hidden border-2 border-transparent group-hover:border-accent transition-colors">
+                              <img
+                                src={getImageUrl(getThumbnailUrl(image.url))}
+                                alt={image.filename}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <p className="text-white/60 text-sm mt-2 truncate">{image.filename}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
