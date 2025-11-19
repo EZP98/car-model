@@ -124,12 +124,12 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
         </div>
 
         {/* Menu Items */}
-        <nav className="p-6 space-y-3" style={{ overflow: 'visible' }}>
+        <nav className="px-3 py-6 space-y-3" style={{ overflow: 'visible' }}>
           {menuItems.map((item) => (
             <div key={item.id} className="relative group" style={{ overflow: 'visible' }}>
               <button
                 onClick={() => navigate(item.path)}
-                className={`w-full rounded-lg transition-all font-bold uppercase text-sm tracking-wide relative flex items-center justify-center px-4 py-4 ${
+                className={`w-full rounded-lg transition-all font-bold uppercase text-sm tracking-wide relative flex items-center justify-center py-4 ${
                   isActive(item.id)
                     ? 'text-white bg-white/10'
                     : 'text-white/50 hover:text-white/80 hover:bg-white/5'

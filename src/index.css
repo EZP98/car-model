@@ -22,6 +22,12 @@
     scroll-snap-type: y mandatory;
   }
 
+  /* Disable snap scroll for backoffice */
+  body.no-snap-scroll html,
+  body.no-snap-scroll html.lenis {
+    scroll-snap-type: none;
+  }
+
   .lenis.lenis-smooth {
     scroll-behavior: auto !important;
   }

@@ -53,15 +53,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">4. Newsletter</h2>
-                <p className="mb-4">
-                  Il Sito offre la possibilità di iscriversi a una newsletter per ricevere aggiornamenti su mostre, eventi e opere disponibili.
-                  L'iscrizione è volontaria e l'utente può cancellarsi in qualsiasi momento inviando una richiesta a: <a href="mailto:adelelofeudo@gmail.com" className="text-accent hover:underline">adelelofeudo@gmail.com</a>
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-white mb-4">5. Collegamenti a Siti Terzi</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">4. Collegamenti a Siti Terzi</h2>
                 <p className="mb-4">
                   Il Sito può contenere collegamenti a siti web di terze parti. Adele Lo Feudo non è responsabile per il contenuto, la privacy policy o le pratiche di tali siti esterni.
                   L'accesso a siti terzi avviene a esclusivo rischio dell'utente.
@@ -69,7 +61,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">6. Limitazione di Responsabilità</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">5. Limitazione di Responsabilità</h2>
                 <p className="mb-4">
                   Il Sito è fornito "così com'è" senza alcuna garanzia, esplicita o implicita. Adele Lo Feudo non garantisce che:
                 </p>
@@ -84,7 +76,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">7. Richieste di Informazioni sulle Opere</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">6. Richieste di Informazioni sulle Opere</h2>
                 <p className="mb-4">
                   Per informazioni su opere, prezzi, disponibilità o commissioni, gli interessati possono contattare direttamente l'artista all'indirizzo: <a href="mailto:adelelofeudo@gmail.com" className="text-accent hover:underline">adelelofeudo@gmail.com</a>
                 </p>
@@ -94,7 +86,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">8. Modifiche ai Termini</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">7. Modifiche ai Termini</h2>
                 <p className="mb-4">
                   Adele Lo Feudo si riserva il diritto di modificare i presenti Termini e Condizioni in qualsiasi momento.
                   Le modifiche saranno pubblicate su questa pagina con indicazione della data di ultimo aggiornamento.
@@ -103,7 +95,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">9. Legge Applicabile e Foro Competente</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">8. Legge Applicabile e Foro Competente</h2>
                 <p className="mb-4">
                   I presenti Termini e Condizioni sono regolati dalla legge italiana.
                   Per qualsiasi controversia relativa all'interpretazione, esecuzione o validità dei presenti Termini sarà competente il Foro di Perugia.
@@ -111,7 +103,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">10. Contatti</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">9. Contatti</h2>
                 <p className="mb-4">
                   Per qualsiasi informazione o richiesta relativa ai presenti Termini e Condizioni, è possibile contattare:
                 </p>
@@ -164,15 +156,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">4. Newsletter</h2>
-                <p className="mb-4">
-                  The Site offers the option to subscribe to a newsletter to receive updates about exhibitions, events, and available artworks.
-                  Subscription is voluntary and users may unsubscribe at any time by sending a request to: <a href="mailto:adelelofeudo@gmail.com" className="text-accent hover:underline">adelelofeudo@gmail.com</a>
-                </p>
-              </section>
-
-              <section>
-                <h2 className="text-2xl font-bold text-white mb-4">5. Links to Third-Party Sites</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">4. Links to Third-Party Sites</h2>
                 <p className="mb-4">
                   The Site may contain links to third-party websites. Adele Lo Feudo is not responsible for the content, privacy policies, or practices of such external sites.
                   Access to third-party sites is at the user's sole risk.
@@ -180,7 +164,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">6. Limitation of Liability</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">5. Limitation of Liability</h2>
                 <p className="mb-4">
                   The Site is provided "as is" without any warranty, express or implied. Adele Lo Feudo does not guarantee that:
                 </p>
@@ -195,7 +179,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">7. Artwork Inquiries</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">6. Artwork Inquiries</h2>
                 <p className="mb-4">
                   For information about artworks, pricing, availability, or commissions, interested parties may contact the artist directly at: <a href="mailto:adelelofeudo@gmail.com" className="text-accent hover:underline">adelelofeudo@gmail.com</a>
                 </p>
@@ -205,7 +189,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">8. Changes to Terms</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">7. Changes to Terms</h2>
                 <p className="mb-4">
                   Adele Lo Feudo reserves the right to modify these Terms and Conditions at any time.
                   Changes will be published on this page with the date of last update indicated.
@@ -214,7 +198,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">9. Governing Law and Jurisdiction</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">8. Governing Law and Jurisdiction</h2>
                 <p className="mb-4">
                   These Terms and Conditions are governed by Italian law.
                   For any dispute relating to the interpretation, execution, or validity of these Terms, the Court of Perugia shall have jurisdiction.
@@ -222,7 +206,7 @@ const TermsConditions: React.FC = () => {
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">10. Contact</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">9. Contact</h2>
                 <p className="mb-4">
                   For any information or request regarding these Terms and Conditions, please contact:
                 </p>

@@ -113,6 +113,19 @@ function AppContent() {
     window.scrollTo(0, 0);
   }, []);
 
+  // Disable snap scroll on /content routes
+  useEffect(() => {
+    if (location.pathname.startsWith('/content')) {
+      document.body.classList.add('no-snap-scroll');
+    } else {
+      document.body.classList.remove('no-snap-scroll');
+    }
+
+    return () => {
+      document.body.classList.remove('no-snap-scroll');
+    };
+  }, [location.pathname]);
+
   // Scroll to top on route change con delay per SmoothScroll
   useEffect(() => {
     // Usa un timeout per assicurarsi che il cambio di pagina sia completato

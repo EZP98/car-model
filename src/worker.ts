@@ -802,6 +802,46 @@ export default {
         return jsonResponse({ images });
       }
 
+      // GET /api/storage/stats - Statistiche storage R2
+      if (path === '/api/storage/stats' && method === 'GET') {
+        if (!env.IMAGES) {
+          return jsonResponse({ error: 'R2 storage not configured' }, 503);
+        }
+
+        const listed = await env.IMAGES.list();
+
+        let totalSize = 0;
+        let originalsCount = 0;
+        let originalsSize = 0;
+        let thumbnailsCount = 0;
+        let thumbnailsSize = 0;
+
+        for (const obj of listed.objects) {
+          totalSize += obj.size;
+
+          if (obj.key.includes('_thumb')) {
+            thumbnailsCount++;
+            thumbnailsSize += obj.size;
+          } else {
+            originalsCount++;
+            originalsSize += obj.size;
+          }
+        }
+
+        return jsonResponse({
+          totalFiles: listed.objects.length,
+          totalSize,
+          originals: {
+            count: originalsCount,
+            size: originalsSize
+          },
+          thumbnails: {
+            count: thumbnailsCount,
+            size: thumbnailsSize
+          }
+        });
+      }
+
       // GET /images/:filename - Serve immagine da R2
       if (path.match(/^\/images\/.+$/) && method === 'GET') {
         if (!env.IMAGES) {

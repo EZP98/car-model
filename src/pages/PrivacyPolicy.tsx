@@ -36,23 +36,26 @@ const PrivacyPolicy: React.FC = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">2. Tipologie di Dati Raccolti</h2>
                 <p className="mb-4">
-                  Questo sito raccoglie i seguenti dati personali:
+                  Questo sito utilizza tecnologie di archiviazione locale (localStorage) esclusivamente per:
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li><strong>Dati di navigazione:</strong> Cookie tecnici e di analytics per migliorare l'esperienza utente</li>
-                  <li><strong>Newsletter:</strong> Indirizzo email fornito volontariamente per ricevere aggiornamenti su mostre ed eventi</li>
+                  <li><strong>Preferenza lingua:</strong> Salvare la lingua scelta dall'utente per migliorare l'esperienza di navigazione</li>
+                  <li><strong>Stato interfaccia:</strong> Memorizzare preferenze tecniche necessarie per il corretto funzionamento del sito</li>
                 </ul>
+                <p className="mt-4">
+                  <strong>Importante:</strong> Questi dati sono memorizzati esclusivamente nel browser dell'utente e non vengono trasmessi a server esterni o terze parti. L'utente può cancellarli in qualsiasi momento attraverso le impostazioni del proprio browser.
+                </p>
               </section>
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">3. Finalità del Trattamento</h2>
                 <p className="mb-4">
-                  I dati personali sono raccolti e trattati per le seguenti finalità:
+                  I dati memorizzati localmente sono utilizzati per le seguenti finalità:
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Invio di newsletter e comunicazioni relative a mostre, eventi e opere disponibili</li>
-                  <li>Analisi statistiche anonime per migliorare il sito</li>
-                  <li>Rispetto degli obblighi di legge</li>
+                  <li>Personalizzazione dell'interfaccia in base alla lingua scelta</li>
+                  <li>Miglioramento dell'esperienza utente durante la navigazione</li>
+                  <li>Funzionamento tecnico ottimale del sito</li>
                 </ul>
               </section>
 
@@ -62,15 +65,17 @@ const PrivacyPolicy: React.FC = () => {
                   Il trattamento dei dati si basa su:
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li><strong>Consenso:</strong> Per l'invio della newsletter</li>
-                  <li><strong>Interesse legittimo:</strong> Per l'analisi statistica e il miglioramento del sito</li>
+                  <li><strong>Interesse legittimo:</strong> L'archiviazione locale delle preferenze è strettamente necessaria per fornire i servizi richiesti dall'utente e migliorare l'usabilità del sito</li>
                 </ul>
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">5. Cookie</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">5. Cookie e Tecnologie di Tracciamento</h2>
                 <p className="mb-4">
-                  Questo sito utilizza cookie tecnici necessari per il corretto funzionamento del sito. In futuro potrebbero essere implementati cookie analitici, per i quali verrà richiesto il consenso secondo la normativa vigente.
+                  Questo sito <strong>non utilizza cookie</strong> né tecnologie di tracciamento di terze parti. Non vengono raccolti dati per finalità di profilazione o marketing.
+                </p>
+                <p className="mb-4">
+                  Utilizza esclusivamente localStorage (archiviazione locale del browser) per memorizzare preferenze tecniche essenziali. Queste informazioni rimangono sul dispositivo dell'utente e non sono accessibili da server esterni.
                 </p>
               </section>
 
@@ -84,14 +89,25 @@ const PrivacyPolicy: React.FC = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">7. Periodo di Conservazione</h2>
                 <p className="mb-4">
-                  I dati personali saranno conservati per il tempo necessario a perseguire le finalità indicate, salvo diversi obblighi di legge. I dati della newsletter saranno conservati fino alla richiesta di cancellazione da parte dell'interessato.
+                  Le preferenze memorizzate in localStorage rimangono salvate nel browser dell'utente fino a quando:
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4">
+                  <li>L'utente cancella manualmente i dati del browser</li>
+                  <li>L'utente cancella la cache e i dati del sito</li>
+                  <li>Il browser viene disinstallato</li>
+                </ul>
+                <p className="mt-4">
+                  Non essendoci server che memorizzano dati personali, non esistono policy di conservazione lato server.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">8. Comunicazione e Diffusione dei Dati</h2>
                 <p className="mb-4">
-                  I dati personali non saranno diffusi e potranno essere comunicati solo a soggetti terzi per finalità strettamente connesse alle finalità del trattamento (es. provider di hosting), che operano come responsabili del trattamento.
+                  I dati memorizzati in localStorage <strong>non vengono mai trasmessi</strong> a server esterni o terze parti. Rimangono esclusivamente sul dispositivo dell'utente.
+                </p>
+                <p className="mb-4">
+                  Il sito è ospitato su Cloudflare Pages, ma il provider di hosting non ha accesso ai dati memorizzati localmente nel browser dell'utente.
                 </p>
               </section>
 
@@ -147,23 +163,26 @@ const PrivacyPolicy: React.FC = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">2. Types of Data Collected</h2>
                 <p className="mb-4">
-                  This website collects the following personal data:
+                  This website uses local storage technologies (localStorage) exclusively for:
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li><strong>Browsing data:</strong> Technical and analytics cookies to improve user experience</li>
-                  <li><strong>Newsletter:</strong> Email address voluntarily provided to receive updates about exhibitions and events</li>
+                  <li><strong>Language preference:</strong> To save the language chosen by the user to improve the browsing experience</li>
+                  <li><strong>Interface state:</strong> To store technical preferences necessary for the proper functioning of the site</li>
                 </ul>
+                <p className="mt-4">
+                  <strong>Important:</strong> This data is stored exclusively in the user's browser and is not transmitted to external servers or third parties. Users can delete it at any time through their browser settings.
+                </p>
               </section>
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">3. Purpose of Processing</h2>
                 <p className="mb-4">
-                  Personal data is collected and processed for the following purposes:
+                  Locally stored data is used for the following purposes:
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li>Sending newsletters and communications about exhibitions, events, and available artworks</li>
-                  <li>Anonymous statistical analysis to improve the website</li>
-                  <li>Compliance with legal obligations</li>
+                  <li>Interface personalization based on chosen language</li>
+                  <li>Improving user experience during browsing</li>
+                  <li>Optimal technical functioning of the site</li>
                 </ul>
               </section>
 
@@ -173,15 +192,17 @@ const PrivacyPolicy: React.FC = () => {
                   Data processing is based on:
                 </p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li><strong>Consent:</strong> For newsletter subscriptions</li>
-                  <li><strong>Legitimate interest:</strong> For statistical analysis and website improvement</li>
+                  <li><strong>Legitimate interest:</strong> Local storage of preferences is strictly necessary to provide the services requested by the user and improve site usability</li>
                 </ul>
               </section>
 
               <section>
-                <h2 className="text-2xl font-bold text-white mb-4">5. Cookies</h2>
+                <h2 className="text-2xl font-bold text-white mb-4">5. Cookies and Tracking Technologies</h2>
                 <p className="mb-4">
-                  This website uses technical cookies necessary for proper functioning. Analytics cookies may be implemented in the future, for which consent will be requested according to applicable regulations.
+                  This website <strong>does not use cookies</strong> or third-party tracking technologies. No data is collected for profiling or marketing purposes.
+                </p>
+                <p className="mb-4">
+                  It exclusively uses localStorage (local browser storage) to store essential technical preferences. This information remains on the user's device and is not accessible from external servers.
                 </p>
               </section>
 
@@ -195,14 +216,25 @@ const PrivacyPolicy: React.FC = () => {
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">7. Retention Period</h2>
                 <p className="mb-4">
-                  Personal data will be retained for as long as necessary to fulfill the stated purposes, unless otherwise required by law. Newsletter data will be retained until the data subject requests deletion.
+                  Preferences stored in localStorage remain saved in the user's browser until:
+                </p>
+                <ul className="list-disc list-inside space-y-2 ml-4">
+                  <li>The user manually deletes browser data</li>
+                  <li>The user clears the site's cache and data</li>
+                  <li>The browser is uninstalled</li>
+                </ul>
+                <p className="mt-4">
+                  Since there are no servers storing personal data, there are no server-side retention policies.
                 </p>
               </section>
 
               <section>
                 <h2 className="text-2xl font-bold text-white mb-4">8. Data Communication and Disclosure</h2>
                 <p className="mb-4">
-                  Personal data will not be disclosed and may only be communicated to third parties for purposes strictly connected to processing purposes (e.g., hosting providers), who operate as data processors.
+                  Data stored in localStorage <strong>is never transmitted</strong> to external servers or third parties. It remains exclusively on the user's device.
+                </p>
+                <p className="mb-4">
+                  The site is hosted on Cloudflare Pages, but the hosting provider does not have access to data stored locally in the user's browser.
                 </p>
               </section>
 
