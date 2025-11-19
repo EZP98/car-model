@@ -77,11 +77,25 @@ const CollectionManagement: React.FC = () => {
   const [showAddArtwork, setShowAddArtwork] = useState(false);
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [availableImages, setAvailableImages] = useState<Array<{ filename: string; url: string }>>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     loadData();
     loadImages();
   }, [collectionId]);
+
+  // Block body scroll when modal is open
+  useEffect(() => {
+    if (showImagePicker) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showImagePicker]);
 
   const loadImages = async () => {
     try {
@@ -92,6 +106,65 @@ const CollectionManagement: React.FC = () => {
       }
     } catch (error) {
       console.error('Error loading images:', error);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Per favore seleziona solo file immagine');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_BASE_URL}/api/media/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_API_KEY || ''}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const data = await response.json() as { url: string };
+
+      // Reload images to show the new one
+      await loadImages();
+
+      // Auto-select the uploaded image
+      setFormData({ ...formData, image_url: data.url });
+      setShowImagePicker(false);
+
+      alert('Immagine caricata con successo!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Errore durante il caricamento. Riprova.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      handleFileUpload(files[0]);
     }
   };
 
@@ -509,6 +582,64 @@ const CollectionManagement: React.FC = () => {
                     >
                       ×
                     </button>
+                  </div>
+
+                  {/* Drag & Drop Upload Zone */}
+                  <div
+                    className={`mb-6 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                      isDragging
+                        ? 'border-accent bg-accent/10'
+                        : 'border-white/20 hover:border-white/40'
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    {isUploading ? (
+                      <div className="text-white">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+                        <p>Caricamento in corso...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-white/80 mb-4">
+                          <svg
+                            className="mx-auto h-12 w-12 mb-2"
+                            stroke="currentColor"
+                            fill="none"
+                            viewBox="0 0 48 48"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                              strokeWidth={2}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          <p className="text-lg font-bold">Trascina un'immagine qui</p>
+                          <p className="text-sm text-white/60 mt-1">oppure</p>
+                        </div>
+                        <label className="inline-block cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload(file);
+                            }}
+                          />
+                          <span className="px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent/80 transition-colors inline-block">
+                            Seleziona File
+                          </span>
+                        </label>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="border-t border-white/10 pt-6 mb-4">
+                    <h4 className="text-white font-bold mb-4">Oppure scegli da Storage:</h4>
                   </div>
 
                   {availableImages.length === 0 ? (
