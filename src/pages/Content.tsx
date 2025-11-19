@@ -428,8 +428,8 @@ const ContentWithCollections: React.FC = () => {
                     setCurrentPageCollections(1);
                   }}
                   placeholder="Cerca collezione..."
-                  className="px-4 py-3 pr-10 bg-secondary text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', width: '250px' }}
+                  className="px-4 py-3 pr-10 bg-secondary text-white border focus:outline-none focus:border-pink-500 transition-colors"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', width: '250px', borderRadius: 0 }}
                 />
                 <svg
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
@@ -464,8 +464,8 @@ const ContentWithCollections: React.FC = () => {
                     setCurrentPageCritics(1);
                   }}
                   placeholder="Cerca critico..."
-                  className="px-4 py-3 pr-10 bg-secondary text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', width: '250px' }}
+                  className="px-4 py-3 pr-10 bg-secondary text-white border focus:outline-none focus:border-pink-500 transition-colors"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', width: '250px', borderRadius: 0 }}
                 />
                 <svg
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"
@@ -500,8 +500,8 @@ const ContentWithCollections: React.FC = () => {
                     setCurrentPageExhibitions(1);
                   }}
                   placeholder="Cerca mostra..."
-                  className="px-4 py-3 pr-10 bg-secondary text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', width: '250px' }}
+                  className="px-4 py-3 pr-10 bg-secondary text-white border focus:outline-none focus:border-pink-500 transition-colors"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif', width: '250px', borderRadius: 0 }}
                 />
                 <svg
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50"

@@ -378,20 +378,6 @@ const MediaStorage: React.FC = () => {
                   + Carica
                 </label>
               </div>
-
-              {/* Regenerate Thumbnails Button */}
-              {stats && stats.originals.count > stats.thumbnails.count && (
-                <button
-                  onClick={handleRegenerateThumbnails}
-                  disabled={regenerating}
-                  className="px-6 py-3 font-bold uppercase text-white border transition-all hover:bg-white/5 disabled:opacity-50"
-                  style={{ borderColor: 'rgba(255, 255, 255, 0.3)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
-                  aria-label="Rigenera thumbnail mancanti"
-                  title={`${stats.originals.count - stats.thumbnails.count} thumbnail mancanti`}
-                >
-                  {regenerating ? 'Rigenerando...' : '🔄 Fix Thumbnails'}
-                </button>
-              )}
             </div>
           </div>
 
@@ -595,9 +581,37 @@ const MediaStorage: React.FC = () => {
           className="bg-secondary p-8 rounded-xl border"
           style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
         >
-          <h2 className="text-2xl font-bold text-white uppercase mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            Immagini Caricate ({images.filter(img => !img.filename.includes('_thumb')).length})
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              Immagini Caricate ({images.filter(img => !img.filename.includes('_thumb')).length})
+            </h2>
+
+            {/* Regenerate Thumbnails Button */}
+            {stats && stats.originals.count > stats.thumbnails.count && (
+              <button
+                onClick={handleRegenerateThumbnails}
+                disabled={regenerating}
+                className="p-2 text-white border rounded-lg transition-all hover:bg-white/5 disabled:opacity-50"
+                style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}
+                aria-label="Rigenera thumbnail mancanti"
+                title={`Rigenera ${stats.originals.count - stats.thumbnails.count} thumbnail mancanti`}
+              >
+                <svg
+                  className={`w-5 h-5 ${regenerating ? 'animate-spin' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
 
           {loading ? (
             <div className="text-white text-center py-12">Caricamento...</div>
@@ -630,7 +644,6 @@ const MediaStorage: React.FC = () => {
                       src={`${API_BASE_URL}${displayUrl}`}
                       alt={image.filename}
                       className="w-full h-full object-cover"
-                      loading="lazy"
                     />
                   </div>
 

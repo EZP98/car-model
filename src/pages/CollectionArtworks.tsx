@@ -354,7 +354,6 @@ const CollectionArtworks: React.FC = () => {
                       src={artwork.image_url || '/placeholder-artwork.jpg'}
                       alt={artwork.title}
                       className="w-32 h-32 object-cover rounded-lg"
-                      loading="lazy"
                     />
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
