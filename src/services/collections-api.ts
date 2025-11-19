@@ -38,18 +38,26 @@ export async function getCollections(showAll = false): Promise<Collection[]> {
     const url = showAll
       ? `${API_BASE_URL}/api/collections?all=true`
       : `${API_BASE_URL}/api/collections`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
     if (!response.ok) throw new Error('Failed to fetch collections');
     const data = await response.json() as { collections: Collection[] };
+    console.log('[collections-api] Collections loaded:', data.collections?.length || 0);
     return data.collections;
   } catch (error) {
-    console.error('Error fetching collections:', error);
+    console.error('[collections-api] Error fetching collections:', error);
     // Fallback to localStorage if API fails
     const COLLECTIONS_KEY = 'alf-collections';
     const stored = localStorage.getItem(COLLECTIONS_KEY);
     if (stored) {
+      console.log('[collections-api] Using localStorage fallback');
       return JSON.parse(stored);
     }
+    console.log('[collections-api] No collections found');
     return [];
   }
 }
