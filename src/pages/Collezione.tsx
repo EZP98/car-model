@@ -484,6 +484,7 @@ const TestoCriticoItem: React.FC<TestoCriticoItemProps> = ({ nome, ruolo, testo,
 
 const Collezione: React.FC = () => {
   const { t } = useTranslation();
+  const { language } = useLanguage();
   const heroRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);

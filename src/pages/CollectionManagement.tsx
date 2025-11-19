@@ -87,7 +87,7 @@ const CollectionManagement: React.FC = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/media`);
       if (response.ok) {
-        const data = await response.json();
+        const data = await response.json() as { images?: Array<{ filename: string; url: string }> };
         setAvailableImages(data.images || []);
       }
     } catch (error) {
