@@ -369,6 +369,18 @@ export default {
           return jsonResponse({ error: 'Title and slug are required' }, 400);
         }
 
+        // Check if slug already exists
+        const existingCollection = await env.DB.prepare(
+          'SELECT id FROM collections WHERE slug = ?'
+        ).bind(slug).first();
+
+        if (existingCollection) {
+          return jsonResponse({
+            error: 'Slug already exists',
+            message: 'Lo slug esiste già. Per favore usa un nome diverso o modifica manualmente lo slug.'
+          }, 409);
+        }
+
         const result = await env.DB.prepare(
           `INSERT INTO collections (title, slug, description, image_url, order_index, is_visible)
            VALUES (?, ?, ?, ?, ?, ?)
