@@ -291,8 +291,8 @@ const CollectionManagement: React.FC = () => {
               </svg>
               Indietro
             </button>
-            <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>{collection.title}</span>
+            <h1 className="text-4xl font-bold uppercase" style={{ fontFamily: 'Montserrat, sans-serif', color: 'white' }}>
+              {collection.title}
             </h1>
           </div>
           <div className="flex items-center gap-4">
