@@ -59,6 +59,21 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
         </svg>
       )
     },
+    {
+      id: 'storage',
+      label: 'Storage',
+      path: '/content/storage',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="2" y="3" width="20" height="5" rx="2"/>
+          <rect x="2" y="10" width="20" height="5" rx="2"/>
+          <rect x="2" y="17" width="20" height="5" rx="2"/>
+          <circle cx="7" cy="5.5" r="0.5" fill="currentColor"/>
+          <circle cx="7" cy="12.5" r="0.5" fill="currentColor"/>
+          <circle cx="7" cy="19.5" r="0.5" fill="currentColor"/>
+        </svg>
+      )
+    },
   ];
 
   const isActive = (itemId: string) => {
@@ -77,6 +92,7 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
       '/content/nuova-mostra': 'mostre',
       '/content/critico/': 'critica',
       '/content/nuovo-critico': 'critica',
+      '/content/storage': 'storage',
     };
 
     for (const [pathPrefix, section] of Object.entries(pathMap)) {

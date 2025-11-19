@@ -16,6 +16,7 @@ import ExhibitionManagement from './pages/ExhibitionManagement';
 import NewExhibition from './pages/NewExhibition';
 import CriticManagement from './pages/CriticManagement';
 import NewCritic from './pages/NewCritic';
+import MediaStorage from './pages/MediaStorage';
 import OperaForm from './pages/OperaForm';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
@@ -163,6 +164,7 @@ function AppContent() {
                 <Route path="/content/mostra/:exhibitionId" element={<ExhibitionManagement />} />
                 <Route path="/content/critico/new" element={<NewCritic />} />
                 <Route path="/content/critico/:criticId" element={<CriticManagement />} />
+                <Route path="/content/storage" element={<MediaStorage />} />
                 <Route path="/content/opera" element={<OperaForm />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsConditions />} />
