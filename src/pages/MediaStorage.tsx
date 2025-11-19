@@ -39,6 +39,9 @@ const MediaStorage: React.FC = () => {
   const [viewingImage, setViewingImage] = useState<MediaImage | null>(null);
   const [regenerating, setRegenerating] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const [displayCount, setDisplayCount] = useState(12);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const observerTarget = React.useRef<HTMLDivElement>(null);
 
   const loadImages = useCallback(async () => {
     try {
@@ -70,6 +73,44 @@ const MediaStorage: React.FC = () => {
     loadImages();
     loadStats();
   }, [loadImages, loadStats]);
+
+  // Reset display count when search changes
+  useEffect(() => {
+    setDisplayCount(12);
+  }, [searchTerm]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMore) {
+          const filteredImages = images.filter(img => !img.filename.includes('_thumb'));
+          const searchFiltered = filteredImages.filter(img =>
+            img.filename.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+
+          if (displayCount < searchFiltered.length) {
+            setLoadingMore(true);
+            setTimeout(() => {
+              setDisplayCount(prev => prev + 12);
+              setLoadingMore(false);
+            }, 300);
+          }
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [images, displayCount, searchTerm, loadingMore]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -597,11 +638,13 @@ const MediaStorage: React.FC = () => {
               Nessuna immagine caricata
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {images
-                .filter(img => !img.filename.includes('_thumb')) // Mostra solo originali
-                .filter(img => img.filename.toLowerCase().includes(searchTerm.toLowerCase())) // Filtra per ricerca
-                .map((image) => {
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {images
+                  .filter(img => !img.filename.includes('_thumb')) // Mostra solo originali
+                  .filter(img => img.filename.toLowerCase().includes(searchTerm.toLowerCase())) // Filtra per ricerca
+                  .slice(0, displayCount) // Infinite scroll pagination
+                  .map((image) => {
                   // Cerca il thumbnail corrispondente
                   const thumbnailFilename = image.filename.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '_thumb.$1');
                   const thumbnail = images.find(img => img.filename === thumbnailFilename);
@@ -661,7 +704,18 @@ const MediaStorage: React.FC = () => {
                 </div>
               );
             })}
-            </div>
+              </div>
+
+              {/* Infinite scroll sentinel */}
+              <div ref={observerTarget} className="h-10" />
+
+              {/* Loading more indicator */}
+              {loadingMore && (
+                <div className="text-white text-center py-6">
+                  <div className="inline-block w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                </div>
+              )}
+            </>
           )}
         </motion.div>
       </div>
