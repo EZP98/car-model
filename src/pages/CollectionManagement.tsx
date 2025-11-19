@@ -577,37 +577,34 @@ const CollectionManagement: React.FC = () => {
 
             {/* Image Picker Modal */}
             {showImagePicker && (
-              <div className="relative z-50">
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 {/* Backdrop */}
                 <div
-                  className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+                  className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                   onClick={() => setShowImagePicker(false)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => e.preventDefault()}
                 />
 
-                {/* Container */}
-                <div className="fixed inset-0 flex items-center justify-center p-4">
-                  <div
-                    className="relative bg-secondary rounded-xl max-w-4xl w-full border max-h-[90vh] flex flex-col"
-                    style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                      {/* Header */}
-                      <div className="p-8 pb-4 flex-shrink-0">
-                        <button
-                          onClick={() => setShowImagePicker(false)}
-                          className="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-xl transition-all hover:scale-110"
-                        >
-                          <span className="text-white text-2xl">×</span>
-                        </button>
-                        <div className="text-center">
-                          <h2 className="text-2xl font-bold text-white">Seleziona Immagine</h2>
-                        </div>
-                      </div>
+                {/* Modal Panel */}
+                <div
+                  className="relative bg-secondary rounded-xl max-w-4xl w-full border max-h-[90vh] flex flex-col"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header */}
+                  <div className="p-8 pb-0">
+                    <button
+                      onClick={() => setShowImagePicker(false)}
+                      className="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-xl transition-all hover:scale-110"
+                    >
+                      <span className="text-white text-2xl">×</span>
+                    </button>
+                    <div className="text-center">
+                      <h2 className="text-2xl font-bold text-white">Seleziona Immagine</h2>
+                    </div>
+                  </div>
 
-                      {/* Content - Scrollable */}
-                      <div className="px-8 pb-8 overflow-y-auto flex-1">
+                  {/* Content - Scrollable */}
+                  <div className="flex-1 overflow-y-auto px-8 pb-8 scrollbar-hide">
                     {/* Drag & Drop Upload Zone */}
                     <div
                     className={`mb-6 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
@@ -692,7 +689,6 @@ const CollectionManagement: React.FC = () => {
                         ))}
                       </div>
                     )}
-                    </div>
                   </div>
                 </div>
               </div>
