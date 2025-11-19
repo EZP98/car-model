@@ -76,8 +76,8 @@ var worker_default = {
           return jsonResponse({ error: "Title and collection_id are required" }, 400);
         }
         const result = await env.DB.prepare(
-          `INSERT INTO artworks (title, year, technique, dimensions, image_url, collection_id, order_index, is_visible)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO artworks (title, year, technique, dimensions, image_url, collection_id, section_id, order_index, is_visible)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
            RETURNING *`
         ).bind(
           title,
@@ -86,7 +86,9 @@ var worker_default = {
           dimensions || null,
           image_url || null,
           collection_id || section_id || null,
-          order_index || 0,
+          section_id || collection_id || null,
+          // Add section_id to satisfy NOT NULL constraint
+          order_index !== void 0 ? order_index : 0,
           is_visible !== void 0 ? is_visible ? 1 : 0 : 1
         ).first();
         return jsonResponse({ artwork: result }, 201);
