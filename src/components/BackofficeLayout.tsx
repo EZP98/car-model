@@ -111,6 +111,12 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
     navigate('/login');
   };
 
+  const handleLogoClick = () => {
+    // Navigate to content page and force reload
+    navigate('/content?tab=collezioni');
+    window.location.reload();
+  };
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
@@ -125,9 +131,15 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
       >
         {/* Header Sidebar */}
         <div className="p-4 border-b flex justify-center" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-          <h1 className="text-lg font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif', color: 'rgb(240, 45, 110)' }}>
+          <button
+            onClick={handleLogoClick}
+            className="text-lg font-bold text-white uppercase cursor-pointer hover:opacity-80 transition-opacity"
+            style={{ fontFamily: 'Montserrat, sans-serif', color: 'rgb(240, 45, 110)' }}
+            title="Refresh Backoffice"
+            aria-label="Refresh Backoffice"
+          >
             ALF
-          </h1>
+          </button>
         </div>
 
         {/* Menu Items */}
