@@ -12,6 +12,32 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { useTranslation } from '../i18n/useTranslation';
 import { Language } from '../i18n/translations';
 
+// Helper function to get translated field based on current language
+const getTranslatedField = <T extends Record<string, any>>(
+  item: T,
+  fieldName: string,
+  language: string,
+  fallbackField?: string
+): string => {
+  // Map zh-TW to zh_tw for database column naming
+  const langSuffix = language === 'zh-TW' ? 'zh_tw' : language;
+  const translatedFieldName = `${fieldName}_${langSuffix}`;
+
+  // Try to get the translated field
+  if (item[translatedFieldName]) {
+    return item[translatedFieldName];
+  }
+
+  // Fallback to Italian
+  const italianFieldName = `${fieldName}_it`;
+  if (item[italianFieldName]) {
+    return item[italianFieldName];
+  }
+
+  // Fallback to the base field or provided fallback
+  return item[fallbackField || fieldName] || '';
+};
+
 // Funzione per formattare la data mostrando solo mese e anno
 const formatDataMostra = (dataStr: string) => {
   const mesi = [
@@ -533,12 +559,12 @@ const Collezione: React.FC = () => {
     .filter(e => e.is_visible)
     .map(e => ({
       id: e.slug,
-      titolo: e.title,
-      sottotitolo: e.subtitle || '',
-      luogo: e.location,
+      titolo: getTranslatedField(e, 'title', language),
+      sottotitolo: getTranslatedField(e, 'subtitle', language) || '',
+      luogo: getTranslatedField(e, 'location', language),
       data: e.date,
-      descrizione: e.description || '',
-      info: e.info,
+      descrizione: getTranslatedField(e, 'description', language) || '',
+      info: getTranslatedField(e, 'info', language),
       website: e.website
     }))
     .sort((a, b) => {
@@ -773,15 +799,17 @@ const Collezione: React.FC = () => {
                   >
                     <Link to={`/collezione/${collection.slug}`} className="group cursor-pointer block">
                       <div className="flex flex-col gap-1 mb-4">
-                        <h4 className="font-body text-[16px] font-bold text-white uppercase">{collection.title}</h4>
+                        <h4 className="font-body text-[16px] font-bold text-white uppercase">
+                          {getTranslatedField(collection, 'title', language)}
+                        </h4>
                         <p className="font-body text-[14px] text-white/60">
-                          {collection.description}
+                          {getTranslatedField(collection, 'description', language)}
                         </p>
                       </div>
                       <div className="border border-white/10 rounded-[12px] overflow-hidden">
                         <div className="aspect-[3/2]">
                           <img
-                            alt={collection.title}
+                            alt={getTranslatedField(collection, 'title', language)}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                             src={collection.image_url || '/opera.png'}
                           />
@@ -883,13 +911,8 @@ const Collezione: React.FC = () => {
                 .filter(critic => critic.is_visible)
                 .sort((a, b) => a.order_index - b.order_index)
                 .map((critic) => {
-                  // Get the text for the current language
-                  const currentLang = localStorage.getItem('preferredLanguage') || 'it';
-                  const criticText = currentLang === 'en' && critic.text_en
-                    ? critic.text_en
-                    : currentLang === 'it' && critic.text_it
-                    ? critic.text_it
-                    : critic.text || '';
+                  // Get the text for the current language using the helper function
+                  const criticText = getTranslatedField(critic, 'text', language);
 
                   return (
                     <TestoCriticoItem

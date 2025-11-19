@@ -28,6 +28,11 @@ export interface Critic {
   text: string;
   text_it?: string;
   text_en?: string;
+  text_es?: string;
+  text_fr?: string;
+  text_ja?: string;
+  text_zh?: string;
+  text_zh_tw?: string;
   order_index: number;
   is_visible: boolean;
   created_at: string;
