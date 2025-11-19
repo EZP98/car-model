@@ -113,7 +113,7 @@ export async function createCollection(collection: Omit<Collection, 'id' | 'crea
     body: JSON.stringify(collection),
   });
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
+    const errorData = await response.json().catch(() => ({})) as { message?: string; error?: string };
     const errorMessage = errorData.message || errorData.error || 'Failed to create collection';
     throw new Error(errorMessage);
   }
