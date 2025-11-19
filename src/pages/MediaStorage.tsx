@@ -136,7 +136,25 @@ const MediaStorage: React.FC = () => {
         <title>Storage - Backoffice</title>
       </Helmet>
 
-      <div className="max-w-7xl mx-auto py-20 px-12">
+      <div
+        className="max-w-7xl mx-auto py-20 px-12 relative"
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+      >
+        {/* Drag Overlay */}
+        {dragActive && (
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center pointer-events-none">
+            <div className="bg-secondary p-12 rounded-xl border-2 border-dashed border-pink-500">
+              <svg className="w-20 h-20 mx-auto mb-4 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <p className="text-white text-2xl font-bold">Rilascia per caricare</p>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
@@ -158,17 +176,9 @@ const MediaStorage: React.FC = () => {
             Carica Nuova Immagine
           </h2>
 
-          {/* Drag & Drop Area */}
+          {/* Upload Area */}
           <div
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            className={`border-2 border-dashed rounded-lg p-12 text-center transition-all ${
-              dragActive
-                ? 'border-pink-500 bg-pink-500/10'
-                : 'border-white/20 hover:border-white/40'
-            }`}
+            className="border-2 border-dashed rounded-lg p-6 text-center transition-all border-white/20 hover:border-white/40"
           >
             <input
               type="file"
@@ -179,13 +189,13 @@ const MediaStorage: React.FC = () => {
             />
 
             {selectedFile ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="text-white">
-                  <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <p className="text-lg font-bold mb-2">{selectedFile.name}</p>
-                  <p className="text-white/60">{formatFileSize(selectedFile.size)}</p>
+                  <p className="text-base font-bold mb-1">{selectedFile.name}</p>
+                  <p className="text-white/60 text-sm">{formatFileSize(selectedFile.size)}</p>
                 </div>
                 <div className="flex gap-3 justify-center">
                   <button
@@ -207,11 +217,11 @@ const MediaStorage: React.FC = () => {
               </div>
             ) : (
               <div>
-                <svg className="w-16 h-16 mx-auto mb-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-12 h-12 mx-auto mb-3 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <p className="text-white text-lg mb-2">Trascina un'immagine qui</p>
-                <p className="text-white/60 mb-4">oppure</p>
+                <p className="text-white text-base mb-2">Trascina un'immagine sulla pagina</p>
+                <p className="text-white/60 text-sm mb-3">oppure</p>
                 <label
                   htmlFor="file-upload"
                   className="inline-block px-6 py-3 font-bold uppercase text-white cursor-pointer transition-colors"
