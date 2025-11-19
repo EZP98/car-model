@@ -88,12 +88,16 @@ const CollectionManagement: React.FC = () => {
   // Block body scroll when modal is open
   useEffect(() => {
     if (showImagePicker) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     };
   }, [showImagePicker]);
 
@@ -586,12 +590,12 @@ const CollectionManagement: React.FC = () => {
                 <div className="fixed inset-0 overflow-y-auto">
                   <div className="flex min-h-full items-center justify-center p-4">
                     <div
-                      className="relative bg-secondary rounded-xl max-w-4xl w-full border my-8"
+                      className="relative bg-secondary rounded-xl max-w-4xl w-full border my-8 max-h-[calc(100vh-2rem)] flex flex-col"
                       style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       {/* Header */}
-                      <div className="p-8 pb-4">
+                      <div className="p-8 pb-4 flex-shrink-0">
                         <button
                           onClick={() => setShowImagePicker(false)}
                           className="absolute top-6 right-6 p-2 hover:bg-white/10 rounded-xl transition-all hover:scale-110"
@@ -603,8 +607,8 @@ const CollectionManagement: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Content */}
-                      <div className="px-8 pb-8">
+                      {/* Content - Scrollable */}
+                      <div className="px-8 pb-8 overflow-y-auto flex-1">
                     {/* Drag & Drop Upload Zone */}
                     <div
                     className={`mb-6 border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
