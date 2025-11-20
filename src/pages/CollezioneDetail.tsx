@@ -6,6 +6,26 @@ import { useLanguage } from '../i18n/LanguageContext';
 import Navbar from '../components/Navbar';
 import { getCollection, getCollectionArtworks, Collection, Artwork } from '../services/collections-api';
 
+// Helper function to get translated field based on current language
+const getTranslatedField = <T extends Record<string, any>>(
+  item: T,
+  fieldName: string,
+  language: string,
+  fallbackField?: string
+): string => {
+  // Map zh-TW to zh_tw for database column naming
+  const langSuffix = language === 'zh-TW' ? 'zh_tw' : language;
+  const translatedFieldName = `${fieldName}_${langSuffix}`;
+
+  // Try to get the translated field
+  if (item[translatedFieldName]) {
+    return item[translatedFieldName];
+  }
+
+  // Fall back to the specified fallback field or the base field
+  return item[fallbackField || fieldName] || '';
+};
+
 const CollezioneDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -106,8 +126,8 @@ const CollezioneDetail: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{collection.title} - Adele Lo Feudo</title>
-        <meta name="description" content={collection.description} />
+        <title>{getTranslatedField(collection, 'title', language)} - Adele Lo Feudo</title>
+        <meta name="description" content={getTranslatedField(collection, 'description', language)} />
       </Helmet>
 
       <Navbar />
@@ -128,10 +148,10 @@ const CollezioneDetail: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <h1 className="text-[42px] font-bold text-white uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              {collection.title}
+              {getTranslatedField(collection, 'title', language)}
             </h1>
             <p className="text-white/60 text-[16px]">
-              {collection.description}
+              {getTranslatedField(collection, 'description', language)}
             </p>
           </motion.div>
 
@@ -146,7 +166,7 @@ const CollezioneDetail: React.FC = () => {
               <div className="aspect-[2/1]">
                 <img
                   src={collection.image_url}
-                  alt={`Copertina ${collection.title}`}
+                  alt={`Copertina ${getTranslatedField(collection, 'title', language)}`}
                   className="w-full h-full object-cover"
                 />
               </div>

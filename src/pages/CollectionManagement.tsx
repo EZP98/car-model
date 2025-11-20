@@ -32,8 +32,13 @@ const getImageUrl = (path: string): string => {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
+  // TEMPORARY: Use production images even on localhost for preview
+  // Remove this when you want to test with local images
+  const imageBaseUrl = import.meta.env.DEV
+    ? 'https://alf-portfolio-api.eziopappalardo98.workers.dev'
+    : API_BASE_URL;
   // Se è un path relativo, costruisci l'URL completo per R2
-  return `${API_BASE_URL}${path}`;
+  return `${imageBaseUrl}${path}`;
 };
 
 const CollectionManagement: React.FC = () => {
@@ -81,6 +86,9 @@ const CollectionManagement: React.FC = () => {
   const [allImages, setAllImages] = useState<Array<{ filename: string; url: string }>>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [draggedArtwork, setDraggedArtwork] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadData();
@@ -183,6 +191,44 @@ const CollectionManagement: React.FC = () => {
     }
   };
 
+  // Drag & Drop handlers for artworks reordering
+  const handleArtworkDragStart = (index: number) => {
+    setDraggedArtwork(index);
+  };
+
+  const handleArtworkDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleArtworkDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+
+    if (draggedArtwork === null || draggedArtwork === dropIndex) {
+      setDraggedArtwork(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    // Reorder artworks array
+    const newArtworks = [...artworks];
+    const draggedItem = newArtworks[draggedArtwork];
+    newArtworks.splice(draggedArtwork, 1);
+    newArtworks.splice(dropIndex, 0, draggedItem);
+
+    setArtworks(newArtworks);
+    setDraggedArtwork(null);
+    setDragOverIndex(null);
+
+    // TODO: Save new order to backend
+    console.log('New artwork order:', newArtworks.map((a, i) => ({ id: a.id, order: i + 1 })));
+  };
+
+  const handleArtworkDragEnd = () => {
+    setDraggedArtwork(null);
+    setDragOverIndex(null);
+  };
+
   // Check if there are changes
   const hasChanges = React.useMemo(() => {
     return formData.title !== originalData.title ||
@@ -217,6 +263,8 @@ const CollectionManagement: React.FC = () => {
 
         // Get artworks
         const artworksData = await getCollectionArtworks(parseInt(collectionId));
+        console.log('Artworks loaded:', artworksData);
+        console.log('First artwork image_url:', artworksData[0]?.image_url);
         setArtworks(artworksData);
       }
     } catch (error) {
@@ -479,11 +527,57 @@ const CollectionManagement: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
+            {/* Immagine Collezione */}
+            <div
+              onClick={() => setShowImagePicker(true)}
+              className="relative cursor-pointer group rounded-xl overflow-hidden"
+              style={{
+                border: formData.image_url ? '2px solid rgba(255, 255, 255, 0.1)' : '2px dashed rgba(255, 255, 255, 0.3)',
+                backgroundColor: formData.image_url ? 'transparent' : 'rgba(0, 0, 0, 0.3)'
+              }}
+            >
+              {formData.image_url ? (
+                <>
+                  {/* Image with overlay */}
+                  <div className="aspect-video relative">
+                    <img
+                      src={getImageUrl(formData.image_url)}
+                      alt="Copertina"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.jpg';
+                      }}
+                    />
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="text-center text-white">
+                        <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="font-bold text-sm">Cambia Immagine</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Empty state */}
+                  <div className="aspect-video flex flex-col items-center justify-center p-8">
+                    <svg className="w-16 h-16 text-white/40 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-white/60 font-bold text-lg mb-1">Clicca per scegliere immagine</p>
+                    <p className="text-white/40 text-sm">Immagine di copertina della collezione</p>
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Informazioni Collezione */}
             <div className="bg-secondary p-8 rounded-xl border" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
               <h2 className="text-2xl font-bold text-white mb-6">Informazioni Collezione</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 <div>
                   <label className="block text-white mb-2 font-bold">Titolo</label>
                   <input
@@ -496,18 +590,6 @@ const CollectionManagement: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-white mb-2 font-bold">Slug (URL)</label>
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    readOnly
-                    className="w-full px-4 py-2 bg-background/50 text-white/70 border rounded-lg cursor-not-allowed"
-                    style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                  />
-                  <p className="text-white/60 text-sm mt-1">⚠️ Non modificabile | URL: /collezione/{formData.slug}</p>
-                </div>
-
-                <div className="md:col-span-2">
                   <label className="block text-white mb-2 font-bold">Descrizione</label>
                   <textarea
                     value={formData.description}
@@ -517,66 +599,95 @@ const CollectionManagement: React.FC = () => {
                     style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                   />
                 </div>
-
-                <div>
-                  <label className="block text-white mb-2 font-bold">Ordine di visualizzazione</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={formData.order_index}
-                    onChange={(e) => setFormData({ ...formData, order_index: parseInt(e.target.value) || 1 })}
-                    className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                    style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                  />
-                  <p className="text-white/60 text-sm mt-1">
-                    1 = prima posizione. Se usi numeri uguali o salti (es. 1, 5, 12), l'ordine sarà comunque corretto.
-                  </p>
-                </div>
               </div>
             </div>
 
-            {/* Immagine Collezione */}
-            <div className="bg-secondary p-8 rounded-xl border" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-              <h2 className="text-2xl font-bold text-white mb-6">Immagine Collezione</h2>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-white mb-2 font-bold">Immagine Copertina</label>
-                  <div className="flex gap-4">
-                    <input
-                      type="text"
-                      value={formData.image_url}
-                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                      className="flex-1 px-4 py-2 bg-background text-white border rounded-lg"
-                      style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                      placeholder="/images/foto.jpg"
-                    />
-                    <button
-                      onClick={() => setShowImagePicker(true)}
-                      className="px-6 py-2 font-bold uppercase text-white rounded-lg transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: 'rgb(240, 45, 110)' }}
-                    >
-                      Scegli da Storage
-                    </button>
+            {/* Anteprima e Riordino Opere */}
+            {artworks.length > 0 && (
+              <div className="bg-secondary p-8 rounded-xl border" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-2xl font-bold text-white">Anteprima e Riordino Opere</h2>
+                  <div className="flex items-center gap-2 text-white/60 text-sm">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                    <span>Trascina per riordinare</span>
                   </div>
                 </div>
 
-                {formData.image_url && (
-                  <div>
-                    <label className="block text-white mb-2 font-bold">Anteprima Immagine</label>
-                    <img
-                      src={getImageUrl(formData.image_url)}
-                      alt="Anteprima"
-                      className="w-64 h-40 object-cover rounded-lg border"
-                      style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.jpg';
+                <div className="grid grid-cols-2 gap-4">
+                  {artworks.map((artwork, index) => (
+                    <motion.div
+                      key={artwork.id}
+                      draggable
+                      onDragStart={() => handleArtworkDragStart(index)}
+                      onDragOver={(e) => handleArtworkDragOver(e, index)}
+                      onDrop={(e) => handleArtworkDrop(e, index)}
+                      onDragEnd={handleArtworkDragEnd}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{
+                        opacity: draggedArtwork === index ? 0.5 : 1,
+                        y: 0,
+                        scale: dragOverIndex === index ? 1.05 : 1
                       }}
-                    />
-                  </div>
+                      transition={{ duration: 0.2 }}
+                      className="cursor-move group relative"
+                    >
+                      {/* Position Badge */}
+                      <div className="absolute -top-2 -left-2 z-10 bg-accent text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
+                        {index + 1}
+                      </div>
+
+                      {/* Drag Handle Indicator */}
+                      <div className="absolute -top-2 -right-2 z-10 bg-background border border-white/20 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg">
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                        </svg>
+                      </div>
+
+                      {/* Image Container */}
+                      <div className="border border-white/10 rounded-lg overflow-hidden bg-background">
+                        <div className="aspect-square">
+                          {artwork.image_url && !imageErrors.has(artwork.id) ? (
+                            <img
+                              src={getImageUrl(artwork.image_url)}
+                              alt={artwork.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                              onError={() => {
+                                setImageErrors(prev => new Set(prev).add(artwork.id));
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-background flex items-center justify-center">
+                              <svg className="w-8 h-8 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {draggedArtwork !== null && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-8 p-4 bg-accent/10 border border-accent/30 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3 text-white/80">
+                      <svg className="w-5 h-5 text-accent flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-sm">
+                        Trascina l'opera nella posizione desiderata e rilascia per riordinare
+                      </p>
+                    </div>
+                  </motion.div>
                 )}
               </div>
-            </div>
+            )}
 
             {/* Image Picker Modal */}
             {showImagePicker && createPortal(

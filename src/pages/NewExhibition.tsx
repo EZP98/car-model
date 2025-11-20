@@ -15,7 +15,11 @@ const getImageUrl = (path: string): string => {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
-  return `${API_BASE_URL}${path}`;
+  // TEMPORARY: Use production images even on localhost for preview
+  const imageBaseUrl = import.meta.env.DEV
+    ? 'https://alf-portfolio-api.eziopappalardo98.workers.dev'
+    : API_BASE_URL;
+  return `${imageBaseUrl}${path}`;
 };
 
 const NewExhibition: React.FC = () => {

@@ -16,7 +16,11 @@ const getImageUrl = (path: string): string => {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
-  return `${API_BASE_URL}${path}`;
+  // TEMPORARY: Use production images even on localhost for preview
+  const imageBaseUrl = import.meta.env.DEV
+    ? 'https://alf-portfolio-api.eziopappalardo98.workers.dev'
+    : API_BASE_URL;
+  return `${imageBaseUrl}${path}`;
 };
 
 const NewCollection: React.FC = () => {
@@ -113,7 +117,7 @@ const NewCollection: React.FC = () => {
           className="bg-secondary p-8 rounded-xl border"
           style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-6">
             {/* Titolo */}
             <div>
               <label className="block text-white mb-2 font-bold">
@@ -130,26 +134,8 @@ const NewCollection: React.FC = () => {
               />
             </div>
 
-            {/* Slug */}
-            <div>
-              <label className="block text-white mb-2 font-bold">
-                Slug (URL)
-              </label>
-              <input
-                type="text"
-                value={formData.slug}
-                readOnly
-                className="w-full px-4 py-3 bg-background/50 text-white/70 border rounded-lg cursor-not-allowed"
-                style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                placeholder="Generato automaticamente dal titolo"
-              />
-              <p className="text-white/60 text-sm mt-1">
-                ✓ Generato automaticamente | URL: /collezione/{formData.slug || 'slug'}
-              </p>
-            </div>
-
             {/* Descrizione */}
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-white mb-2 font-bold">
                 Descrizione
               </label>
@@ -199,7 +185,7 @@ const NewCollection: React.FC = () => {
 
             {/* Anteprima immagine */}
             {formData.image_url && (
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-white mb-2 font-bold">
                   Anteprima Immagine
                 </label>
@@ -217,7 +203,7 @@ const NewCollection: React.FC = () => {
             )}
 
             {/* Visibilità */}
-            <div className="md:col-span-2">
+            <div>
               <label className="flex items-center gap-3 cursor-pointer">
                 <div className="relative">
                   <input
@@ -289,7 +275,6 @@ const NewCollection: React.FC = () => {
           <h3 className="text-white font-bold mb-3">Suggerimenti:</h3>
           <ul className="text-white/60 space-y-2 text-sm">
             <li>• Il titolo apparirà nella homepage e nelle pagine della collezione</li>
-            <li>• Lo slug determina l'URL della collezione (usa solo lettere minuscole, numeri e trattini)</li>
             <li>• L'ordine di visualizzazione determina la posizione nella homepage (numero più basso = prima posizione)</li>
             <li>• Puoi aggiungere le opere alla collezione dopo averla creata</li>
           </ul>

@@ -131,20 +131,64 @@ const LoginContent: React.FC = () => {
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="bg-secondary"
+            className="bg-secondary p-8 rounded-xl border"
+            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
           >
             {/* Google Login or Authenticated State */}
             {!isGoogleAuthenticated ? (
-              <div className="flex flex-col items-center gap-4">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  theme="filled_black"
-                  size="large"
-                  text="continue_with"
-                  shape="rectangular"
-                  logo_alignment="left"
-                />
+              <div className="flex flex-col gap-6">
+                {/* Google Login */}
+                <div className="flex flex-col items-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    theme="filled_black"
+                    size="large"
+                    text="continue_with"
+                    shape="rectangular"
+                    logo_alignment="left"
+                  />
+                </div>
+
+                {/* Password Form - ONLY in development */}
+                {import.meta.env.DEV && (
+                  <>
+                    {/* Divider */}
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 h-px bg-white/10"></div>
+                      <span className="text-white/40 text-sm uppercase tracking-wider">oppure</span>
+                      <div className="flex-1 h-px bg-white/10"></div>
+                    </div>
+
+                    {/* Password Form */}
+                    <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                      <div>
+                        <label className="block text-white/80 text-sm font-bold mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                          Password (Development Only)
+                        </label>
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Inserisci la password"
+                          className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-accent transition-colors"
+                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        disabled={isLoading || !password}
+                        className="w-full py-3 px-6 bg-accent text-white font-bold uppercase tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+                        style={{ fontFamily: 'Montserrat, sans-serif' }}
+                      >
+                        {isLoading ? 'Caricamento...' : 'Accedi'}
+                      </motion.button>
+                    </form>
+                  </>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center gap-6">

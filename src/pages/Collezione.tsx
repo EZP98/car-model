@@ -1084,9 +1084,6 @@ const Collezione: React.FC = () => {
         </div>
       </footer>
 
-      {/* Language Switcher */}
-      <LanguageSwitcher />
-
       {/* Modal Mostre */}
       {selectedMostra && (
         <MostraModal
