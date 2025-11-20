@@ -7,9 +7,8 @@ import BackofficeLayout from '../components/BackofficeLayout';
 import { getCollections, updateCollection, deleteCollection, Collection, Artwork, getCollectionArtworks } from '../services/collections-api';
 import { useToast } from '../components/Toast';
 
-const API_BASE_URL = import.meta.env.PROD
-  ? 'https://alf-portfolio-api.eziopappalardo98.workers.dev'
-  : 'http://localhost:8787';
+// In development, use empty string to leverage Vite proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_KEY = import.meta.env.VITE_API_KEY || '';
 
 // Helper to add authentication headers
@@ -56,6 +55,7 @@ const CollectionManagement: React.FC = () => {
     title: '',
     slug: '',
     description: '',
+    detailed_description: '',
     image_url: '',
     order_index: 1,
     is_visible: true
@@ -254,6 +254,7 @@ const CollectionManagement: React.FC = () => {
           title: collectionData.title,
           slug: collectionData.slug,
           description: collectionData.description,
+          detailed_description: (collectionData as any).detailed_description || '',
           image_url: collectionData.image_url,
           order_index: collectionData.order_index,
           is_visible: collectionData.is_visible
@@ -414,15 +415,19 @@ const CollectionManagement: React.FC = () => {
       </Helmet>
 
       {loading ? (
-        <div className="max-w-5xl mx-auto py-20 px-12 flex items-center justify-center min-h-[60vh]">
-          <div className="text-white text-xl">Caricamento...</div>
-        </div>
+        <div className="max-w-5xl mx-auto py-20 px-12 min-h-[60vh]" />
       ) : !collection ? (
         <div className="max-w-5xl mx-auto py-20 px-12">
           <div className="text-white text-xl">Collezione non trovata</div>
         </div>
       ) : (
-      <div className="max-w-5xl mx-auto py-20 px-12">
+      <motion.div
+        className="max-w-5xl mx-auto py-20 px-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -597,6 +602,18 @@ const CollectionManagement: React.FC = () => {
                     rows={4}
                     className="w-full px-4 py-2 bg-background text-white border rounded-lg"
                     style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-white mb-2 font-bold">Descrizione Dettagliata ("Il Perché di Questa Collezione")</label>
+                  <textarea
+                    value={formData.detailed_description || ''}
+                    onChange={(e) => setFormData({ ...formData, detailed_description: e.target.value })}
+                    rows={8}
+                    className="w-full px-4 py-2 bg-background text-white border rounded-lg"
+                    style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                    placeholder="Testo lungo che apparirà nella sezione 'Il Perché di Questa Collezione' della pagina pubblica..."
                   />
                 </div>
               </div>
@@ -1103,7 +1120,7 @@ const CollectionManagement: React.FC = () => {
             </button>
           </div>
         )}
-      </div>
+      </motion.div>
       )}
     </BackofficeLayout>
   );

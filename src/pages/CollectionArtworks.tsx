@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
 import { getCollections, getCollectionArtworks, Collection, Artwork } from '../services/collections-api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+// In development, use empty string to leverage Vite proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 const CollectionArtworks: React.FC = () => {
   const { collectionId } = useParams<{ collectionId: string }>();
@@ -151,7 +152,13 @@ const CollectionArtworks: React.FC = () => {
         <title>Gestione Opere - {collection.title} - Adele Lo Feudo</title>
       </Helmet>
 
-      <div className="max-w-5xl mx-auto py-20 px-12">
+      <motion.div
+        className="max-w-5xl mx-auto py-20 px-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         <div className="flex justify-between items-center mb-8">
           <div>
             <button
@@ -487,7 +494,7 @@ const CollectionArtworks: React.FC = () => {
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
     </BackofficeLayout>
   );
 };

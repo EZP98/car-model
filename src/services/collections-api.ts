@@ -3,9 +3,9 @@
  * Gestisce le collezioni (OPERA 5-8) che si vedono nel frontend
  */
 
-const API_BASE_URL = import.meta.env.PROD
-  ? 'https://alf-portfolio-api.eziopappalardo98.workers.dev'
-  : 'http://localhost:8787';
+// In development, use empty string to leverage Vite proxy
+// In production, set VITE_API_URL env var to the deployed worker URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_KEY = import.meta.env.VITE_API_KEY || '';
 
 // Helper to add authentication headers
@@ -40,6 +40,14 @@ export interface Collection {
   description_ja?: string;
   description_zh?: string;
   description_zh_tw?: string;
+  detailed_description?: string;
+  detailed_description_it?: string;
+  detailed_description_en?: string;
+  detailed_description_es?: string;
+  detailed_description_fr?: string;
+  detailed_description_ja?: string;
+  detailed_description_zh?: string;
+  detailed_description_zh_tw?: string;
   image_url: string;
   order_index: number;
   is_visible: boolean;
@@ -66,27 +74,28 @@ export async function getCollections(showAll = false): Promise<Collection[]> {
     const url = showAll
       ? `${API_BASE_URL}/api/collections?all=true`
       : `${API_BASE_URL}/api/collections`;
+    console.log('[collections-api] Fetching from:', url);
     const response = await fetch(url, {
       headers: {
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache'
       }
     });
-    if (!response.ok) throw new Error('Failed to fetch collections');
+    console.log('[collections-api] Response status:', response.status, response.statusText);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[collections-api] Error response:', errorText);
+      throw new Error(`Failed to fetch collections: ${response.status} ${errorText}`);
+    }
+
     const data = await response.json() as { collections: Collection[] };
-    console.log('[collections-api] Collections loaded:', data.collections?.length || 0);
+    console.log('[collections-api] Collections loaded:', data.collections?.length || 0, data.collections);
     return data.collections;
   } catch (error) {
     console.error('[collections-api] Error fetching collections:', error);
-    // Fallback to localStorage if API fails
-    const COLLECTIONS_KEY = 'alf-collections';
-    const stored = localStorage.getItem(COLLECTIONS_KEY);
-    if (stored) {
-      console.log('[collections-api] Using localStorage fallback');
-      return JSON.parse(stored);
-    }
-    console.log('[collections-api] No collections found');
-    return [];
+    // Don't use localStorage fallback - throw the error so we can see what's wrong
+    throw error;
   }
 }
 

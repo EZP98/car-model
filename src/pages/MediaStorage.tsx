@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
+import BackofficeLoader from '../components/BackofficeLoader';
 
 interface MediaImage {
   filename: string;
@@ -23,9 +24,8 @@ interface StorageStats {
   };
 }
 
-const API_BASE_URL = import.meta.env.PROD
-  ? 'https://alf-portfolio-api.eziopappalardo98.workers.dev'
-  : 'http://localhost:8787';
+// In development, use empty string to leverage Vite proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 const MediaStorage: React.FC = () => {
   const [images, setImages] = useState<MediaImage[]>([]);
@@ -439,8 +439,12 @@ const MediaStorage: React.FC = () => {
         <title>Storage - Backoffice</title>
       </Helmet>
 
-      <div
+      <motion.div
         className="max-w-5xl mx-auto py-20 px-12 relative"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
@@ -856,7 +860,7 @@ const MediaStorage: React.FC = () => {
           </div>
 
           {loading ? (
-            <div className="text-white text-center py-12">Caricamento...</div>
+            <BackofficeLoader message="Caricamento immagini..." />
           ) : images.length === 0 ? (
             <div className="text-white/60 text-center py-12">
               Nessuna immagine caricata
@@ -973,7 +977,7 @@ const MediaStorage: React.FC = () => {
             </>
           )}
         </motion.div>
-      </div>
+      </motion.div>
     </BackofficeLayout>
   );
 };

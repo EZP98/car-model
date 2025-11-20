@@ -97,7 +97,13 @@ const CriticManagement: React.FC = () => {
         <title>Gestione Critico - {formData.name} - Backoffice</title>
       </Helmet>
 
-      <div className="max-w-5xl mx-auto py-20 px-12">
+      <motion.div
+        className="max-w-5xl mx-auto py-20 px-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         {/* Header */}
         <div className="flex justify-between items-start mb-8">
           <div>
@@ -305,7 +311,7 @@ const CriticManagement: React.FC = () => {
             {saving ? 'Salvataggio...' : 'Salva Modifiche'}
           </button>
         </div>
-      </div>
+      </motion.div>
     </BackofficeLayout>
   );
 };

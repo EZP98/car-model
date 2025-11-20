@@ -104,14 +104,12 @@ const CollezioneDetail: React.FC = () => {
     return () => timers.forEach(timer => clearTimeout(timer));
   }, [id]); // Aggiungi id come dipendenza per re-triggere quando cambia collezione
 
-  // Loading state
+  // Loading state - show nothing
   if (loading) {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen bg-background pt-24 px-6 flex items-center justify-center">
-          <div className="text-white">Loading...</div>
-        </div>
+        <div className="min-h-screen bg-background pt-24 px-6" />
       </>
     );
   }
@@ -174,26 +172,21 @@ const CollezioneDetail: React.FC = () => {
           </motion.div>
 
           {/* Testo descrittivo della collezione */}
-          <motion.div
-            className="border border-white/10 rounded-[12px] p-8 bg-white/5 mb-16"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <h3 className="text-xl font-bold text-white mb-4 uppercase tracking-wider" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Il Perché di Questa Collezione
-            </h3>
-            <p className="text-white/80 leading-relaxed text-base">
-              Questa serie di opere nasce da una profonda riflessione sulla materialità e la trasformazione.
-              Ogni quadro rappresenta un dialogo silenzioso tra l'artista e la tela, dove il colore diventa
-              veicolo di emozioni non dette e la forma si fa portavoce di un linguaggio universale che trascende
-              le parole. L'intento è quello di creare uno spazio contemplativo dove l'osservatore possa ritrovare
-              frammenti di sé stesso riflessi nelle texture e nelle cromie, invitandolo a una lettura personale e
-              intima dell'opera. La collezione si propone come un viaggio attraverso stati d'animo e percezioni,
-              dove ogni pennellata è testimonianza di un momento vissuto e ogni composizione diventa finestra
-              su mondi interiori inesplorati.
-            </p>
-          </motion.div>
+          {getTranslatedField(collection, 'detailed_description', language) && (
+            <motion.div
+              className="border border-white/10 rounded-[12px] p-8 bg-white/5 mb-16"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <h3 className="text-xl font-bold text-white mb-4 uppercase tracking-wider" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                Il Perché di Questa Collezione
+              </h3>
+              <p className="text-white/80 leading-relaxed text-base whitespace-pre-wrap">
+                {getTranslatedField(collection, 'detailed_description', language)}
+              </p>
+            </motion.div>
+          )}
 
           {/* Griglia delle opere */}
           <motion.div

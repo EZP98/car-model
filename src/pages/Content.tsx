@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
 import {
   getCollections,
@@ -407,8 +408,19 @@ const ContentWithCollections: React.FC = () => {
         <title>Gestione Contenuti - Adele Lo Feudo</title>
       </Helmet>
 
-      <div className="max-w-5xl mx-auto py-20 px-12">
-        <div className="flex justify-between items-center mb-8">
+      <motion.div
+        className="max-w-5xl mx-auto py-20 px-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <motion.div
+          className="flex justify-between items-center mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
           <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
             Gestione <span style={{ color: 'rgb(240, 45, 110)' }}>
               {activeTab === 'collezioni' ? 'Collezioni' :
@@ -534,15 +546,13 @@ const ContentWithCollections: React.FC = () => {
               </button>
             </div>
           )}
-        </div>
+        </motion.div>
 
 
         {/* Tab Content */}
         {activeTab === 'collezioni' && (
           loading ? (
-            <div className="text-center py-20">
-              <p className="text-white text-xl">Caricamento...</p>
-            </div>
+            <div className="min-h-[400px]" />
           ) : collections.length === 0 ? (
             <div className="p-8 border text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
               <p className="text-white text-lg mb-4">Nessuna collezione presente</p>
@@ -655,9 +665,7 @@ const ContentWithCollections: React.FC = () => {
 
         {activeTab === 'critica' && (
           loading ? (
-            <div className="text-center py-20">
-              <p className="text-white text-xl">Caricamento...</p>
-            </div>
+            <div className="min-h-[400px]" />
           ) : critics.length === 0 ? (
             <div className="p-8 border text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
               <p className="text-white text-lg mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
@@ -711,9 +719,7 @@ const ContentWithCollections: React.FC = () => {
 
         {activeTab === 'mostre' && (
           loading ? (
-            <div className="text-center py-20">
-              <p className="text-white text-xl">Caricamento...</p>
-            </div>
+            <div className="min-h-[400px]" />
           ) : exhibitions.length === 0 ? (
             <div className="p-8 border text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
               <p className="text-white text-lg mb-4">Nessuna mostra presente</p>
@@ -951,7 +957,7 @@ const ContentWithCollections: React.FC = () => {
           </div>
         )}
 
-      </div>
+      </motion.div>
     </BackofficeLayout>
   );
 };

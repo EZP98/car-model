@@ -52,7 +52,13 @@ const NewCritic: React.FC = () => {
         <title>Nuovo Critico - Gestione Backoffice</title>
       </Helmet>
 
-      <div className="max-w-4xl mx-auto py-20 px-12">
+      <motion.div
+        className="max-w-4xl mx-auto py-20 px-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         {/* Header */}
         <div className="mb-8">
           <button
@@ -141,7 +147,7 @@ const NewCritic: React.FC = () => {
                 rows={6}
                 className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors resize-none"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                placeholder="&quot;Le opere di Adele Lo Feudo sono un viaggio nell'anima umana...&quot;"
+                placeholder="Le opere di Adele Lo Feudo sono un viaggio nell'anima umana..."
               />
               <p className="text-white/60 text-sm mt-1">
                 Opzionale. Traduzione italiana della recensione
@@ -276,7 +282,7 @@ const NewCritic: React.FC = () => {
             <li>• L'ordine determina la posizione nella pagina (i numeri più bassi appaiono prima)</li>
           </ul>
         </div>
-      </div>
+      </motion.div>
     </BackofficeLayout>
   );
 };

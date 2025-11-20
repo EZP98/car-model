@@ -14,3 +14,7 @@ preview_database_id = "01e7645a-dc0f-4eba-83e5-2ccd116808ef"
 binding = "IMAGES"
 bucket_name = "adele-lo-feudo-images"
 preview_bucket_name = "adele-lo-feudo-images"
+
+# AI binding for translations
+[ai]
+binding = "AI"

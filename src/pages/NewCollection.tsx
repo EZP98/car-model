@@ -6,9 +6,8 @@ import BackofficeLayout from '../components/BackofficeLayout';
 import { createCollection } from '../services/collections-api';
 import { useToast } from '../components/Toast';
 
-const API_BASE_URL = import.meta.env.PROD
-  ? 'https://alf-portfolio-api.eziopappalardo98.workers.dev'
-  : 'http://localhost:8787';
+// In development, use empty string to leverage Vite proxy
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Helper function to get full image URL
 const getImageUrl = (path: string): string => {
@@ -91,7 +90,13 @@ const NewCollection: React.FC = () => {
         <title>Nuova Collezione - Gestione Backoffice</title>
       </Helmet>
 
-      <div className="max-w-4xl mx-auto py-20 px-12">
+      <motion.div
+        className="max-w-4xl mx-auto py-20 px-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         {/* Header */}
         <div className="mb-8">
           <button
@@ -279,7 +284,7 @@ const NewCollection: React.FC = () => {
             <li>• Puoi aggiungere le opere alla collezione dopo averla creata</li>
           </ul>
         </div>
-      </div>
+      </motion.div>
     </BackofficeLayout>
   );
 };

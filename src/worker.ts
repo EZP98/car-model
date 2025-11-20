@@ -7,6 +7,8 @@ interface Env {
   DB: D1Database;
   IMAGES?: R2Bucket;
   API_KEY: string; // Secret API key for authentication
+  AI?: any; // Cloudflare AI binding for translations
+  ANTHROPIC_API_KEY?: string; // Anthropic API key for Claude translations
 }
 
 // Funzioni helper per CORS
@@ -41,6 +43,114 @@ function isAuthenticated(request: Request, env: Env): boolean {
 
 function unauthorizedResponse() {
   return jsonResponse({ error: 'Unauthorized - Invalid or missing API key' }, 401);
+}
+
+// ========== TRANSLATION HELPERS ==========
+
+interface Translation {
+  entity_type: string;
+  entity_id: number;
+  field_name: string;
+  language: string;
+  value: string;
+}
+
+/**
+ * Get all translations for a specific entity
+ */
+async function getTranslations(
+  db: D1Database,
+  entityType: string,
+  entityId: number
+): Promise<Record<string, any>> {
+  const { results } = await db.prepare(
+    'SELECT field_name, language, value FROM translations WHERE entity_type = ? AND entity_id = ?'
+  ).bind(entityType, entityId).all();
+
+  const translations: Record<string, any> = {};
+
+  for (const row of results as any) {
+    const key = `${row.field_name}_${row.language.replace('-', '_')}`;
+    translations[key] = row.value;
+  }
+
+  return translations;
+}
+
+/**
+ * Save or update translations for an entity
+ */
+async function saveTranslations(
+  db: D1Database,
+  entityType: string,
+  entityId: number,
+  translations: Record<string, any>
+): Promise<void> {
+  const languages = ['it', 'en', 'es', 'fr', 'ja', 'zh', 'zh-tw'];
+
+  for (const [key, value] of Object.entries(translations)) {
+    if (!value) continue;
+
+    // Parse field name and language from key (e.g., "title_en" -> field="title", lang="en")
+    const parts = key.split('_');
+    const language = parts.pop();
+    const fieldName = parts.join('_');
+
+    // Normalize language code (zh_tw -> zh-tw)
+    const normalizedLang = language === 'tw' ? 'zh-tw' : language;
+
+    if (!languages.includes(normalizedLang || '')) continue;
+
+    await db.prepare(
+      `INSERT INTO translations (entity_type, entity_id, field_name, language, value, updated_at)
+       VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+       ON CONFLICT(entity_type, entity_id, field_name, language)
+       DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP`
+    ).bind(entityType, entityId, fieldName, normalizedLang, value).run();
+  }
+}
+
+/**
+ * Enrich entities with their translations
+ */
+async function enrichWithTranslations(
+  db: D1Database,
+  entities: any[],
+  entityType: string
+): Promise<any[]> {
+  if (!entities || entities.length === 0) return entities;
+
+  // Get all entity IDs
+  const entityIds = entities.map(e => e.id);
+
+  // Get all translations for these entities in one query
+  const { results } = await db.prepare(
+    `SELECT entity_id, field_name, language, value
+     FROM translations
+     WHERE entity_type = ? AND entity_id IN (${entityIds.map(() => '?').join(',')})`
+  ).bind(entityType, ...entityIds).all();
+
+  // Group translations by entity_id
+  const translationsByEntity: Record<number, Translation[]> = {};
+  for (const row of results as any) {
+    if (!translationsByEntity[row.entity_id]) {
+      translationsByEntity[row.entity_id] = [];
+    }
+    translationsByEntity[row.entity_id].push(row);
+  }
+
+  // Enrich each entity with its translations
+  return entities.map(entity => {
+    const entityTranslations = translationsByEntity[entity.id] || [];
+    const enriched = { ...entity };
+
+    for (const trans of entityTranslations) {
+      const key = `${trans.field_name}_${trans.language.replace('-', '_')}`;
+      enriched[key] = trans.value;
+    }
+
+    return enriched;
+  });
 }
 
 // Router principale
@@ -334,8 +444,9 @@ export default {
           : 'SELECT * FROM collections WHERE is_visible = 1 ORDER BY order_index ASC';
 
         const { results } = await env.DB.prepare(query).all();
+        const enriched = await enrichWithTranslations(env.DB, results, 'collection');
 
-        return jsonResponse({ collections: results });
+        return jsonResponse({ collections: enriched });
       }
 
       // GET /api/collections/:slug - Singola collezione
@@ -349,7 +460,8 @@ export default {
           return jsonResponse({ error: 'Collection not found' }, 404);
         }
 
-        return jsonResponse({ collection: results[0] });
+        const enriched = await enrichWithTranslations(env.DB, results, 'collection');
+        return jsonResponse({ collection: enriched[0] });
       }
 
       // POST /api/collections - Crea nuova collezione
@@ -361,6 +473,20 @@ export default {
           image_url?: string;
           order_index?: number;
           is_visible?: boolean;
+          title_it?: string;
+          title_en?: string;
+          title_es?: string;
+          title_fr?: string;
+          title_ja?: string;
+          title_zh?: string;
+          title_zh_tw?: string;
+          description_it?: string;
+          description_en?: string;
+          description_es?: string;
+          description_fr?: string;
+          description_ja?: string;
+          description_zh?: string;
+          description_zh_tw?: string;
         };
 
         const { title, slug, description, image_url, order_index, is_visible } = body;
@@ -381,6 +507,7 @@ export default {
           }, 409);
         }
 
+        // Insert base collection data (without translation fields)
         const result = await env.DB.prepare(
           `INSERT INTO collections (title, slug, description, image_url, order_index, is_visible)
            VALUES (?, ?, ?, ?, ?, ?)
@@ -394,7 +521,13 @@ export default {
           is_visible !== undefined ? (is_visible ? 1 : 0) : 1
         ).first();
 
-        return jsonResponse({ collection: result }, 201);
+        // Save translations to translations table
+        await saveTranslations(env.DB, 'collection', (result as any).id, body);
+
+        // Enrich with translations before returning
+        const enriched = await enrichWithTranslations(env.DB, [result as any], 'collection');
+
+        return jsonResponse({ collection: enriched[0] }, 201);
       }
 
       // PUT /api/collections/:id - Aggiorna collezione
@@ -407,10 +540,25 @@ export default {
           image_url?: string;
           order_index?: number;
           is_visible?: boolean;
+          title_it?: string;
+          title_en?: string;
+          title_es?: string;
+          title_fr?: string;
+          title_ja?: string;
+          title_zh?: string;
+          title_zh_tw?: string;
+          description_it?: string;
+          description_en?: string;
+          description_es?: string;
+          description_fr?: string;
+          description_ja?: string;
+          description_zh?: string;
+          description_zh_tw?: string;
         };
 
         const { title, slug, description, image_url, order_index, is_visible } = body;
 
+        // Update base collection data (without translation fields)
         const result = await env.DB.prepare(
           `UPDATE collections
            SET title = COALESCE(?, title),
@@ -436,7 +584,13 @@ export default {
           return jsonResponse({ error: 'Collection not found' }, 404);
         }
 
-        return jsonResponse({ collection: result });
+        // Save translations to translations table
+        await saveTranslations(env.DB, 'collection', (result as any).id, body);
+
+        // Enrich with translations before returning
+        const enriched = await enrichWithTranslations(env.DB, [result as any], 'collection');
+
+        return jsonResponse({ collection: enriched[0] });
       }
 
       // DELETE /api/collections/:id - Elimina collezione
@@ -539,52 +693,85 @@ export default {
       // PUT /api/exhibitions/:id - Aggiorna mostra
       if (path.match(/^\/api\/exhibitions\/\d+$/) && method === 'PUT') {
         const id = path.split('/').pop();
-        const body = await request.json() as {
-          title?: string;
-          subtitle?: string;
-          location?: string;
-          date?: string;
-          description?: string;
-          info?: string;
-          website?: string;
-          image_url?: string;
-          slug?: string;
-          order_index?: number;
-          is_visible?: boolean;
-        };
+        const body = await request.json() as any;
 
-        const { title, subtitle, location, date, description, info, website, image_url, slug, order_index, is_visible } = body;
+        const {
+          title, subtitle, location, date, description, info, website, image_url, slug, order_index, is_visible,
+          title_it, title_en, title_es, title_fr, title_ja, title_zh, title_zh_tw,
+          subtitle_it, subtitle_en, subtitle_es, subtitle_fr, subtitle_ja, subtitle_zh, subtitle_zh_tw,
+          description_it, description_en, description_es, description_fr, description_ja, description_zh, description_zh_tw,
+          location_it, location_en, location_es, location_fr, location_ja, location_zh, location_zh_tw,
+          info_it, info_en, info_es, info_fr, info_ja, info_zh, info_zh_tw
+        } = body;
+
+        // Build dynamic UPDATE query with all fields
+        const updates: string[] = [];
+        const params: any[] = [];
+
+        // Base fields
+        if (title !== undefined) { updates.push('title = ?'); params.push(title); }
+        if (subtitle !== undefined) { updates.push('subtitle = ?'); params.push(subtitle); }
+        if (location !== undefined) { updates.push('location = ?'); params.push(location); }
+        if (date !== undefined) { updates.push('date = ?'); params.push(date); }
+        if (description !== undefined) { updates.push('description = ?'); params.push(description); }
+        if (info !== undefined) { updates.push('info = ?'); params.push(info); }
+        if (website !== undefined) { updates.push('website = ?'); params.push(website); }
+        if (image_url !== undefined) { updates.push('image_url = ?'); params.push(image_url); }
+        if (slug !== undefined) { updates.push('slug = ?'); params.push(slug); }
+        if (order_index !== undefined) { updates.push('order_index = ?'); params.push(order_index); }
+        if (is_visible !== undefined) { updates.push('is_visible = ?'); params.push(is_visible ? 1 : 0); }
+
+        // Translation fields
+        if (title_it !== undefined) { updates.push('title_it = ?'); params.push(title_it); }
+        if (title_en !== undefined) { updates.push('title_en = ?'); params.push(title_en); }
+        if (title_es !== undefined) { updates.push('title_es = ?'); params.push(title_es); }
+        if (title_fr !== undefined) { updates.push('title_fr = ?'); params.push(title_fr); }
+        if (title_ja !== undefined) { updates.push('title_ja = ?'); params.push(title_ja); }
+        if (title_zh !== undefined) { updates.push('title_zh = ?'); params.push(title_zh); }
+        if (title_zh_tw !== undefined) { updates.push('title_zh_tw = ?'); params.push(title_zh_tw); }
+
+        if (subtitle_it !== undefined) { updates.push('subtitle_it = ?'); params.push(subtitle_it); }
+        if (subtitle_en !== undefined) { updates.push('subtitle_en = ?'); params.push(subtitle_en); }
+        if (subtitle_es !== undefined) { updates.push('subtitle_es = ?'); params.push(subtitle_es); }
+        if (subtitle_fr !== undefined) { updates.push('subtitle_fr = ?'); params.push(subtitle_fr); }
+        if (subtitle_ja !== undefined) { updates.push('subtitle_ja = ?'); params.push(subtitle_ja); }
+        if (subtitle_zh !== undefined) { updates.push('subtitle_zh = ?'); params.push(subtitle_zh); }
+        if (subtitle_zh_tw !== undefined) { updates.push('subtitle_zh_tw = ?'); params.push(subtitle_zh_tw); }
+
+        if (description_it !== undefined) { updates.push('description_it = ?'); params.push(description_it); }
+        if (description_en !== undefined) { updates.push('description_en = ?'); params.push(description_en); }
+        if (description_es !== undefined) { updates.push('description_es = ?'); params.push(description_es); }
+        if (description_fr !== undefined) { updates.push('description_fr = ?'); params.push(description_fr); }
+        if (description_ja !== undefined) { updates.push('description_ja = ?'); params.push(description_ja); }
+        if (description_zh !== undefined) { updates.push('description_zh = ?'); params.push(description_zh); }
+        if (description_zh_tw !== undefined) { updates.push('description_zh_tw = ?'); params.push(description_zh_tw); }
+
+        if (location_it !== undefined) { updates.push('location_it = ?'); params.push(location_it); }
+        if (location_en !== undefined) { updates.push('location_en = ?'); params.push(location_en); }
+        if (location_es !== undefined) { updates.push('location_es = ?'); params.push(location_es); }
+        if (location_fr !== undefined) { updates.push('location_fr = ?'); params.push(location_fr); }
+        if (location_ja !== undefined) { updates.push('location_ja = ?'); params.push(location_ja); }
+        if (location_zh !== undefined) { updates.push('location_zh = ?'); params.push(location_zh); }
+        if (location_zh_tw !== undefined) { updates.push('location_zh_tw = ?'); params.push(location_zh_tw); }
+
+        if (info_it !== undefined) { updates.push('info_it = ?'); params.push(info_it); }
+        if (info_en !== undefined) { updates.push('info_en = ?'); params.push(info_en); }
+        if (info_es !== undefined) { updates.push('info_es = ?'); params.push(info_es); }
+        if (info_fr !== undefined) { updates.push('info_fr = ?'); params.push(info_fr); }
+        if (info_ja !== undefined) { updates.push('info_ja = ?'); params.push(info_ja); }
+        if (info_zh !== undefined) { updates.push('info_zh = ?'); params.push(info_zh); }
+        if (info_zh_tw !== undefined) { updates.push('info_zh_tw = ?'); params.push(info_zh_tw); }
+
+        if (updates.length === 0) {
+          return jsonResponse({ error: 'No fields to update' }, 400);
+        }
+
+        updates.push('updated_at = CURRENT_TIMESTAMP');
+        params.push(id);
 
         const result = await env.DB.prepare(
-          `UPDATE exhibitions
-           SET title = COALESCE(?, title),
-               subtitle = COALESCE(?, subtitle),
-               location = COALESCE(?, location),
-               date = COALESCE(?, date),
-               description = COALESCE(?, description),
-               info = COALESCE(?, info),
-               website = COALESCE(?, website),
-               image_url = COALESCE(?, image_url),
-               slug = COALESCE(?, slug),
-               order_index = COALESCE(?, order_index),
-               is_visible = COALESCE(?, is_visible),
-               updated_at = CURRENT_TIMESTAMP
-           WHERE id = ?
-           RETURNING *`
-        ).bind(
-          title || null,
-          subtitle || null,
-          location || null,
-          date || null,
-          description || null,
-          info || null,
-          website || null,
-          image_url || null,
-          slug || null,
-          order_index || null,
-          is_visible !== undefined ? (is_visible ? 1 : 0) : null,
-          id
-        ).first();
+          `UPDATE exhibitions SET ${updates.join(', ')} WHERE id = ? RETURNING *`
+        ).bind(...params).first();
 
         if (!result) {
           return jsonResponse({ error: 'Exhibition not found' }, 404);
@@ -616,7 +803,9 @@ export default {
           'SELECT * FROM critics ORDER BY id ASC'
         ).all();
 
-        return jsonResponse({ critics: results });
+        const enriched = await enrichWithTranslations(env.DB, results, 'critic');
+
+        return jsonResponse({ critics: enriched });
       }
 
       // GET /api/critics/:id - Singolo critico
@@ -630,7 +819,9 @@ export default {
           return jsonResponse({ error: 'Critic not found' }, 404);
         }
 
-        return jsonResponse({ critic: results[0] });
+        const enriched = await enrichWithTranslations(env.DB, results, 'critic');
+
+        return jsonResponse({ critic: enriched[0] });
       }
 
       // POST /api/critics - Crea nuovo critico
@@ -645,27 +836,32 @@ export default {
           is_visible?: boolean;
         };
 
-        const { name, role, text, text_it, text_en, order_index, is_visible } = body;
+        const { name, role, text, order_index, is_visible } = body;
 
         if (!name || !role || !text) {
           return jsonResponse({ error: 'Name, role and text are required' }, 400);
         }
 
+        // Insert base critic data (without translation fields)
         const result = await env.DB.prepare(
-          `INSERT INTO critics (name, role, text, text_it, text_en, order_index, is_visible)
-           VALUES (?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO critics (name, role, text, order_index, is_visible)
+           VALUES (?, ?, ?, ?, ?)
            RETURNING *`
         ).bind(
           name,
           role,
           text,
-          text_it || null,
-          text_en || null,
           order_index || 0,
           is_visible !== undefined ? (is_visible ? 1 : 0) : 1
         ).first();
 
-        return jsonResponse({ critic: result }, 201);
+        // Save translations to translations table
+        await saveTranslations(env.DB, 'critic', (result as any).id, body);
+
+        // Enrich with translations before returning
+        const enriched = await enrichWithTranslations(env.DB, [result as any], 'critic');
+
+        return jsonResponse({ critic: enriched[0] }, 201);
       }
 
       // PUT /api/critics/:id - Aggiorna critico
@@ -681,15 +877,14 @@ export default {
           is_visible?: boolean;
         };
 
-        const { name, role, text, text_it, text_en, order_index, is_visible } = body;
+        const { name, role, text, order_index, is_visible } = body;
 
+        // Update base critic data (without translation fields)
         const result = await env.DB.prepare(
           `UPDATE critics
            SET name = COALESCE(?, name),
                role = COALESCE(?, role),
                text = COALESCE(?, text),
-               text_it = COALESCE(?, text_it),
-               text_en = COALESCE(?, text_en),
                order_index = COALESCE(?, order_index),
                is_visible = COALESCE(?, is_visible),
                updated_at = CURRENT_TIMESTAMP
@@ -699,8 +894,6 @@ export default {
           name || null,
           role || null,
           text || null,
-          text_it || null,
-          text_en || null,
           order_index || null,
           is_visible !== undefined ? (is_visible ? 1 : 0) : null,
           id
@@ -710,7 +903,13 @@ export default {
           return jsonResponse({ error: 'Critic not found' }, 404);
         }
 
-        return jsonResponse({ critic: result });
+        // Save translations to translations table
+        await saveTranslations(env.DB, 'critic', (result as any).id, body);
+
+        // Enrich with translations before returning
+        const enriched = await enrichWithTranslations(env.DB, [result as any], 'critic');
+
+        return jsonResponse({ critic: enriched[0] });
       }
 
       // DELETE /api/critics/:id - Elimina critico
@@ -1040,6 +1239,114 @@ export default {
         ).bind(id).run();
 
         return jsonResponse({ message: 'Subscriber removed successfully' });
+      }
+
+      // ========== TRANSLATION ==========
+
+      // POST /api/translate - Auto-translate text using Claude API
+      if (path === '/api/translate' && method === 'POST') {
+        // Check for Anthropic API key (preferred) or fallback to Cloudflare AI
+        const useClaudeAPI = !!env.ANTHROPIC_API_KEY;
+
+        if (!useClaudeAPI && !env.AI) {
+          return jsonResponse({ error: 'Translation service not configured. Please set ANTHROPIC_API_KEY or configure Cloudflare AI binding.' }, 503);
+        }
+
+        const body = await request.json() as {
+          text: string;
+          targetLanguage: string;
+          sourceLanguage?: string;
+        };
+
+        const { text, targetLanguage, sourceLanguage = 'it' } = body;
+
+        if (!text || !targetLanguage) {
+          return jsonResponse({ error: 'text and targetLanguage are required' }, 400);
+        }
+
+        // Map language codes to full language names
+        const languageNames: Record<string, { source: string; target: string }> = {
+          'en': { source: 'Italian', target: 'English' },
+          'es': { source: 'Italian', target: 'Spanish' },
+          'fr': { source: 'Italian', target: 'French' },
+          'ja': { source: 'Italian', target: 'Japanese' },
+          'zh': { source: 'Italian', target: 'Simplified Chinese' },
+          'zh_tw': { source: 'Italian', target: 'Traditional Chinese' },
+        };
+
+        const langConfig = languageNames[targetLanguage];
+        if (!langConfig) {
+          return jsonResponse({ error: 'Unsupported target language' }, 400);
+        }
+
+        try {
+          let translatedText = '';
+
+          if (useClaudeAPI) {
+            // Use Claude API for high-quality translations
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': env.ANTHROPIC_API_KEY!,
+                'anthropic-version': '2023-06-01'
+              },
+              body: JSON.stringify({
+                model: 'claude-3-5-sonnet-20241022',
+                max_tokens: 4096,
+                messages: [{
+                  role: 'user',
+                  content: `You are a professional translator specializing in art and cultural content. Translate the following text from ${langConfig.source} to ${langConfig.target}.
+
+IMPORTANT INSTRUCTIONS:
+- Maintain the artistic and cultural tone
+- Preserve formatting (line breaks, punctuation)
+- Keep proper nouns and artwork titles in their original form
+- Ensure natural, fluent language in the target language
+- Return ONLY the translated text, no explanations
+
+Text to translate:
+${text}`
+                }]
+              })
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(`Claude API error: ${response.status} - ${JSON.stringify(errorData)}`);
+            }
+
+            const data = await response.json() as any;
+            translatedText = data.content[0].text.trim();
+          } else {
+            // Fallback to Cloudflare AI
+            const aiResponse = await env.AI!.run('@cf/meta/m2m100-1.2b', {
+              text,
+              source_lang: 'italian',
+              target_lang: targetLanguage === 'zh_tw' ? 'chinese_traditional' :
+                          targetLanguage === 'zh' ? 'chinese_simplified' :
+                          targetLanguage === 'ja' ? 'japanese' :
+                          targetLanguage === 'es' ? 'spanish' :
+                          targetLanguage === 'fr' ? 'french' : 'english'
+            });
+
+            translatedText = aiResponse?.translated_text || aiResponse?.text || '';
+          }
+
+          return jsonResponse({
+            translatedText,
+            sourceLanguage,
+            targetLanguage,
+            originalText: text,
+            engine: useClaudeAPI ? 'claude-3.5-sonnet' : 'cloudflare-ai'
+          });
+        } catch (error: any) {
+          console.error('Translation error:', error);
+          return jsonResponse({
+            error: 'Translation failed',
+            message: error.message
+          }, 500);
+        }
       }
 
       // Route non trovata

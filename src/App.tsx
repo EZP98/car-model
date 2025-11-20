@@ -21,6 +21,7 @@ import OperaForm from './pages/OperaForm';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsConditions from './pages/TermsConditions';
 import Login from './pages/Login';
+import TranslationManagement from './pages/TranslationManagement';
 
 // Import components
 import Navbar from './components/Navbar';
@@ -183,6 +184,7 @@ function AppContent() {
                 <Route path="/content/mostra/:exhibitionId" element={<ProtectedRoute><ExhibitionManagement /></ProtectedRoute>} />
                 <Route path="/content/critico/new" element={<ProtectedRoute><NewCritic /></ProtectedRoute>} />
                 <Route path="/content/critico/:criticId" element={<ProtectedRoute><CriticManagement /></ProtectedRoute>} />
+                <Route path="/content/traduzioni" element={<ProtectedRoute><TranslationManagement /></ProtectedRoute>} />
                 <Route path="/content/storage" element={<ProtectedRoute><MediaStorage /></ProtectedRoute>} />
                 <Route path="/content/opera" element={<ProtectedRoute><OperaForm /></ProtectedRoute>} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />

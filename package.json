@@ -36,6 +36,9 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:all": "./dev.sh",
+    "dev:worker": "wrangler dev --remote --port 8787",
+    "stop": "./stop.sh",
     "start": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",

@@ -2,7 +2,9 @@
  * API Service per comunicare con Cloudflare Workers
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+// In development, use empty string to leverage Vite proxy
+// In production, use the env var for the deployed worker URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_KEY = import.meta.env.VITE_API_KEY || '';
 
 // Helper to add authentication headers

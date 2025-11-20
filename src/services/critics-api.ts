@@ -3,9 +3,9 @@
  * Gestisce le recensioni e i critici
  */
 
-const API_BASE_URL = import.meta.env.PROD
-  ? 'https://alf-portfolio-api.eziopappalardo98.workers.dev'
-  : 'http://localhost:8787';
+// In development, use empty string to leverage Vite proxy
+// In production, set VITE_API_URL env var to the deployed worker URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 const API_KEY = import.meta.env.VITE_API_KEY || '';
 
 // Helper to add authentication headers
