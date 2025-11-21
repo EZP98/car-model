@@ -25,6 +25,26 @@ import {
 } from '../services/critics-api';
 import { useLanguage } from '../i18n/LanguageContext';
 
+// Get API base URL for image URLs
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
+// Helper function to convert relative image URLs to absolute
+const getImageUrl = (url: string | null | undefined): string => {
+  if (!url) return '/opera.png';
+
+  // If URL is already absolute, return as is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  // If URL is relative, prepend API base URL
+  if (url.startsWith('/images/')) {
+    return `${API_BASE_URL}${url}`;
+  }
+
+  return url;
+};
+
 type TabType = 'collezioni' | 'critica' | 'biografia' | 'mostre';
 
 const ContentWithCollections: React.FC = () => {
@@ -627,7 +647,7 @@ const ContentWithCollections: React.FC = () => {
                   ) : (
                     <div className="flex items-start gap-6 p-2">
                       <img
-                        src={collection.image_url || '/opera.png'}
+                        src={getImageUrl(collection.image_url)}
                         alt={collection.title}
                         className="w-48 h-32 object-cover rounded-lg"
                       />
@@ -744,7 +764,7 @@ const ContentWithCollections: React.FC = () => {
                     <div className="flex items-start gap-6 p-2">
                       {exhibition.image_url && (
                         <img
-                          src={exhibition.image_url}
+                          src={getImageUrl(exhibition.image_url)}
                           alt={exhibition.title}
                           className="w-48 h-32 object-cover rounded-lg"
                         />
