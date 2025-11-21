@@ -6,6 +6,26 @@ import { useLanguage } from '../i18n/LanguageContext';
 import Navbar from '../components/Navbar';
 import { getCollection, getCollectionArtworks, Collection, Artwork } from '../services/collections-api';
 
+// Get API base URL for image URLs
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
+// Helper function to convert relative image URLs to absolute
+const getImageUrl = (url: string | null | undefined): string => {
+  if (!url) return '/placeholder-artwork.jpg';
+
+  // If URL is already absolute, return as is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  // If URL is relative, prepend API base URL
+  if (url.startsWith('/images/')) {
+    return `${API_BASE_URL}${url}`;
+  }
+
+  return url;
+};
+
 // Helper function to get translated field based on current language
 const getTranslatedField = <T extends Record<string, any>>(
   item: T,
@@ -124,7 +144,7 @@ const CollezioneDetail: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{getTranslatedField(collection, 'title', language)} - Adele Lo Feudo</title>
+        <title>{collection.title} - Adele Lo Feudo</title>
         <meta name="description" content={getTranslatedField(collection, 'description', language)} />
       </Helmet>
 
@@ -146,7 +166,7 @@ const CollezioneDetail: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <h1 className="text-[42px] font-bold text-white uppercase mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              {getTranslatedField(collection, 'title', language)}
+              {collection.title}
             </h1>
             <p className="text-white/60 text-[16px]">
               {getTranslatedField(collection, 'description', language)}
@@ -163,8 +183,8 @@ const CollezioneDetail: React.FC = () => {
             <div className="border border-white/10 rounded-[12px] overflow-hidden">
               <div className="aspect-[2/1]">
                 <img
-                  src={collection.image_url}
-                  alt={`Copertina ${getTranslatedField(collection, 'title', language)}`}
+                  src={getImageUrl(collection.image_url)}
+                  alt={`Copertina ${collection.title}`}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -222,7 +242,7 @@ const CollezioneDetail: React.FC = () => {
                     <div className="border border-white/10 rounded-[12px] overflow-hidden">
                       <div className="aspect-square">
                         <img
-                          src={artwork.image_url || '/placeholder-artwork.jpg'}
+                          src={getImageUrl(artwork.image_url)}
                           alt={artwork.title}
                           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                         />
