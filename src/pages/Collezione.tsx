@@ -13,6 +13,26 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { useTranslation } from '../i18n/useTranslation';
 import { Language } from '../i18n/translations';
 
+// Get API base URL for image URLs
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
+// Helper function to convert relative image URLs to absolute
+const getImageUrl = (url: string | null | undefined): string => {
+  if (!url) return '/opera.png';
+
+  // If URL is already absolute, return as is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  // If URL is relative, prepend API base URL
+  if (url.startsWith('/images/')) {
+    return `${API_BASE_URL}${url}`;
+  }
+
+  return url;
+};
+
 // Helper function to get translated field based on current language
 const getTranslatedField = <T extends Record<string, any>>(
   item: T,
@@ -783,7 +803,7 @@ const Collezione: React.FC = () => {
                           <img
                             alt={getTranslatedField(collection, 'title', language)}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            src={collection.image_url || '/opera.png'}
+                            src={getImageUrl(collection.image_url)}
                           />
                         </div>
                       </div>
