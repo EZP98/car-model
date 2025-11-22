@@ -14,12 +14,12 @@
 
   html {
     scrollbar-width: none; /* Firefox */
-    scroll-snap-type: y mandatory;
+    scroll-snap-type: y proximity;
   }
 
   html.lenis {
     height: auto;
-    scroll-snap-type: y mandatory;
+    scroll-snap-type: y proximity;
   }
 
   /* Disable snap scroll for backoffice */
@@ -72,6 +72,16 @@
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  /* Remove blue focus outline from all interactive elements */
+  button:focus,
+  a:focus,
+  input:focus,
+  textarea:focus,
+  select:focus,
+  [role="button"]:focus {
+    outline: none;
   }
 }
 

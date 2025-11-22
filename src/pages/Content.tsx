@@ -3,6 +3,9 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
+import Modal from '../components/Modal';
+import Toast from '../components/Toast';
+import ImageWithFallback from '../components/ImageWithFallback';
 import {
   getCollections,
   updateCollection,
@@ -24,6 +27,7 @@ import {
   type Critic
 } from '../services/critics-api';
 import { useLanguage } from '../i18n/LanguageContext';
+import { getTranslatedField } from '../utils/translations';
 
 // Get API base URL for image URLs
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -69,6 +73,16 @@ const ContentWithCollections: React.FC = () => {
   const [searchCollections, setSearchCollections] = useState('');
   const [searchExhibitions, setSearchExhibitions] = useState('');
   const [searchCritics, setSearchCritics] = useState('');
+
+  // Preview Modal & Drag and Drop
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewCollections, setPreviewCollections] = useState<Collection[]>([]);
+  const [originalPreviewCollections, setOriginalPreviewCollections] = useState<Collection[]>([]);
+  const [draggedCollection, setDraggedCollection] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // Toast notification
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   // Stati per biografia
   const [selectedBioEditor, setSelectedBioEditor] = useState<'alf' | 'studio' | null>(null);
@@ -186,10 +200,10 @@ const ContentWithCollections: React.FC = () => {
         await loadData();
         setEditingId(null);
         setFormData(null);
-        alert('Collezione aggiornata con successo!');
+        setToast({ message: 'Collezione aggiornata con successo!', type: 'success' });
       } catch (error) {
         console.error('Error updating collection:', error);
-        alert('Errore durante l\'aggiornamento della collezione');
+        setToast({ message: 'Errore durante l\'aggiornamento della collezione', type: 'error' });
       }
     }
   };
@@ -199,10 +213,10 @@ const ContentWithCollections: React.FC = () => {
       try {
         await deleteCollection(id);
         await loadData();
-        alert('Collezione eliminata con successo!');
+        setToast({ message: 'Collezione eliminata con successo!', type: 'success' });
       } catch (error) {
         console.error('Error deleting collection:', error);
-        alert('Errore durante l\'eliminazione della collezione');
+        setToast({ message: 'Errore durante l\'eliminazione della collezione', type: 'error' });
       }
     }
   };
@@ -221,10 +235,10 @@ const ContentWithCollections: React.FC = () => {
         await loadData();
         setEditingId(null);
         setFormData(null);
-        alert('Critico aggiornato con successo!');
+        setToast({ message: 'Critico aggiornato con successo!', type: 'success' });
       } catch (error) {
         console.error('Error updating critic:', error);
-        alert('Errore durante l\'aggiornamento del critico');
+        setToast({ message: 'Errore durante l\'aggiornamento del critico', type: 'error' });
       }
     }
   };
@@ -234,10 +248,10 @@ const ContentWithCollections: React.FC = () => {
       try {
         await deleteCritic(id);
         await loadData();
-        alert('Critico eliminato con successo!');
+        setToast({ message: 'Critico eliminato con successo!', type: 'success' });
       } catch (error) {
         console.error('Error deleting critic:', error);
-        alert('Errore durante l\'eliminazione del critico');
+        setToast({ message: 'Errore durante l\'eliminazione del critico', type: 'error' });
       }
     }
   };
@@ -261,10 +275,10 @@ const ContentWithCollections: React.FC = () => {
         is_visible: true
       });
       await loadData();
-      alert('Critico aggiunto con successo!');
+      setToast({ message: 'Critico aggiunto con successo!', type: 'success' });
     } catch (error) {
       console.error('Error adding critic:', error);
-      alert('Errore durante l\'aggiunta del critico');
+      setToast({ message: 'Errore durante l\'aggiunta del critico', type: 'error' });
     }
   };
 
@@ -281,10 +295,10 @@ const ContentWithCollections: React.FC = () => {
         await loadData();
         setEditingId(null);
         setFormData(null);
-        alert('Mostra aggiornata con successo!');
+        setToast({ message: 'Mostra aggiornata con successo!', type: 'success' });
       } catch (error) {
         console.error('Error updating exhibition:', error);
-        alert('Errore durante l\'aggiornamento della mostra');
+        setToast({ message: 'Errore durante l\'aggiornamento della mostra', type: 'error' });
       }
     }
   };
@@ -294,10 +308,10 @@ const ContentWithCollections: React.FC = () => {
       try {
         await deleteExhibition(id);
         await loadData();
-        alert('Mostra eliminata con successo!');
+        setToast({ message: 'Mostra eliminata con successo!', type: 'success' });
       } catch (error) {
         console.error('Error deleting exhibition:', error);
-        alert('Errore durante l\'eliminazione della mostra');
+        setToast({ message: 'Errore durante l\'eliminazione della mostra', type: 'error' });
       }
     }
   };
@@ -412,7 +426,7 @@ const ContentWithCollections: React.FC = () => {
   // Handler per biografia
   const handleSaveBio = () => {
     localStorage.setItem('artist-bio-enhanced', JSON.stringify(bioContent));
-    alert('Biografia salvata con successo!');
+    setToast({ message: 'Biografia salvata con successo!', type: 'success' });
   };
 
   // Handler per aggiornare i paragrafi della biografia
@@ -420,6 +434,81 @@ const ContentWithCollections: React.FC = () => {
     const newContent = { ...bioContent };
     newContent[section][lang].paragraphs[index] = value;
     setBioContent(newContent);
+  };
+
+  // Handlers per Preview Modal & Drag and Drop
+  const handleOpenPreview = () => {
+    const sortedCollections = [...collections].sort((a, b) => a.order_index - b.order_index);
+    setPreviewCollections(sortedCollections);
+    setOriginalPreviewCollections(sortedCollections);
+    setShowPreviewModal(true);
+  };
+
+  const handleClosePreview = () => {
+    setShowPreviewModal(false);
+    setDraggedCollection(null);
+    setDragOverIndex(null);
+  };
+
+  // Check if order has changed
+  const hasOrderChanged = () => {
+    if (previewCollections.length !== originalPreviewCollections.length) return true;
+    return previewCollections.some((col, idx) =>
+      col.id !== originalPreviewCollections[idx]?.id
+    );
+  };
+
+  const handleCollectionDragStart = (index: number) => {
+    setDraggedCollection(index);
+  };
+
+  const handleCollectionDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    setDragOverIndex(index);
+  };
+
+  const handleCollectionDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedCollection === null) return;
+
+    const newCollections = [...previewCollections];
+    const draggedItem = newCollections[draggedCollection];
+    newCollections.splice(draggedCollection, 1);
+    newCollections.splice(dropIndex, 0, draggedItem);
+
+    // Update order_index for all collections
+    const updatedCollections = newCollections.map((col, idx) => ({
+      ...col,
+      order_index: idx + 1
+    }));
+
+    setPreviewCollections(updatedCollections);
+    setDraggedCollection(null);
+    setDragOverIndex(null);
+  };
+
+  const handleCollectionDragEnd = () => {
+    setDraggedCollection(null);
+    setDragOverIndex(null);
+  };
+
+  const handleSaveCollectionOrder = async () => {
+    try {
+      // Save the new order to the database
+      await Promise.all(
+        previewCollections.map(col =>
+          updateCollection(col.id, { order_index: col.order_index })
+        )
+      );
+
+      // Reload collections
+      await loadData();
+      setToast({ message: 'Ordine salvato con successo!', type: 'success' });
+      handleClosePreview();
+    } catch (error) {
+      console.error('Error saving collection order:', error);
+      setToast({ message: 'Errore nel salvare l\'ordine', type: 'error' });
+    }
   };
 
   return (
@@ -476,6 +565,17 @@ const ContentWithCollections: React.FC = () => {
                   <path d="m21 21-4.35-4.35" />
                 </svg>
               </div>
+              <button
+                onClick={handleOpenPreview}
+                className="p-3 text-white transition-colors hover:bg-white/10"
+                style={{ backgroundColor: 'rgb(30, 30, 30)', borderRadius: 0, border: '1px solid rgba(255, 255, 255, 0.1)' }}
+                title="Anteprima e riordina collezioni"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
               <button
                 onClick={() => navigate('/content/collezione/new')}
                 className="p-3 text-white transition-colors"
@@ -590,87 +690,37 @@ const ContentWithCollections: React.FC = () => {
                 {getPaginatedItems(filterCollections(collections), currentPageCollections).map((collection) => (
                 <div
                   key={collection.id}
-                  className={`bg-secondary border rounded-xl transition-all ${editingId === collection.id ? 'p-6' : 'p-4 hover:bg-white/5 cursor-pointer'}`}
+                  className="bg-secondary p-4 border rounded-xl hover:bg-white/5 cursor-pointer transition-all"
                   style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                  onClick={editingId !== collection.id ? () => navigate(`/content/collezione/${collection.id}`) : undefined}
+                  onClick={() => navigate(`/content/collezione/${collection.id}`)}
                 >
-                  {editingId === collection.id && formData ? (
-                    <div className="space-y-4">
-                      {/* Form di modifica collezione */}
-                      <div>
-                        <label className="block text-white mb-2 font-bold" style={{ fontFamily: 'Montserrat, sans-serif' }}>Titolo</label>
-                        <input
-                          type="text"
-                          value={formData.title}
-                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif' }}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white mb-2 font-bold" style={{ fontFamily: 'Montserrat, sans-serif' }}>Descrizione</label>
-                        <textarea
-                          value={formData.description}
-                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                          rows={3}
-                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif' }}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-white mb-2 font-bold" style={{ fontFamily: 'Montserrat, sans-serif' }}>Immagine URL</label>
-                        <input
-                          type="text"
-                          value={formData.image_url}
-                          onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                          className="w-full px-4 py-2 bg-background text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif' }}
-                        />
-                      </div>
-                      <div className="flex gap-4">
-                        <button
-                          onClick={handleSaveCollection}
-                          className="px-6 py-2 font-bold uppercase text-white"
-                          style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
-                        >
-                          Salva
-                        </button>
-                        <button
-                          onClick={handleCancel}
-                          className="px-6 py-2 font-bold uppercase text-white border rounded-lg"
-                          style={{ borderColor: 'rgba(255, 255, 255, 0.1)', fontFamily: 'Montserrat, sans-serif' }}
-                        >
-                          Annulla
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start gap-6 p-2">
-                      <img
+                  <div className="flex items-start gap-6 p-2">
+                    <div className="w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                      <ImageWithFallback
                         src={getImageUrl(collection.image_url)}
-                        alt={collection.title}
-                        className="w-48 h-32 object-cover rounded-lg"
+                        alt={getTranslatedField(collection, 'title', language)}
+                        objectFit="cover"
                       />
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
-                          {collection.title}
-                        </h3>
-                        <p className="text-white mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                          {collection.description}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
+                        {getTranslatedField(collection, 'title', language)}
+                      </h3>
+                      <p className="text-white mb-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                        {getTranslatedField(collection, 'description', language)}
+                      </p>
+                      <div className="flex items-center gap-4">
+                        <p className="text-gray text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                          Link: <span className="text-white/60">/collezione/{collection.slug}</span>
                         </p>
-                        <div className="flex items-center gap-4">
-                          <p className="text-gray text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                            Link: <span className="text-white/60">/collezione/{collection.slug}</span>
-                          </p>
-                          {!collection.is_visible && (
-                            <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg font-bold">
-                              NASCOSTO
-                            </span>
-                          )}
-                        </div>
+                        {!collection.is_visible && (
+                          <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg font-bold">
+                            NASCOSTO
+                          </span>
+                        )}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
                 ))}
               </div>
@@ -712,11 +762,11 @@ const ContentWithCollections: React.FC = () => {
                     <div className="flex justify-between items-start p-2">
                       <div className="flex-1">
                         <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
-                          {critic.name}
+                          {critic.name_it || critic.name}
                         </h3>
                         <p className="text-white/80 mb-4">{critic.role}</p>
                         <p className="text-white/60 italic" style={{ maxWidth: '800px' }}>
-                          {critic.text ? `"${critic.text.substring(0, 200)}..."` : 'Testo non disponibile'}
+                          {critic.quote_it || critic.text ? `"${(critic.quote_it || critic.text).substring(0, 200)}..."` : 'Testo non disponibile'}
                         </p>
                         {!critic.is_visible && (
                           <span className="inline-block mt-2 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-lg font-bold">
@@ -763,11 +813,13 @@ const ContentWithCollections: React.FC = () => {
                   >
                     <div className="flex items-start gap-6 p-2">
                       {exhibition.image_url && (
-                        <img
-                          src={getImageUrl(exhibition.image_url)}
-                          alt={exhibition.title}
-                          className="w-48 h-32 object-cover rounded-lg"
-                        />
+                        <div className="w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                          <ImageWithFallback
+                            src={getImageUrl(exhibition.image_url)}
+                            alt={exhibition.title}
+                            objectFit="cover"
+                          />
+                        </div>
                       )}
                       <div className="flex-1">
                         <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
@@ -978,6 +1030,136 @@ const ContentWithCollections: React.FC = () => {
         )}
 
       </motion.div>
+
+      {/* Preview Modal */}
+      <Modal
+        isOpen={showPreviewModal}
+        onClose={handleClosePreview}
+        maxWidth="4xl"
+        showCloseButton={false}
+      >
+        {/* Header */}
+        <div className="bg-secondary border-b px-6 py-5 flex items-center justify-between" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+          <div>
+            <h2 className="text-2xl font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              Anteprima <span style={{ color: 'rgb(240, 45, 110)' }}>Homepage</span>
+            </h2>
+            <p className="text-white/60 text-sm mt-1">Trascina per riordinare</p>
+          </div>
+          <button
+            onClick={handleClosePreview}
+            className="text-white/60 hover:text-white transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Collections Grid */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {previewCollections.map((collection, index) => (
+              <motion.div
+                key={collection.id}
+                draggable
+                onDragStart={() => handleCollectionDragStart(index)}
+                onDragOver={(e) => handleCollectionDragOver(e, index)}
+                onDrop={(e) => handleCollectionDrop(e, index)}
+                onDragEnd={handleCollectionDragEnd}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{
+                  opacity: draggedCollection === index ? 0.5 : 1,
+                  scale: dragOverIndex === index ? 1.05 : 1
+                }}
+                transition={{ duration: 0.2 }}
+                className="cursor-move group relative"
+              >
+                {/* Order Badge */}
+                <div className="absolute -top-3 -left-3 z-10 bg-white text-black w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg shadow-lg" style={{ backgroundColor: 'rgb(240, 45, 110)' }}>
+                  {index + 1}
+                </div>
+
+                {/* Drag Handle */}
+                <div className="absolute -top-3 -right-3 z-10 bg-background border border-white/20 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                  </svg>
+                </div>
+
+                {/* Collection Card */}
+                <div className="aspect-[16/9] overflow-hidden rounded-lg border border-white/10 bg-background transition-all duration-300 group-hover:border-white/30">
+                  <ImageWithFallback
+                    src={getImageUrl(collection.image_url)}
+                    alt={getTranslatedField(collection, 'title', language)}
+                    objectFit="cover"
+                    className="transition-transform duration-700 group-hover:scale-110"
+                  />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Helper Text */}
+          {draggedCollection !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6 p-4 border bg-white/5"
+              style={{ borderRadius: '8px', borderColor: 'rgba(255, 255, 255, 0.1)' }}
+            >
+              <div className="flex items-center gap-3 text-white/80">
+                <svg className="w-5 h-5 flex-shrink-0" style={{ color: 'rgb(240, 45, 110)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm">
+                  Trascina la collezione nella posizione desiderata e rilascia per riordinare
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+      </Modal>
+
+      {/* Floating Buttons - Show only if order changed */}
+      {showPreviewModal && hasOrderChanged() && (
+        <div className="fixed bottom-6 right-6 flex gap-3 z-[10001]">
+          <button
+            onClick={handleClosePreview}
+            className="px-6 py-3 font-bold uppercase text-white border hover:bg-white/5 transition-all shadow-lg"
+            style={{
+              borderColor: 'rgba(255, 255, 255, 0.2)',
+              fontFamily: 'Montserrat, sans-serif',
+              borderRadius: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)'
+            }}
+          >
+            Annulla
+          </button>
+          <button
+            onClick={handleSaveCollectionOrder}
+            className="px-6 py-3 font-bold uppercase text-white transition-all hover:opacity-90 shadow-lg"
+            style={{
+              backgroundColor: 'rgb(240, 45, 110)',
+              fontFamily: 'Montserrat, sans-serif',
+              borderRadius: 0
+            }}
+          >
+            Salva Ordine
+          </button>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+        />
+      )}
     </BackofficeLayout>
   );
 };

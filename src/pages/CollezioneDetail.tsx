@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n/LanguageContext';
 import Navbar from '../components/Navbar';
 import { getCollection, getCollectionArtworks, Collection, Artwork } from '../services/collections-api';
+import { getTranslatedField } from '../utils/translations';
 
 // Get API base URL for image URLs
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -26,26 +27,6 @@ const getImageUrl = (url: string | null | undefined): string => {
   return url;
 };
 
-// Helper function to get translated field based on current language
-const getTranslatedField = <T extends Record<string, any>>(
-  item: T,
-  fieldName: string,
-  language: string,
-  fallbackField?: string
-): string => {
-  // Map zh-TW to zh_tw for database column naming
-  const langSuffix = language === 'zh-TW' ? 'zh_tw' : language;
-  const translatedFieldName = `${fieldName}_${langSuffix}`;
-
-  // Try to get the translated field
-  if (item[translatedFieldName]) {
-    return item[translatedFieldName];
-  }
-
-  // Fall back to the specified fallback field or the base field
-  return item[fallbackField || fieldName] || '';
-};
-
 const CollezioneDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -55,6 +36,7 @@ const CollezioneDetail: React.FC = () => {
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   // Fetch collection and artworks data
   useEffect(() => {
@@ -69,9 +51,11 @@ const CollezioneDetail: React.FC = () => {
         const collectionData = await getCollection(id);
         setCollection(collectionData);
 
-        // Fetch artworks for this collection
+        // Fetch artworks for this collection (only visible ones for public frontend)
         const artworksData = await getCollectionArtworks(collectionData.id);
-        setArtworks(artworksData);
+        // Filter to show only visible artworks
+        const visibleArtworks = artworksData.filter(artwork => artwork.is_visible);
+        setArtworks(visibleArtworks);
       } catch (err) {
         console.error('Error fetching collection data:', err);
         setError('Failed to load collection');
@@ -86,42 +70,19 @@ const CollezioneDetail: React.FC = () => {
 
   // Scroll to top quando la pagina viene caricata
   useEffect(() => {
-    // Forza lo scroll immediato
-    const scrollToTop = () => {
-      // Reset native scroll
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
+    // Reset scroll - versione semplificata per evitare lag
+    window.scrollTo({ top: 0, behavior: 'instant' });
 
-      // Reset Lenis scroll if available (the smooth scroll library)
-      const lenis = (window as any).lenis;
-      if (lenis) {
-        lenis.scrollTo(0, { immediate: true, force: true, lock: true });
-      }
+    const lenis = (window as any).lenis;
+    if (lenis) {
+      lenis.scrollTo(0, { immediate: true });
+    }
+  }, [id]);
 
-      // Forza anche eventuali container con scroll
-      const containers = document.querySelectorAll('.smooth-scroll-container, [data-scroll-container]');
-      containers.forEach(container => {
-        if (container) {
-          container.scrollTop = 0;
-          (container as any).scrollTo?.(0, 0);
-        }
-      });
-    };
-
-    // Esegui immediatamente
-    scrollToTop();
-
-    // Riprova dopo un breve delay per assicurarsi che funzioni
-    const timers = [
-      setTimeout(scrollToTop, 0),
-      setTimeout(scrollToTop, 50),
-      setTimeout(scrollToTop, 100),
-      setTimeout(scrollToTop, 200)
-    ];
-
-    return () => timers.forEach(timer => clearTimeout(timer));
-  }, [id]); // Aggiungi id come dipendenza per re-triggere quando cambia collezione
+  // Handler per errori di caricamento immagine
+  const handleImageError = (imageId: string) => {
+    setImageErrors(prev => new Set(prev).add(imageId));
+  };
 
   // Loading state - show nothing
   if (loading) {
@@ -143,7 +104,7 @@ const CollezioneDetail: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{collection.title} - Adele Lo Feudo</title>
+        <title>{getTranslatedField(collection, 'title', language)} - Adele Lo Feudo</title>
         <meta name="description" content={getTranslatedField(collection, 'description', language)} />
       </Helmet>
 
@@ -160,12 +121,12 @@ const CollezioneDetail: React.FC = () => {
           {/* Header con titolo collezione */}
           <motion.div
             className="mb-8 text-center"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
           >
             <h1 className="text-[42px] font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              {collection.title}
+              {getTranslatedField(collection, 'title', language)}
             </h1>
             <p className="text-white/60 text-[16px]">
               {getTranslatedField(collection, 'description', language)}
@@ -175,17 +136,23 @@ const CollezioneDetail: React.FC = () => {
           {/* Immagine di copertina della collezione */}
           <motion.div
             className="mb-12"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
           >
             <div className="border border-white/10 rounded-[12px] overflow-hidden">
-              <div className="aspect-[2/1]">
-                <img
-                  src={getImageUrl(collection.image_url)}
-                  alt={`Copertina ${collection.title}`}
-                  className="w-full h-full object-cover"
-                />
+              <div className="aspect-[2/1] bg-black">
+                {!imageErrors.has(`collection-${collection.id}`) ? (
+                  <img
+                    src={getImageUrl(collection.image_url)}
+                    alt={`Copertina ${getTranslatedField(collection, 'title', language)}`}
+                    loading="eager"
+                    className="w-full h-full object-cover"
+                    onError={() => handleImageError(`collection-${collection.id}`)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-black" />
+                )}
               </div>
             </div>
           </motion.div>
@@ -193,14 +160,12 @@ const CollezioneDetail: React.FC = () => {
           {/* Testo descrittivo della collezione */}
           {getTranslatedField(collection, 'detailed_description', language) && (
             <motion.div
-              className="border border-white/10 rounded-[12px] p-8 bg-white/5 mb-16"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              className="mb-16"
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.5 }}
             >
-              <h3 className="text-xl font-bold text-white mb-4 uppercase tracking-wider" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                Il Perché di Questa Collezione
-              </h3>
               <p className="text-white/80 leading-relaxed text-base whitespace-pre-wrap">
                 {getTranslatedField(collection, 'detailed_description', language)}
               </p>
@@ -211,45 +176,42 @@ const CollezioneDetail: React.FC = () => {
           <motion.div
             className="mb-16"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.4 }}
           >
-            <motion.h3
-              className="text-2xl font-bold text-white mb-8 uppercase tracking-wider text-center"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            >
-              Opere della Collezione
-            </motion.h3>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {artworks.length > 0 ? (
                 artworks.map((artwork, index) => (
                   <motion.div
                     key={artwork.id}
                     className="space-y-4"
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
                     transition={{
-                      duration: 0.6,
-                      delay: 0.6 + index * 0.1,
+                      duration: 0.5,
+                      delay: index * 0.05,
                       ease: "easeOut"
                     }}
                   >
-                    <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                      <div className="aspect-square">
-                        <img
-                          src={getImageUrl(artwork.image_url)}
-                          alt={artwork.title}
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                        />
+                    <div className="border border-white/10 rounded-[12px] overflow-hidden group">
+                      <div className="w-full bg-black">
+                        {!imageErrors.has(`artwork-${artwork.id}`) ? (
+                          <img
+                            src={getImageUrl(artwork.image_url)}
+                            alt={artwork.title}
+                            loading="lazy"
+                            className="w-full h-auto object-contain transition-transform duration-500 ease-out will-change-transform group-hover:scale-105"
+                            onError={() => handleImageError(`artwork-${artwork.id}`)}
+                          />
+                        ) : (
+                          <div className="w-full aspect-square bg-black" />
+                        )}
                       </div>
                     </div>
 
                     <div className="text-center space-y-2">
-                      <h4 className="text-lg font-bold text-white">{artwork.title}</h4>
                       {artwork.year && <p className="text-white/60 text-sm">{artwork.year}</p>}
                       {artwork.technique && <p className="text-white/60 text-sm">{artwork.technique}</p>}
                       {artwork.dimensions && <p className="text-white/60 text-sm">{artwork.dimensions}</p>}

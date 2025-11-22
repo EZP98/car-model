@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
+import Toast from '../components/Toast';
 import { getExhibition, updateExhibition, deleteExhibition } from '../services/exhibitions-api';
 
 const ExhibitionManagement: React.FC = () => {
@@ -10,13 +11,14 @@ const ExhibitionManagement: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [formData, setFormData] = useState({
-    title: '',
-    subtitle: '',
-    location: '',
+    title_it: '',
+    subtitle_it: '',
+    location_it: '',
     date: '',
-    description: '',
-    info: '',
+    description_it: '',
+    info_it: '',
     website: '',
     image_url: '',
     slug: '',
@@ -35,12 +37,12 @@ const ExhibitionManagement: React.FC = () => {
     try {
       const exhibition = await getExhibition(parseInt(exhibitionId));
       setFormData({
-        title: exhibition.title,
-        subtitle: exhibition.subtitle || '',
-        location: exhibition.location,
+        title_it: (exhibition as any).title_it || exhibition.title,
+        subtitle_it: (exhibition as any).subtitle_it || exhibition.subtitle || '',
+        location_it: (exhibition as any).location_it || exhibition.location,
         date: exhibition.date,
-        description: exhibition.description,
-        info: exhibition.info || '',
+        description_it: (exhibition as any).description_it || exhibition.description,
+        info_it: (exhibition as any).info_it || exhibition.info || '',
         website: exhibition.website || '',
         image_url: exhibition.image_url || '',
         slug: exhibition.slug,
@@ -49,7 +51,7 @@ const ExhibitionManagement: React.FC = () => {
       });
     } catch (error) {
       console.error('Error loading exhibition:', error);
-      alert('Errore nel caricamento della mostra');
+      setToast({ message: 'Errore nel caricamento della mostra', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -62,22 +64,22 @@ const ExhibitionManagement: React.FC = () => {
     setSaving(true);
     try {
       await updateExhibition(parseInt(exhibitionId), {
-        title: formData.title,
-        subtitle: formData.subtitle || undefined,
-        location: formData.location,
+        title_it: formData.title_it,
+        subtitle_it: formData.subtitle_it || undefined,
+        location_it: formData.location_it,
         date: formData.date,
-        description: formData.description,
-        info: formData.info || undefined,
+        description_it: formData.description_it,
+        info_it: formData.info_it || undefined,
         website: formData.website || undefined,
         image_url: formData.image_url || undefined,
         slug: formData.slug,
         order_index: formData.order_index,
         is_visible: formData.is_visible
       });
-      alert('Mostra aggiornata con successo');
+      setToast({ message: 'Mostra aggiornata con successo', type: 'success' });
     } catch (error) {
       console.error('Error updating exhibition:', error);
-      alert('Errore nell\'aggiornamento della mostra');
+      setToast({ message: 'Errore nell\'aggiornamento della mostra', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -110,7 +112,7 @@ const ExhibitionManagement: React.FC = () => {
   return (
     <BackofficeLayout>
       <Helmet>
-        <title>Gestione Mostra - {formData.title} - Backoffice</title>
+        <title>Gestione Mostra - {formData.title_it} - Backoffice</title>
       </Helmet>
 
       <motion.div
@@ -190,8 +192,8 @@ const ExhibitionManagement: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                value={formData.title_it}
+                onChange={(e) => setFormData({ ...formData, title_it: e.target.value })}
                 className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                 required
@@ -205,8 +207,8 @@ const ExhibitionManagement: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={formData.subtitle}
-                onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                value={formData.subtitle_it}
+                onChange={(e) => setFormData({ ...formData, subtitle_it: e.target.value })}
                 className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
               />
@@ -219,8 +221,8 @@ const ExhibitionManagement: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                value={formData.location_it}
+                onChange={(e) => setFormData({ ...formData, location_it: e.target.value })}
                 className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                 required
@@ -249,8 +251,8 @@ const ExhibitionManagement: React.FC = () => {
                 Descrizione
               </label>
               <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                value={formData.description_it}
+                onChange={(e) => setFormData({ ...formData, description_it: e.target.value })}
                 rows={4}
                 className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors resize-none"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
@@ -263,8 +265,8 @@ const ExhibitionManagement: React.FC = () => {
                 Info Aggiuntive
               </label>
               <textarea
-                value={formData.info}
-                onChange={(e) => setFormData({ ...formData, info: e.target.value })}
+                value={formData.info_it}
+                onChange={(e) => setFormData({ ...formData, info_it: e.target.value })}
                 rows={3}
                 className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors resize-none"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
@@ -364,6 +366,16 @@ const ExhibitionManagement: React.FC = () => {
           </button>
         </div>
       </motion.div>
+
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+        />
+      )}
     </BackofficeLayout>
   );
 };

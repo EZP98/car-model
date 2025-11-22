@@ -4,7 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
 import { createCollection } from '../services/collections-api';
-import { useToast } from '../components/Toast';
+import Toast from '../components/Toast';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 // In development, use empty string to leverage Vite proxy
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -24,8 +25,8 @@ const getImageUrl = (path: string): string => {
 
 const NewCollection: React.FC = () => {
   const navigate = useNavigate();
-  const { showError, showSuccess } = useToast();
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -39,7 +40,7 @@ const NewCollection: React.FC = () => {
     e.preventDefault();
 
     if (!formData.title || !formData.slug) {
-      showError('Titolo e Slug sono obbligatori');
+      setToast({ message: 'Titolo e Slug sono obbligatori', type: 'error' });
       return;
     }
 
@@ -55,7 +56,7 @@ const NewCollection: React.FC = () => {
       });
 
       // Mostra messaggio di successo
-      showSuccess('Collezione creata con successo!');
+      setToast({ message: 'Collezione creata con successo!', type: 'success' });
 
       // Naviga alla pagina di gestione della nuova collezione dopo un breve delay
       setTimeout(() => {
@@ -64,7 +65,7 @@ const NewCollection: React.FC = () => {
     } catch (error) {
       console.error('Error creating collection:', error);
       const errorMessage = error instanceof Error ? error.message : 'Errore nella creazione della collezione';
-      showError(errorMessage);
+      setToast({ message: errorMessage, type: 'error' });
       setSaving(false);
     }
   };
@@ -194,14 +195,12 @@ const NewCollection: React.FC = () => {
                 <label className="block text-white mb-2 font-bold">
                   Anteprima Immagine
                 </label>
-                <div className="border rounded-lg overflow-hidden" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  <img
+                <div className="border rounded-lg overflow-hidden h-64" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                  <ImageWithFallback
                     src={getImageUrl(formData.image_url)}
                     alt="Anteprima"
-                    className="w-full h-64 object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder.jpg';
-                    }}
+                    objectFit="cover"
+                    loading="eager"
                   />
                 </div>
               </div>
@@ -285,6 +284,16 @@ const NewCollection: React.FC = () => {
           </ul>
         </div>
       </motion.div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+        />
+      )}
     </BackofficeLayout>
   );
 };

@@ -3,6 +3,9 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
 import BackofficeLoader from '../components/BackofficeLoader';
+import Toast from '../components/Toast';
+import ImageWithFallback from '../components/ImageWithFallback';
+import { optimizeImageComplete, createThumbnail } from '../utils/imageOptimization';
 
 interface MediaImage {
   filename: string;
@@ -42,6 +45,7 @@ const MediaStorage: React.FC = () => {
   const [displayCount, setDisplayCount] = useState(12);
   const [loadingMore, setLoadingMore] = useState(false);
   const observerTarget = React.useRef<HTMLDivElement>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     image: MediaImage;
     usage: {
@@ -151,70 +155,6 @@ const MediaStorage: React.FC = () => {
     }
   };
 
-  // Funzione per creare thumbnail
-  const createThumbnail = (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          // Crea canvas per thumbnail (max 400px)
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            reject(new Error('Canvas context not available'));
-            return;
-          }
-
-          // Calcola dimensioni mantenendo aspect ratio
-          let width = img.width;
-          let height = img.height;
-          const maxSize = 400;
-
-          if (width > height) {
-            if (width > maxSize) {
-              height = (height * maxSize) / width;
-              width = maxSize;
-            }
-          } else {
-            if (height > maxSize) {
-              width = (width * maxSize) / height;
-              height = maxSize;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          // Disegna immagine ridimensionata
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Converti in blob
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const thumbnailFile = new File(
-                  [blob],
-                  file.name.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '_thumb.$1'),
-                  { type: file.type }
-                );
-                resolve(thumbnailFile);
-              } else {
-                reject(new Error('Failed to create thumbnail blob'));
-              }
-            },
-            file.type,
-            0.85 // Qualità 85%
-          );
-        };
-        img.onerror = () => reject(new Error('Failed to load image'));
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleFileSelect = (file: File) => {
     // Verifica che sia un'immagine
     if (!file.type.startsWith('image/')) {
@@ -236,43 +176,51 @@ const MediaStorage: React.FC = () => {
     try {
       setUploading(true);
 
-      // Carica originale
-      console.log('Uploading original...');
-      const formDataOriginal = new FormData();
-      formDataOriginal.append('file', selectedFile);
+      console.log('🚀 Inizio ottimizzazione e upload...');
 
-      const responseOriginal = await fetch(`${API_BASE_URL}/api/upload`, {
+      // Ottimizza immagine: converte in WebP alta qualità + thumbnail
+      const { optimized, thumbnail } = await optimizeImageComplete(selectedFile);
+
+      // Carica immagine ottimizzata (WebP 95%, max 2500px)
+      console.log('📤 Upload immagine ottimizzata...');
+      const formDataOptimized = new FormData();
+      formDataOptimized.append('file', optimized);
+
+      const responseOptimized = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
-        body: formDataOriginal,
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_API_KEY}`,
+        },
+        body: formDataOptimized,
       });
 
-      if (!responseOriginal.ok) throw new Error('Upload original failed');
+      if (!responseOptimized.ok) throw new Error('Upload optimized failed');
 
-      // Genera e carica thumbnail
-      console.log('Generating thumbnail...');
-      const thumbnail = await createThumbnail(selectedFile);
-
-      console.log('Uploading thumbnail...');
+      // Carica thumbnail (WebP 85%, max 400px)
+      console.log('📤 Upload thumbnail...');
       const formDataThumbnail = new FormData();
       formDataThumbnail.append('file', thumbnail);
 
       const responseThumbnail = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_API_KEY}`,
+        },
         body: formDataThumbnail,
       });
 
       if (!responseThumbnail.ok) throw new Error('Upload thumbnail failed');
 
-      console.log('Upload complete!');
+      console.log('✅ Upload completato!');
 
       // Ricarica la lista delle immagini e le statistiche
       await loadImages();
       await loadStats();
       setSelectedFile(null);
-      alert('Immagine caricata con successo!');
+      setToast({ message: 'Immagine caricata e ottimizzata con successo!', type: 'success' });
     } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Errore durante il caricamento dell\'immagine');
+      console.error('❌ Errore durante upload:', error);
+      setToast({ message: 'Errore durante il caricamento dell\'immagine', type: 'error' });
     } finally {
       setUploading(false);
     }
@@ -636,11 +584,15 @@ const MediaStorage: React.FC = () => {
               <div className="mb-6">
                 {/* Image preview */}
                 <div className="flex items-center gap-4 mb-6 p-4 bg-black/20 rounded-lg">
-                  <img
-                    src={`${API_BASE_URL}${deleteConfirm.image.url}`}
-                    alt={deleteConfirm.image.filename}
-                    className="w-20 h-20 object-cover rounded-lg"
-                  />
+                  <div className="w-20 h-20 flex-shrink-0">
+                    <ImageWithFallback
+                      src={`${API_BASE_URL}${deleteConfirm.image.url}`}
+                      alt={deleteConfirm.image.filename}
+                      className="rounded-lg"
+                      aspectRatio="aspect-square"
+                      objectFit="cover"
+                    />
+                  </div>
                   <div className="flex-1">
                     <p className="text-white text-base font-bold mb-1">{deleteConfirm.image.filename}</p>
                     <p className="text-white/60 text-sm">
@@ -775,11 +727,14 @@ const MediaStorage: React.FC = () => {
             >
               {/* Image */}
               <div className="flex-1 flex items-center justify-center mb-6">
-                <img
-                  src={`${API_BASE_URL}${viewingImage.url}`}
-                  alt={viewingImage.filename}
-                  className="max-w-full max-h-[80vh] object-contain"
-                />
+                <div className="max-w-full max-h-[80vh]">
+                  <ImageWithFallback
+                    src={`${API_BASE_URL}${viewingImage.url}`}
+                    alt={viewingImage.filename}
+                    objectFit="contain"
+                    loading="eager"
+                  />
+                </div>
               </div>
 
               {/* Info */}
@@ -837,8 +792,8 @@ const MediaStorage: React.FC = () => {
               <button
                 onClick={handleRegenerateThumbnails}
                 disabled={regenerating}
-                className="p-2 text-white border rounded-lg transition-all hover:bg-white/5 disabled:opacity-50"
-                style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}
+                className="p-2 text-white border transition-all hover:bg-white/5 disabled:opacity-50"
+                style={{ borderColor: 'rgba(255, 255, 255, 0.2)', borderRadius: 0 }}
                 aria-label="Rigenera thumbnail mancanti"
                 title={`Rigenera ${stats.originals.count - stats.thumbnails.count} thumbnail mancanti`}
               >
@@ -894,10 +849,7 @@ const MediaStorage: React.FC = () => {
                     {!loadedImages.has(image.filename) && (
                       <div className="absolute inset-0 bg-white/5 animate-pulse" style={{ borderRadius: '0.5rem 0.5rem 0 0' }} />
                     )}
-                    <img
-                      src={`${API_BASE_URL}${displayUrl}`}
-                      alt={image.filename}
-                      className={`w-full h-full object-cover ${
+                    <div className={`w-full h-full ${
                         loadedImages.has(image.filename) ? 'opacity-100' : 'opacity-0'
                       }`}
                       style={{
@@ -906,11 +858,25 @@ const MediaStorage: React.FC = () => {
                         willChange: 'opacity',
                         transition: 'opacity 0.2s ease-out'
                       }}
-                      onLoad={() => {
-                        setLoadedImages(prev => new Set(prev).add(image.filename));
-                      }}
-                      loading="lazy"
-                    />
+                    >
+                      <ImageWithFallback
+                        src={`${API_BASE_URL}${displayUrl}`}
+                        alt={image.filename}
+                        className="rounded-t-lg"
+                        aspectRatio="aspect-video"
+                        objectFit="cover"
+                        loading="lazy"
+                      />
+                      <img
+                        src={`${API_BASE_URL}${displayUrl}`}
+                        alt=""
+                        className="hidden"
+                        onLoad={() => {
+                          setLoadedImages(prev => new Set(prev).add(image.filename));
+                        }}
+                        loading="lazy"
+                      />
+                    </div>
 
                     {/* Delete Button - Visible on hover */}
                     <button
@@ -978,6 +944,16 @@ const MediaStorage: React.FC = () => {
           )}
         </motion.div>
       </motion.div>
+
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+        />
+      )}
     </BackofficeLayout>
   );
 };

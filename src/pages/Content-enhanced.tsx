@@ -462,11 +462,11 @@ const ContentEnhanced: React.FC = () => {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)' }}>
-                          {critic.name}
+                          {critic.name_it || critic.name}
                         </h3>
                         <p className="text-white/80 mb-4">{critic.role}</p>
                         <p className="text-white/60 italic" style={{ maxWidth: '800px' }}>
-                          {critic.text ? `"${critic.text.substring(0, 200)}..."` : 'Testo non disponibile'}
+                          {critic.quote_it || critic.text ? `"${(critic.quote_it || critic.text).substring(0, 200)}..."` : 'Testo non disponibile'}
                         </p>
                       </div>
                       <div className="flex gap-4 ml-4">

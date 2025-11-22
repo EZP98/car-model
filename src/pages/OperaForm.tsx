@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 interface OperaFormData {
   id?: number;
@@ -113,12 +114,12 @@ const OperaForm: React.FC = () => {
               <div className="space-y-4">
                 {/* Preview immagine */}
                 {formData.image && (
-                  <div className="w-full max-w-md mx-auto">
-                    <img
+                  <div className="w-full max-w-md mx-auto border-2 rounded overflow-hidden" style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}>
+                    <ImageWithFallback
                       src={formData.image}
                       alt="Preview"
-                      className="w-full h-auto object-contain rounded border-2"
-                      style={{ borderColor: 'rgba(240, 45, 110, 0.3)' }}
+                      objectFit="contain"
+                      loading="eager"
                     />
                   </div>
                 )}

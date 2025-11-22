@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,6 +15,18 @@ const Navbar: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Scroll to section when landing on homepage with hash
+  useEffect(() => {
+    if ((location.pathname === '/' || location.pathname === '/collezione') && location.hash) {
+      setTimeout(() => {
+        const element = document.querySelector(location.hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  }, [location.pathname, location.hash]);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -35,7 +48,17 @@ const Navbar: React.FC = () => {
     { href: '#about', label: 'ABOUT' },
   ];
 
-  const handleNavClick = (href: string) => {
+  const handleNavClick = (href: string, e?: React.MouseEvent) => {
+    e?.preventDefault();
+
+    // Se non sei in homepage, vai alla home con hash
+    if (location.pathname !== '/' && location.pathname !== '/collezione') {
+      navigate('/' + href);
+      setIsMobileMenuOpen(false);
+      return;
+    }
+
+    // Se sei già in homepage, smooth scroll alla sezione
     const element = document.querySelector(href);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
@@ -63,7 +86,8 @@ const Navbar: React.FC = () => {
           {navItems.map((item, index) => (
             <a
               key={index}
-              onClick={() => handleNavClick(item.href)}
+              href={'/' + item.href}
+              onClick={(e) => handleNavClick(item.href, e)}
               className="hidden md:block no-underline text-base font-bold uppercase text-center leading-8 relative cursor-pointer text-accent hover:text-white transition-colors"
               style={{
                 fontFamily: 'Montserrat, sans-serif'
@@ -125,7 +149,8 @@ const Navbar: React.FC = () => {
           {navItems.map((item, index) => (
             <a
               key={index}
-              onClick={() => handleNavClick(item.href)}
+              href={'/' + item.href}
+              onClick={(e) => handleNavClick(item.href, e)}
               className="no-underline text-4xl md:text-5xl font-bold uppercase text-accent hover:text-white transition-all duration-300 cursor-pointer transform hover:scale-110"
               style={{
                 fontFamily: 'Montserrat, sans-serif',

@@ -43,7 +43,11 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "migrate:dry-run": "tsx scripts/migrate-images-to-webp.ts --dry-run",
+    "migrate:test": "tsx scripts/migrate-images-to-webp.ts --dry-run --limit 5",
+    "migrate:webp": "tsx scripts/migrate-images-to-webp.ts",
+    "cleanup:old-images": "tsx scripts/cleanup-old-images.ts"
   },
   "eslintConfig": {
     "extends": [
@@ -66,11 +70,14 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251115.0",
     "@tailwindcss/postcss": "^4.1.17",
+    "@types/sharp": "^0.31.1",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.22",
     "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",
+    "sharp": "^0.34.5",
     "tailwindcss": "^3.4.18",
+    "tsx": "^4.20.6",
     "vite": "^7.2.2",
     "vite-plugin-svgr": "^4.5.0"
   }

@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
 import { createExhibition } from '../services/exhibitions-api';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 // In development, use empty string to leverage Vite proxy
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -293,14 +294,13 @@ const NewExhibition: React.FC = () => {
                 placeholder="/path/to/image.jpg"
               />
               {formData.image_url && (
-                <div className="mt-4">
-                  <img
+                <div className="mt-4 h-40 w-auto inline-block">
+                  <ImageWithFallback
                     src={getImageUrl(formData.image_url)}
                     alt="Anteprima"
-                    className="h-40 object-cover rounded-lg"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder.jpg';
-                    }}
+                    className="rounded-lg"
+                    objectFit="cover"
+                    loading="eager"
                   />
                 </div>
               )}

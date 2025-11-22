@@ -12,6 +12,8 @@ import { getExhibitions, type Exhibition, getCritics, type Critic } from '../ser
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTranslation } from '../i18n/useTranslation';
 import { Language } from '../i18n/translations';
+import ImageWithFallback from '../components/ImageWithFallback';
+import { getTranslatedField } from '../utils/translations';
 
 // Get API base URL for image URLs
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -31,32 +33,6 @@ const getImageUrl = (url: string | null | undefined): string => {
   }
 
   return url;
-};
-
-// Helper function to get translated field based on current language
-const getTranslatedField = <T extends Record<string, any>>(
-  item: T,
-  fieldName: string,
-  language: string,
-  fallbackField?: string
-): string => {
-  // Map zh-TW to zh_tw for database column naming
-  const langSuffix = language === 'zh-TW' ? 'zh_tw' : language;
-  const translatedFieldName = `${fieldName}_${langSuffix}`;
-
-  // Try to get the translated field
-  if (item[translatedFieldName]) {
-    return item[translatedFieldName];
-  }
-
-  // Fallback to Italian
-  const italianFieldName = `${fieldName}_it`;
-  if (item[italianFieldName]) {
-    return item[italianFieldName];
-  }
-
-  // Fallback to the base field or provided fallback
-  return item[fallbackField || fieldName] || '';
 };
 
 // Funzione per formattare la data mostrando solo mese e anno
@@ -745,12 +721,14 @@ const Collezione: React.FC = () => {
           </h2>
         </div>
         <div className="relative w-full flex items-center justify-center mt-4 mb-16 px-6 mobile:px-6">
-          <img
-            className="hero-image w-[700px] max-w-[90%] h-auto object-contain object-center rounded-[10px] opacity-0"
-            src="https://framerusercontent.com/images/8TonweCu2FGoT0Vejhe7bUZe5ys.png"
-            alt="Adele Lo Feudo - Artista"
-            loading="lazy"
-          />
+          <div className="hero-image w-[700px] max-w-[90%] opacity-0 rounded-[10px] overflow-hidden">
+            <ImageWithFallback
+              src="https://framerusercontent.com/images/8TonweCu2FGoT0Vejhe7bUZe5ys.png"
+              alt="Adele Lo Feudo - Artista"
+              objectFit="contain"
+              loading="lazy"
+            />
+          </div>
         </div>
       </section>
 
@@ -799,13 +777,13 @@ const Collezione: React.FC = () => {
                         </p>
                       </div>
                       <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                        <div className="aspect-[3/2]">
-                          <img
-                            alt={getTranslatedField(collection, 'title', language)}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            src={getImageUrl(collection.image_url)}
-                          />
-                        </div>
+                        <ImageWithFallback
+                          src={getImageUrl(collection.image_url)}
+                          alt={getTranslatedField(collection, 'title', language)}
+                          aspectRatio="aspect-[3/2]"
+                          objectFit="cover"
+                          className="group-hover:scale-110 transition-transform duration-700"
+                        />
                       </div>
                     </Link>
                   </motion.div>
@@ -909,11 +887,11 @@ const Collezione: React.FC = () => {
                   return (
                     <TestoCriticoItem
                       key={critic.id}
-                      nome={critic.name}
+                      nome={critic.name_it || critic.name}
                       ruolo={critic.role}
                       testo={criticText}
                       onClick={() => openCriticoModal({
-                        nome: critic.name,
+                        nome: critic.name_it || critic.name,
                         ruolo: critic.role,
                         testo: criticText
                       })}
@@ -969,13 +947,13 @@ const Collezione: React.FC = () => {
                 {/* Image Column */}
                 <div className="group w-full md:w-[380px] flex-shrink-0">
                   <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                    <div className="aspect-[3/4]">
-                      <img
-                        src="/adele.jpg"
-                        alt="Adele Lo Feudo"
-                        className="w-full h-full object-cover grayscale group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
+                    <ImageWithFallback
+                      src="/adele.jpg"
+                      alt="Adele Lo Feudo"
+                      aspectRatio="aspect-[3/4]"
+                      objectFit="cover"
+                      className="grayscale group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
                 </div>
                 {/* Text Column */}
@@ -1009,13 +987,13 @@ const Collezione: React.FC = () => {
                 {/* Image Column */}
                 <div className="group w-full md:w-[380px] flex-shrink-0">
                   <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                    <div className="aspect-[3/4]">
-                      <img
-                        src="/parallax-image.jpg"
-                        alt="ALF Studio"
-                        className="w-full h-full object-cover grayscale group-hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
+                    <ImageWithFallback
+                      src="/parallax-image.jpg"
+                      alt="ALF Studio"
+                      aspectRatio="aspect-[3/4]"
+                      objectFit="cover"
+                      className="grayscale group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
                 </div>
                 {/* Text Column */}

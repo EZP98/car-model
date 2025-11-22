@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
 import { getCollections, getCollectionArtworks, Collection, Artwork } from '../services/collections-api';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 // In development, use empty string to leverage Vite proxy
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -27,6 +28,16 @@ const CollectionArtworks: React.FC = () => {
 
   useEffect(() => {
     loadData();
+  }, [collectionId]);
+
+  // Reload data when window regains focus (e.g., after editing in another tab/component)
+  useEffect(() => {
+    const handleFocus = () => {
+      loadData();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [collectionId]);
 
   const loadData = async () => {
@@ -149,7 +160,7 @@ const CollectionArtworks: React.FC = () => {
   return (
     <BackofficeLayout>
       <Helmet>
-        <title>Gestione Opere - {collection.title} - Adele Lo Feudo</title>
+        <title>Gestione Opere - {collection.title_it || collection.title} - Adele Lo Feudo</title>
       </Helmet>
 
       <motion.div
@@ -171,7 +182,7 @@ const CollectionArtworks: React.FC = () => {
               Indietro
             </button>
             <h1 className="text-4xl font-bold text-white uppercase" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Opere di <span style={{ color: 'rgb(240, 45, 110)' }}>{collection.title}</span>
+              Opere di <span style={{ color: 'rgb(240, 45, 110)' }}>{collection.title_it || collection.title}</span>
             </h1>
           </div>
           <button
@@ -448,11 +459,15 @@ const CollectionArtworks: React.FC = () => {
                   </div>
                 ) : (
                   <div className="flex items-start gap-6">
-                    <img
-                      src={artwork.image_url || '/placeholder-artwork.jpg'}
-                      alt={artwork.title}
-                      className="w-32 h-32 object-cover rounded-lg"
-                    />
+                    <div className="w-32 h-32 flex-shrink-0">
+                      <ImageWithFallback
+                        src={artwork.image_url || '/placeholder-artwork.jpg'}
+                        alt={artwork.title}
+                        className="rounded-lg"
+                        aspectRatio="aspect-square"
+                        objectFit="cover"
+                      />
+                    </div>
                     <div className="flex-1">
                       <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
                         {artwork.title}

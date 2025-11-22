@@ -412,15 +412,15 @@ const ContentWithCollections: React.FC = () => {
                     <div className="flex items-start gap-6">
                       <img
                         src={collection.image_url || '/opera.png'}
-                        alt={collection.title}
+                        alt={collection.title_it || collection.title}
                         className="w-48 h-32 object-cover rounded-lg"
                       />
                       <div className="flex-1">
                         <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                          {collection.title}
+                          {collection.title_it || collection.title}
                         </h3>
                         <p className="text-white mb-2" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
-                          {collection.description}
+                          {collection.description_it || collection.description}
                         </p>
                         <p className="text-gray text-sm" style={{ fontFamily: 'Palanquin, Helvetica Neue, sans-serif' }}>
                           Link: <span className="text-white/60">/collezione/{collection.slug}</span>
@@ -525,11 +525,11 @@ const ContentWithCollections: React.FC = () => {
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <h3 className="text-2xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)' }}>
-                          {critic.name}
+                          {critic.name_it || critic.name}
                         </h3>
                         <p className="text-white/80 mb-4">{critic.role}</p>
                         <p className="text-white/60 italic" style={{ maxWidth: '800px' }}>
-                          {critic.text ? `"${critic.text.substring(0, 200)}..."` : 'Testo non disponibile'}
+                          {critic.quote_it || critic.text ? `"${(critic.quote_it || critic.text).substring(0, 200)}..."` : 'Testo non disponibile'}
                         </p>
                       </div>
                       <div className="flex gap-4 ml-4">

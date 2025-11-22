@@ -69,6 +69,8 @@ export interface Exhibition {
   image_url?: string;
   order_index: number;
   is_visible: boolean;
+  content_version: number;
+  translations_version: number;
   created_at: string;
   updated_at: string;
 }

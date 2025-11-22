@@ -13,9 +13,19 @@ lsof -ti:8787 | xargs kill -9 2>/dev/null
 
 echo "✅ Pulizia completata"
 echo ""
-echo "🚀 Avvio worker API su porta 8787..."
+echo "🔑 Controllo autenticazione Cloudflare..."
 
-# Avvia worker in background
+# Verifica che wrangler sia autenticato
+if ! wrangler whoami >/dev/null 2>&1; then
+  echo "❌ Non sei autenticato! Esegui: wrangler login"
+  exit 1
+fi
+
+echo "✅ Autenticato correttamente"
+echo ""
+echo "🚀 Avvio worker API su porta 8787 (modalità remote - usa DB reale)..."
+
+# Avvia worker in background usando --remote (accede al DB di produzione)
 wrangler dev --remote --port 8787 &
 WORKER_PID=$!
 
@@ -23,6 +33,8 @@ WORKER_PID=$!
 sleep 3
 
 echo "✅ Worker avviato (PID: $WORKER_PID)"
+echo ""
+echo "💡 Se il worker si ferma con errore di autenticazione, esegui: wrangler login"
 echo ""
 echo "🚀 Avvio frontend su porta 3001..."
 

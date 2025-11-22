@@ -5,7 +5,8 @@ import BackofficeLayout from '../components/BackofficeLayout';
 import { getCollections, updateCollection, type Collection } from '../services/collections-api';
 import { getCritics, updateCritic, type Critic } from '../services/critics-api';
 import { getExhibitions, updateExhibition, type Exhibition } from '../services/exhibitions-api';
-import { useToast } from '../components/Toast';
+import Toast from '../components/Toast';
+import ImageWithFallback from '../components/ImageWithFallback';
 import { translateText } from '../services/translation-api';
 
 // Get API base URL for image URLs
@@ -98,28 +99,27 @@ const TranslationManagement: React.FC = () => {
   const [formData, setFormData] = useState<TranslationFormData>({});
   const [saving, setSaving] = useState(false);
   const [translating, setTranslating] = useState(false);
-  const { showToast } = useToast();
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
     loadData();
-  }, [activeTab]);
+  }, []); // Load once on mount, not on tab change
 
   const loadData = async () => {
     try {
       setLoading(true);
-      if (activeTab === 'collections') {
-        const data = await getCollections(true);
-        setCollections(data);
-      } else if (activeTab === 'critics') {
-        const data = await getCritics(true);
-        setCritics(data);
-      } else if (activeTab === 'exhibitions') {
-        const data = await getExhibitions(true);
-        setExhibitions(data);
-      }
+      // Load all data at once
+      const [collectionsData, criticsData, exhibitionsData] = await Promise.all([
+        getCollections(true),
+        getCritics(true),
+        getExhibitions(true)
+      ]);
+      setCollections(collectionsData);
+      setCritics(criticsData);
+      setExhibitions(exhibitionsData);
     } catch (error) {
       console.error('Error loading data:', error);
-      showToast('Errore nel caricamento dei dati', 'error');
+      setToast({ message: 'Errore nel caricamento dei dati', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -223,12 +223,12 @@ const TranslationManagement: React.FC = () => {
         await updateCritic(editingItem.id, formData);
       }
 
-      showToast('Traduzioni salvate con successo!', 'success');
+      setToast({ message: 'Traduzioni salvate con successo!', type: 'success' });
       setEditingItem(null);
       loadData(); // Reload to show updated data
     } catch (error) {
       console.error('Error saving translations:', error);
-      showToast('Errore nel salvataggio delle traduzioni', 'error');
+      setToast({ message: 'Errore nel salvataggio delle traduzioni', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -239,7 +239,7 @@ const TranslationManagement: React.FC = () => {
 
     try {
       setTranslating(true);
-      showToast('Traduzione automatica in corso...', 'info');
+      setToast({ message: 'Traduzione automatica in corso...', type: 'info' });
 
       // Determine which fields to translate based on item type
       let fieldsToTranslate: string[] = [];
@@ -265,7 +265,7 @@ const TranslationManagement: React.FC = () => {
       // Check if we have Italian source text
       const hasSourceText = fieldsToTranslate.some(field => sourceValues[field]);
       if (!hasSourceText) {
-        showToast('Manca il testo italiano da tradurre', 'error');
+        setToast({ message: 'Manca il testo italiano da tradurre', type: 'error' });
         setTranslating(false);
         return;
       }
@@ -295,10 +295,10 @@ const TranslationManagement: React.FC = () => {
       }
 
       setFormData(newFormData);
-      showToast(`${translatedCount} traduzioni generate con successo!`, 'success');
+      setToast({ message: `${translatedCount} traduzioni generate con successo!`, type: 'success' });
     } catch (error) {
       console.error('Auto-translation error:', error);
-      showToast('Errore nella traduzione automatica', 'error');
+      setToast({ message: 'Errore nella traduzione automatica', type: 'error' });
     } finally {
       setTranslating(false);
     }
@@ -331,19 +331,21 @@ const TranslationManagement: React.FC = () => {
         if (!item[infoKey]) missing++;
       });
     } else if ('title' in item) {
-      // It's a Collection - check title and description for each language
+      // It's a Collection - check title, description, and detailed_description for each language
       LANGUAGES.forEach(lang => {
         const titleKey = `title_${lang.code}` as keyof Collection;
         const descKey = `description_${lang.code}` as keyof Collection;
+        const detailedDescKey = `detailed_description_${lang.code}` as keyof Collection;
 
         // Check if Italian (source) exists
         if (lang.code === 'it') {
           hasItalian = !!(item[titleKey] || item[descKey]);
         }
 
-        total += 2; // title + description
+        total += 3; // title + description + detailed_description
         if (!item[titleKey]) missing++;
         if (!item[descKey]) missing++;
+        if (!item[detailedDescKey]) missing++;
       });
     } else {
       // It's a Critic - check text for each language
@@ -365,11 +367,14 @@ const TranslationManagement: React.FC = () => {
 
   const getItemTitle = (item: Collection | Critic | Exhibition): string => {
     if ('location' in item) {
-      return item.title;
+      // Exhibition: prioritize title_it, fallback to title
+      return (item as any).title_it || item.title;
     } else if ('title' in item) {
-      return item.title;
+      // Collection: prioritize title_it, fallback to title
+      return (item as any).title_it || item.title;
     } else {
-      return item.name;
+      // Critic: prioritize name_it, fallback to name
+      return (item as any).name_it || item.name;
     }
   };
 
@@ -461,9 +466,6 @@ const TranslationManagement: React.FC = () => {
                   <th className="px-6 py-4 text-center text-xs font-bold text-white/80 uppercase tracking-wider">
                     Traduzioni Mancanti
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-bold text-white/80 uppercase tracking-wider">
-                    Azioni
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
@@ -476,11 +478,15 @@ const TranslationManagement: React.FC = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           {'image_url' in item && item.image_url && (
-                            <img
-                              src={getImageUrl(item.image_url)}
-                              alt={getItemTitle(item)}
-                              className="w-12 h-12 object-cover rounded-lg"
-                            />
+                            <div className="w-12 h-12 flex-shrink-0">
+                              <ImageWithFallback
+                                src={getImageUrl(item.image_url)}
+                                alt={getItemTitle(item)}
+                                className="rounded-lg"
+                                aspectRatio="aspect-square"
+                                objectFit="cover"
+                              />
+                            </div>
                           )}
                           <span className="text-white font-medium">{getItemTitle(item)}</span>
                         </div>
@@ -490,7 +496,17 @@ const TranslationManagement: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex flex-col items-center gap-1">
-                          {status.missing === 0 ? (
+                          {/* Check if translations are outdated (content_version > translations_version) */}
+                          {item.content_version > item.translations_version ? (
+                            <>
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-orange-500/20 text-orange-400">
+                                ⚠️ Traduzioni obsolete
+                              </span>
+                              <span className="text-white/40 text-xs">
+                                Il contenuto italiano è stato modificato
+                              </span>
+                            </>
+                          ) : status.missing === 0 ? (
                             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400">
                               ✓ Completo
                             </span>
@@ -509,15 +525,6 @@ const TranslationManagement: React.FC = () => {
                             </>
                           )}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => handleEditClick(item)}
-                          className="px-4 py-2 bg-accent text-white rounded-lg font-bold text-sm hover:opacity-90 transition-opacity uppercase"
-                          style={{ fontFamily: 'Montserrat, sans-serif' }}
-                        >
-                          {status.missing === 0 ? 'Modifica' : status.hasItalian ? 'Completa Traduzioni' : 'Aggiungi Traduzioni'}
-                        </button>
                       </td>
                     </tr>
                   );
@@ -729,6 +736,16 @@ const TranslationManagement: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+        />
       )}
     </BackofficeLayout>
   );

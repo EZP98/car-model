@@ -78,6 +78,39 @@ async function getTranslations(
 }
 
 /**
+ * Update versioning based on what fields are being modified
+ * - If ANY Italian (_it) field is modified → increment content_version
+ * - If ONLY non-Italian translations are modified → set translations_version = content_version
+ */
+async function updateVersioning(
+  db: D1Database,
+  tableName: string,
+  entityId: number,
+  translations: Record<string, any>
+): Promise<void> {
+  const hasItalianChanges = Object.keys(translations).some(key => key.endsWith('_it'));
+  const hasOnlyNonItalianChanges = Object.keys(translations).length > 0 && !hasItalianChanges;
+
+  if (hasItalianChanges) {
+    // Italian content changed → increment content_version
+    await db.prepare(
+      `UPDATE ${tableName}
+       SET content_version = content_version + 1,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    ).bind(entityId).run();
+  } else if (hasOnlyNonItalianChanges) {
+    // Only translations updated → sync translations_version with content_version
+    await db.prepare(
+      `UPDATE ${tableName}
+       SET translations_version = content_version,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    ).bind(entityId).run();
+  }
+}
+
+/**
  * Save or update translations for an entity
  */
 async function saveTranslations(
@@ -180,16 +213,19 @@ export default {
       if (path === '/api/artworks' && method === 'GET') {
         const collectionId = url.searchParams.get('collection_id');
         const sectionId = url.searchParams.get('section_id'); // Keep for backward compatibility
+        const showAll = url.searchParams.get('all') === 'true';
         let query = 'SELECT * FROM artworks';
         const params: any[] = [];
 
         if (collectionId) {
-          query += ' WHERE collection_id = ? AND is_visible = 1';
+          query += showAll
+            ? ' WHERE collection_id = ?'
+            : ' WHERE collection_id = ? AND is_visible = 1';
           params.push(collectionId);
         } else if (sectionId) {
           query += ' WHERE section_id = ?';
           params.push(sectionId);
-        } else {
+        } else if (!showAll) {
           query += ' WHERE is_visible = 1';
         }
 
@@ -584,6 +620,9 @@ export default {
           return jsonResponse({ error: 'Collection not found' }, 404);
         }
 
+        // Update versioning based on which fields are being modified
+        await updateVersioning(env.DB, 'collections', (result as any).id, body);
+
         // Save translations to translations table
         await saveTranslations(env.DB, 'collection', (result as any).id, body);
 
@@ -777,6 +816,9 @@ export default {
           return jsonResponse({ error: 'Exhibition not found' }, 404);
         }
 
+        // Update versioning based on which fields are being modified
+        await updateVersioning(env.DB, 'exhibitions', (result as any).id, body);
+
         return jsonResponse({ exhibition: result });
       }
 
@@ -903,6 +945,9 @@ export default {
           return jsonResponse({ error: 'Critic not found' }, 404);
         }
 
+        // Update versioning based on which fields are being modified
+        await updateVersioning(env.DB, 'critics', (result as any).id, body);
+
         // Save translations to translations table
         await saveTranslations(env.DB, 'critic', (result as any).id, body);
 
@@ -925,6 +970,71 @@ export default {
         }
 
         return jsonResponse({ message: 'Critic deleted', critic: result });
+      }
+
+      // ========== BIOGRAPHY ==========
+
+      // GET /api/biography - Get biography
+      if (path === '/api/biography' && method === 'GET') {
+        const biography = await env.DB.prepare(
+          'SELECT * FROM biography WHERE id = 1'
+        ).first();
+
+        if (!biography) {
+          return jsonResponse({ error: 'Biography not found' }, 404);
+        }
+
+        return jsonResponse({ biography });
+      }
+
+      // PUT /api/biography - Update biography
+      if (path === '/api/biography' && method === 'PUT') {
+        // Check authentication
+        if (!await isAuthenticated(request, env)) {
+          return jsonResponse({ error: 'Unauthorized' }, 401);
+        }
+
+        const body = await request.json() as {
+          text_it?: string;
+          text_en?: string;
+          text_es?: string;
+          text_fr?: string;
+          text_ja?: string;
+          text_zh?: string;
+          text_zh_tw?: string;
+        };
+
+        // Build SET clause dynamically
+        const updates: string[] = [];
+        const values: any[] = [];
+
+        if (body.text_it !== undefined) { updates.push('text_it = ?'); values.push(body.text_it); }
+        if (body.text_en !== undefined) { updates.push('text_en = ?'); values.push(body.text_en); }
+        if (body.text_es !== undefined) { updates.push('text_es = ?'); values.push(body.text_es); }
+        if (body.text_fr !== undefined) { updates.push('text_fr = ?'); values.push(body.text_fr); }
+        if (body.text_ja !== undefined) { updates.push('text_ja = ?'); values.push(body.text_ja); }
+        if (body.text_zh !== undefined) { updates.push('text_zh = ?'); values.push(body.text_zh); }
+        if (body.text_zh_tw !== undefined) { updates.push('text_zh_tw = ?'); values.push(body.text_zh_tw); }
+
+        if (updates.length === 0) {
+          return jsonResponse({ error: 'No fields to update' }, 400);
+        }
+
+        // Add updated_at
+        updates.push('updated_at = CURRENT_TIMESTAMP');
+
+        const result = await env.DB.prepare(
+          `UPDATE biography SET ${updates.join(', ')} WHERE id = 1 RETURNING *`
+        ).bind(...values).first();
+
+        if (!result) {
+          return jsonResponse({ error: 'Biography not found' }, 404);
+        }
+
+        // Update versioning based on which fields are being modified
+        await updateVersioning(env.DB, 'biography', 1, body);
+
+        return jsonResponse({ biography: result });
       }
 
       // ========== CONTENT BLOCKS ==========
@@ -1115,7 +1225,17 @@ export default {
         }
 
         const filename = path.replace('/images/', '');
-        const object = await env.IMAGES.get(filename);
+        let object = await env.IMAGES.get(filename);
+
+        // Fallback: se non trovata, cerca file che terminano con lo stesso nome
+        // (gestisce il caso di file rinominati con timestamp durante migrazione WebP)
+        if (!object) {
+          const listed = await env.IMAGES.list();
+          const match = listed.objects.find(obj => obj.key.endsWith(filename));
+          if (match) {
+            object = await env.IMAGES.get(match.key);
+          }
+        }
 
         if (!object) {
           return jsonResponse({ error: 'Image not found' }, 404);

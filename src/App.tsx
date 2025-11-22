@@ -34,8 +34,6 @@ import { LanguageProvider } from './i18n/LanguageContext';
 // Import Loading Context
 import { LoadingProvider, useLoading } from './context/LoadingContext';
 
-// Import Toast
-import { ToastProvider } from './components/Toast';
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -203,11 +201,9 @@ function App() {
     <HelmetProvider>
       <LanguageProvider>
         <LoadingProvider>
-          <ToastProvider>
-            <Router>
-              <AppContent />
-            </Router>
-          </ToastProvider>
+          <Router>
+            <AppContent />
+          </Router>
         </LoadingProvider>
       </LanguageProvider>
     </HelmetProvider>

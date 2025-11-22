@@ -14,7 +14,7 @@ const SmoothScroll: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       return;
     }
 
-    // Initialize Lenis only on desktop
+    // Initialize Lenis on desktop (now works with proximity snap)
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),

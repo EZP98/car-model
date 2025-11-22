@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
+import Toast from '../components/Toast';
 import { getCritic, updateCritic, deleteCritic } from '../services/critics-api';
 
 const CriticManagement: React.FC = () => {
@@ -10,12 +11,20 @@ const CriticManagement: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    role: '',
-    text: '',
+    name_it: '',
+    role_it: '',
     text_it: '',
-    text_en: '',
+    order_index: 1,
+    is_visible: true
+  });
+
+  // Original data to track changes
+  const [originalData, setOriginalData] = useState({
+    name_it: '',
+    role_it: '',
+    text_it: '',
     order_index: 1,
     is_visible: true
   });
@@ -30,18 +39,18 @@ const CriticManagement: React.FC = () => {
     setLoading(true);
     try {
       const critic = await getCritic(parseInt(criticId));
-      setFormData({
-        name: critic.name,
-        role: critic.role,
-        text: critic.text,
-        text_it: critic.text_it || '',
-        text_en: critic.text_en || '',
+      const data = {
+        name_it: (critic as any).name_it || critic.name,
+        role_it: (critic as any).role_it || critic.role,
+        text_it: critic.text_it || critic.text,
         order_index: critic.order_index,
         is_visible: critic.is_visible
-      });
+      };
+      setFormData(data);
+      setOriginalData(data);
     } catch (error) {
       console.error('Error loading critic:', error);
-      alert('Errore nel caricamento del critico');
+      setToast({ message: 'Errore nel caricamento del critico', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -54,14 +63,17 @@ const CriticManagement: React.FC = () => {
     setSaving(true);
     try {
       await updateCritic(parseInt(criticId), {
-        ...formData,
-        text_it: formData.text_it || undefined,
-        text_en: formData.text_en || undefined
+        name_it: formData.name_it,
+        role_it: formData.role_it,
+        text_it: formData.text_it,
+        order_index: formData.order_index,
+        is_visible: formData.is_visible
       });
-      alert('Critico aggiornato con successo');
+      setToast({ message: 'Critico aggiornato con successo', type: 'success' });
+      loadCritic();
     } catch (error) {
       console.error('Error updating critic:', error);
-      alert('Errore nell\'aggiornamento del critico');
+      setToast({ message: 'Errore nell\'aggiornamento del critico', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -79,7 +91,7 @@ const CriticManagement: React.FC = () => {
       navigate('/content');
     } catch (error) {
       console.error('Error deleting critic:', error);
-      alert('Errore nell\'eliminazione del critico');
+      setToast({ message: 'Errore nell\'eliminazione del critico', type: 'error' });
     }
   };
 
@@ -94,7 +106,7 @@ const CriticManagement: React.FC = () => {
   return (
     <BackofficeLayout>
       <Helmet>
-        <title>Gestione Critico - {formData.name} - Backoffice</title>
+        <title>Gestione Critico - {formData.name_it} - Backoffice</title>
       </Helmet>
 
       <motion.div
@@ -174,8 +186,8 @@ const CriticManagement: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={formData.name_it}
+                onChange={(e) => setFormData({ ...formData, name_it: e.target.value })}
                 className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                 placeholder="es. Angelo Leidi"
@@ -190,8 +202,8 @@ const CriticManagement: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                value={formData.role_it}
+                onChange={(e) => setFormData({ ...formData, role_it: e.target.value })}
                 className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                 placeholder="es. Critico d'Arte"
@@ -199,26 +211,10 @@ const CriticManagement: React.FC = () => {
               />
             </div>
 
-            {/* Recensione (Testo principale) */}
-            <div className="md:col-span-2">
-              <label className="block text-white mb-2 font-bold">
-                Recensione *
-              </label>
-              <textarea
-                value={formData.text}
-                onChange={(e) => setFormData({ ...formData, text: e.target.value })}
-                rows={6}
-                className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors resize-none"
-                style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                placeholder="Testo principale della recensione..."
-                required
-              />
-            </div>
-
             {/* Recensione (Italiano) */}
             <div className="md:col-span-2">
               <label className="block text-white mb-2 font-bold">
-                Recensione (Italiano)
+                Recensione *
               </label>
               <textarea
                 value={formData.text_it}
@@ -226,22 +222,8 @@ const CriticManagement: React.FC = () => {
                 rows={6}
                 className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors resize-none"
                 style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                placeholder="Traduzione italiana (opzionale)..."
-              />
-            </div>
-
-            {/* Recensione (Inglese) */}
-            <div className="md:col-span-2">
-              <label className="block text-white mb-2 font-bold">
-                Recensione (Inglese)
-              </label>
-              <textarea
-                value={formData.text_en}
-                onChange={(e) => setFormData({ ...formData, text_en: e.target.value })}
-                rows={6}
-                className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors resize-none"
-                style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                placeholder="Traduzione inglese (opzionale)..."
+                placeholder="Testo della recensione in italiano..."
+                required
               />
             </div>
 
@@ -268,11 +250,11 @@ const CriticManagement: React.FC = () => {
             <h3 className="text-white font-bold mb-4">Anteprima:</h3>
             <div className="space-y-2">
               <h4 className="text-xl font-bold" style={{ color: 'rgb(240, 45, 110)' }}>
-                {formData.name || 'Nome Critico'}
+                {formData.name_it || 'Nome Critico'}
               </h4>
-              <p className="text-white/60">{formData.role || 'Ruolo'}</p>
+              <p className="text-white/60">{formData.role_it || 'Ruolo'}</p>
               <p className="text-white italic mt-4">
-                "{formData.text || 'Recensione...'}"
+                "{formData.text_it || 'Recensione...'}"
               </p>
             </div>
           </div>
@@ -312,6 +294,16 @@ const CriticManagement: React.FC = () => {
           </button>
         </div>
       </motion.div>
+
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+        />
+      )}
     </BackofficeLayout>
   );
 };

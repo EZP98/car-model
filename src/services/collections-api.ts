@@ -51,6 +51,8 @@ export interface Collection {
   image_url: string;
   order_index: number;
   is_visible: boolean;
+  content_version: number;
+  translations_version: number;
   created_at: string;
   updated_at: string;
 }
@@ -117,14 +119,31 @@ export async function getCollection(slug: string): Promise<Collection> {
   }
 }
 
-export async function getCollectionArtworks(collectionId: number): Promise<Artwork[]> {
+export async function getCollectionArtworks(collectionId: number, includeHidden: boolean = false): Promise<Artwork[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/artworks?collection_id=${collectionId}`);
+    const url = includeHidden
+      ? `${API_BASE_URL}/api/artworks?collection_id=${collectionId}&all=true`
+      : `${API_BASE_URL}/api/artworks?collection_id=${collectionId}`;
+    const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch artworks');
     const data = await response.json() as { artworks: Artwork[] };
     return data.artworks;
   } catch (error) {
     console.error('Error fetching artworks:', error);
+    return [];
+  }
+}
+
+export async function getAllArtworks(): Promise<Artwork[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/artworks?all=true`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to fetch artworks');
+    const data = await response.json() as { artworks: Artwork[] };
+    return data.artworks;
+  } catch (error) {
+    console.error('Error fetching all artworks:', error);
     return [];
   }
 }
