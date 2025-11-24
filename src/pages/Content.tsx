@@ -34,6 +34,11 @@ import {
   updateParallax,
   type Parallax
 } from '../services/parallax-api';
+import {
+  getStudio,
+  updateStudio,
+  type Studio
+} from '../services/studio-api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { getTranslatedField } from '../utils/translations';
 import { optimizeImageComplete } from '../utils/imageOptimization';
@@ -128,17 +133,27 @@ const ContentWithCollections: React.FC = () => {
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [imagePickerTarget, setImagePickerTarget] = useState<'parallax' | 'alf' | 'studio' | null>(null);
 
+  // Stati per tracking modifiche non salvate
+  const [originalParallaxData, setOriginalParallaxData] = useState({ textTop: '', textBottom: '', image: '' });
+  const [originalStudioData, setOriginalStudioData] = useState({ paragraphs: ['', '', '', ''], image: '' });
+  const [originalAlfData, setOriginalAlfData] = useState({ paragraphs: ['', '', '', ''], image: '' });
+
   // Carica i dati parallax dal database
   useEffect(() => {
     const loadParallaxData = async () => {
       try {
         const parallaxData = await getParallax();
         if (parallaxData) {
-          if (parallaxData.image_url) setParallaxImage(parallaxData.image_url);
+          const textTop = parallaxData.text_top_it || '';
+          const textBottom = parallaxData.text_bottom_it || '';
+          const image = parallaxData.image_url || '';
 
-          // Carica il testo italiano (source)
-          if (parallaxData.text_top_it) setParallaxTextTop(parallaxData.text_top_it);
-          if (parallaxData.text_bottom_it) setParallaxTextBottom(parallaxData.text_bottom_it);
+          setParallaxTextTop(textTop);
+          setParallaxTextBottom(textBottom);
+          setParallaxImage(image);
+
+          // Salva dati originali per tracking modifiche
+          setOriginalParallaxData({ textTop, textBottom, image });
         }
       } catch (error) {
         console.error('Error loading parallax data:', error);
@@ -150,8 +165,14 @@ const ContentWithCollections: React.FC = () => {
     // Carica immagini ALF e Studio da localStorage (per ora)
     const savedAlf = localStorage.getItem('alf-image');
     const savedStudio = localStorage.getItem('studio-image');
-    if (savedAlf) setAlfImage(savedAlf);
-    if (savedStudio) setStudioImage(savedStudio);
+    if (savedAlf) {
+      setAlfImage(savedAlf);
+      setOriginalAlfData(prev => ({ ...prev, image: savedAlf }));
+    }
+    if (savedStudio) {
+      setStudioImage(savedStudio);
+      setOriginalStudioData(prev => ({ ...prev, image: savedStudio }));
+    }
   }, []);
 
   // Carica i dati all'avvio
@@ -247,6 +268,25 @@ const ContentWithCollections: React.FC = () => {
     setEditingId(collection.id);
     setFormData({ ...collection });
   };
+
+  // Controlla se ci sono modifiche non salvate per Parallax
+  const hasParallaxChanges = React.useMemo(() => {
+    return parallaxTextTop !== originalParallaxData.textTop ||
+           parallaxTextBottom !== originalParallaxData.textBottom ||
+           parallaxImage !== originalParallaxData.image;
+  }, [parallaxTextTop, parallaxTextBottom, parallaxImage, originalParallaxData]);
+
+  // Controlla se ci sono modifiche non salvate per Studio
+  const hasStudioChanges = React.useMemo(() => {
+    return JSON.stringify(bioContent.studio.it.paragraphs) !== JSON.stringify(originalStudioData.paragraphs) ||
+           studioImage !== originalStudioData.image;
+  }, [bioContent.studio.it.paragraphs, studioImage, originalStudioData]);
+
+  // Controlla se ci sono modifiche non salvate per ALF
+  const hasAlfChanges = React.useMemo(() => {
+    return JSON.stringify(bioContent.alf.it.paragraphs) !== JSON.stringify(originalAlfData.paragraphs) ||
+           alfImage !== originalAlfData.image;
+  }, [bioContent.alf.it.paragraphs, alfImage, originalAlfData]);
 
   const handleSaveCollection = async () => {
     if (formData && editingId) {
@@ -1005,7 +1045,7 @@ const ContentWithCollections: React.FC = () => {
               >
                 {/* ALF Card */}
                 <button
-                  onClick={() => setSelectedBioEditor('alf')}
+                  onClick={() => navigate('/content/alf')}
                   className="bg-secondary p-4 border rounded-xl hover:bg-white/5 cursor-pointer transition-all"
                   style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                 >
@@ -1023,7 +1063,7 @@ const ContentWithCollections: React.FC = () => {
                       <circle cx="12" cy="7" r="4"/>
                     </svg>
                     <h3 className="text-3xl font-bold text-white mb-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                      <span style={{ color: 'rgb(240, 45, 110)' }}>ALF</span> Biografia
+                      ALF
                     </h3>
                     <p className="text-white/60">
                       Modifica la biografia dell'artista
@@ -1033,7 +1073,7 @@ const ContentWithCollections: React.FC = () => {
 
                 {/* STUDIO Card */}
                 <button
-                  onClick={() => setSelectedBioEditor('studio')}
+                  onClick={() => navigate('/content/studio')}
                   className="bg-secondary p-4 border rounded-xl hover:bg-white/5 cursor-pointer transition-all"
                   style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                 >
@@ -1051,7 +1091,7 @@ const ContentWithCollections: React.FC = () => {
                       <polyline points="9 22 9 12 15 12 15 22" />
                     </svg>
                     <h3 className="text-3xl font-bold text-white mb-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                      <span style={{ color: 'rgb(240, 45, 110)' }}>STUDIO</span> Descrizione
+                      STUDIO
                     </h3>
                     <p className="text-white/60">
                       Modifica la descrizione dello studio
@@ -1061,7 +1101,7 @@ const ContentWithCollections: React.FC = () => {
 
                 {/* PARALLAX Card - Occupa 2 colonne */}
                 <button
-                  onClick={() => setSelectedBioEditor('parallax')}
+                  onClick={() => navigate('/content/parallax')}
                   className="bg-secondary p-4 border rounded-xl hover:bg-white/5 cursor-pointer transition-all md:col-span-2"
                   style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                 >
@@ -1080,7 +1120,7 @@ const ContentWithCollections: React.FC = () => {
                       <polyline points="21 15 16 10 5 21"/>
                     </svg>
                     <h3 className="text-3xl font-bold text-white mb-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                      <span style={{ color: 'rgb(240, 45, 110)' }}>PARALLAX</span> Immagine
+                      PARALLAX
                     </h3>
                     <p className="text-white/60">
                       Imposta l'immagine della sezione parallax
@@ -1089,314 +1129,10 @@ const ContentWithCollections: React.FC = () => {
                 </button>
               </motion.div>
             )}
-
-            {/* ALF Editor */}
-            {selectedBioEditor === 'alf' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="space-y-6"
-              >
-                <button
-                  onClick={() => setSelectedBioEditor(null)}
-                  className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M15 18l-6-6 6-6" />
-                  </svg>
-                  Indietro
-                </button>
-
-                {/* Layout a 2 colonne: immagine sinistra, form destra */}
-                <div className="grid md:grid-cols-[300px_1fr] gap-6">
-                  {/* Image block - piccola a sinistra */}
-                  <div
-                    onClick={() => handleOpenImagePicker('alf')}
-                    className="relative cursor-pointer group rounded-xl overflow-hidden h-fit"
-                    style={{
-                      border: alfImage ? '2px solid rgba(255, 255, 255, 0.1)' : '2px dashed rgba(255, 255, 255, 0.3)',
-                      backgroundColor: alfImage ? 'transparent' : 'rgba(0, 0, 0, 0.3)'
-                    }}
-                  >
-                    {alfImage ? (
-                      <>
-                        <div className="aspect-[3/4] relative">
-                          <ImageWithFallback
-                            src={getImageUrl(alfImage)}
-                            alt="ALF Biografia"
-                            aspectRatio="aspect-[3/4]"
-                            objectFit="cover"
-                            loading="eager"
-                          />
-                          {/* Hover overlay with "Cambia Immagine" */}
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <div className="text-center text-white">
-                              <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              <p className="font-bold text-xs">Cambia</p>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="aspect-[3/4] flex flex-col items-center justify-center p-6">
-                          <svg className="w-12 h-12 text-white/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <p className="text-white/60 font-bold text-sm text-center">Clicca per scegliere</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Form box a destra */}
-                  <div className="bg-secondary p-8 rounded-xl border" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                    <h2 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                      <span style={{ color: 'rgb(240, 45, 110)' }}>ALF</span> Biografia
-                    </h2>
-
-                    <div className="space-y-6">
-                      <h4 className="text-xl font-bold text-white">Italiano</h4>
-                      {bioContent.alf.it.paragraphs.map((paragraph, index) => (
-                        <div key={index}>
-                          <label className="block text-white mb-2 font-bold">Paragrafo {index + 1}</label>
-                          <textarea
-                            value={paragraph}
-                            onChange={(e) => updateBioParagraph('alf', 'it', index, e.target.value)}
-                            rows={4}
-                            className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
-                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                            placeholder={`Paragrafo ${index + 1} in italiano...`}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* STUDIO Editor */}
-            {selectedBioEditor === 'studio' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="space-y-6"
-              >
-                <button
-                  onClick={() => setSelectedBioEditor(null)}
-                  className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M15 18l-6-6 6-6" />
-                  </svg>
-                  Indietro
-                </button>
-
-                {/* Layout a 2 colonne: immagine sinistra, form destra */}
-                <div className="grid md:grid-cols-[300px_1fr] gap-6">
-                  {/* Image block - piccola a sinistra */}
-                  <div
-                    onClick={() => handleOpenImagePicker('studio')}
-                    className="relative cursor-pointer group rounded-xl overflow-hidden h-fit"
-                    style={{
-                      border: studioImage ? '2px solid rgba(255, 255, 255, 0.1)' : '2px dashed rgba(255, 255, 255, 0.3)',
-                      backgroundColor: studioImage ? 'transparent' : 'rgba(0, 0, 0, 0.3)'
-                    }}
-                  >
-                    {studioImage ? (
-                      <>
-                        <div className="aspect-[3/4] relative">
-                          <ImageWithFallback
-                            src={getImageUrl(studioImage)}
-                            alt="Studio"
-                            aspectRatio="aspect-[3/4]"
-                            objectFit="cover"
-                            loading="eager"
-                          />
-                          {/* Hover overlay with "Cambia Immagine" */}
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <div className="text-center text-white">
-                              <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              <p className="font-bold text-xs">Cambia</p>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="aspect-[3/4] flex flex-col items-center justify-center p-6">
-                          <svg className="w-12 h-12 text-white/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <p className="text-white/60 font-bold text-sm text-center">Clicca per scegliere</p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Form box a destra */}
-                  <div className="bg-secondary p-8 rounded-xl border" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                    <h2 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                      <span style={{ color: 'rgb(240, 45, 110)' }}>STUDIO</span> Descrizione
-                    </h2>
-
-                    <div className="space-y-6">
-                      <h4 className="text-xl font-bold text-white">Italiano</h4>
-                      {bioContent.studio.it.paragraphs.map((paragraph, index) => (
-                        <div key={index}>
-                          <label className="block text-white mb-2 font-bold">Paragrafo {index + 1}</label>
-                          <textarea
-                            value={paragraph}
-                            onChange={(e) => updateBioParagraph('studio', 'it', index, e.target.value)}
-                            rows={4}
-                            className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
-                            style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                            placeholder={`Paragrafo ${index + 1} in italiano...`}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* PARALLAX Editor */}
-            {selectedBioEditor === 'parallax' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                <button
-                  onClick={() => setSelectedBioEditor(null)}
-                  className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M15 18l-6-6 6-6" />
-                  </svg>
-                  Indietro
-                </button>
-
-                {/* Immagine Background Parallax */}
-                <div
-                  onClick={() => handleOpenImagePicker('parallax')}
-                  className="relative cursor-pointer group rounded-xl overflow-hidden"
-                  style={{
-                    border: parallaxImage ? '2px solid rgba(255, 255, 255, 0.1)' : '2px dashed rgba(255, 255, 255, 0.3)',
-                    backgroundColor: parallaxImage ? 'transparent' : 'rgba(0, 0, 0, 0.3)'
-                  }}
-                >
-                  {parallaxImage ? (
-                    <>
-                      {/* Image with overlay */}
-                      <div className="aspect-video relative">
-                        <ImageWithFallback
-                          src={getImageUrl(parallaxImage)}
-                          alt="Parallax Background"
-                          aspectRatio="aspect-video"
-                          objectFit="cover"
-                          loading="eager"
-                        />
-                        {/* Hover overlay */}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <div className="text-center text-white">
-                            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <p className="font-bold text-sm">Cambia Immagine</p>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      {/* Empty state */}
-                      <div className="aspect-video flex flex-col items-center justify-center p-8">
-                        <svg className="w-16 h-16 text-white/40 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <p className="text-white/60 font-bold text-lg mb-1">Clicca per scegliere immagine</p>
-                        <p className="text-white/40 text-sm">Immagine di background per il parallax</p>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Testi Parallax */}
-                <div className="bg-secondary p-8 rounded-xl border" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  <h2 className="text-2xl font-bold text-white mb-6">Testi Parallax</h2>
-
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-white mb-2 font-bold">Testo in alto a sinistra</label>
-                      <textarea
-                        value={parallaxTextTop}
-                        onChange={(e) => setParallaxTextTop(e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-2 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
-                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                        placeholder="Testo che apparirà in alto a sinistra sopra l'immagine..."
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-white mb-2 font-bold">Testo in basso a destra</label>
-                      <textarea
-                        value={parallaxTextBottom}
-                        onChange={(e) => setParallaxTextBottom(e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-2 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
-                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
-                        placeholder="Testo che apparirà in basso a destra sopra l'immagine..."
-                      />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
           </div>
         )}
 
       </motion.div>
-
-      {/* Floating Buttons - Show when editing Parallax */}
-      {activeTab === 'biografia' && selectedBioEditor === 'parallax' && (
-        <div className="fixed bottom-6 right-6 flex gap-3 z-50">
-          <button
-            onClick={() => setSelectedBioEditor(null)}
-            className="px-6 py-3 font-bold uppercase text-white border hover:bg-white/5 transition-all shadow-lg"
-            style={{ borderColor: 'rgba(255, 255, 255, 0.2)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0, backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
-          >
-            Annulla
-          </button>
-          <button
-            onClick={async () => {
-              try {
-                await updateParallax({
-                  text_top_it: parallaxTextTop,
-                  text_bottom_it: parallaxTextBottom
-                });
-                setToast({ message: 'Testi salvati con successo!', type: 'success' });
-              } catch (error) {
-                console.error('Error updating parallax:', error);
-                setToast({ message: 'Errore nel salvataggio', type: 'error' });
-              }
-            }}
-            className="px-6 py-3 font-bold uppercase text-white transition-all hover:opacity-90 shadow-lg"
-            style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
-          >
-            Salva
-          </button>
-        </div>
-      )}
 
       {/* Preview Modal */}
       <Modal

@@ -1005,20 +1005,13 @@ export default {
           return jsonResponse({ error: 'Unauthorized' }, 401);
         }
 
-        const body = await request.json() as {
-          text_it?: string;
-          text_en?: string;
-          text_es?: string;
-          text_fr?: string;
-          text_ja?: string;
-          text_zh?: string;
-          text_zh_tw?: string;
-        };
+        const body = await request.json() as any;
 
         // Build SET clause dynamically
         const updates: string[] = [];
         const values: any[] = [];
 
+        // Legacy text fields
         if (body.text_it !== undefined) { updates.push('text_it = ?'); values.push(body.text_it); }
         if (body.text_en !== undefined) { updates.push('text_en = ?'); values.push(body.text_en); }
         if (body.text_es !== undefined) { updates.push('text_es = ?'); values.push(body.text_es); }
@@ -1026,6 +1019,42 @@ export default {
         if (body.text_ja !== undefined) { updates.push('text_ja = ?'); values.push(body.text_ja); }
         if (body.text_zh !== undefined) { updates.push('text_zh = ?'); values.push(body.text_zh); }
         if (body.text_zh_tw !== undefined) { updates.push('text_zh_tw = ?'); values.push(body.text_zh_tw); }
+
+        // Paragraph fields
+        if (body.paragraph1_it !== undefined) { updates.push('paragraph1_it = ?'); values.push(body.paragraph1_it); }
+        if (body.paragraph1_en !== undefined) { updates.push('paragraph1_en = ?'); values.push(body.paragraph1_en); }
+        if (body.paragraph1_es !== undefined) { updates.push('paragraph1_es = ?'); values.push(body.paragraph1_es); }
+        if (body.paragraph1_fr !== undefined) { updates.push('paragraph1_fr = ?'); values.push(body.paragraph1_fr); }
+        if (body.paragraph1_ja !== undefined) { updates.push('paragraph1_ja = ?'); values.push(body.paragraph1_ja); }
+        if (body.paragraph1_zh !== undefined) { updates.push('paragraph1_zh = ?'); values.push(body.paragraph1_zh); }
+        if (body.paragraph1_zh_tw !== undefined) { updates.push('paragraph1_zh_tw = ?'); values.push(body.paragraph1_zh_tw); }
+
+        if (body.paragraph2_it !== undefined) { updates.push('paragraph2_it = ?'); values.push(body.paragraph2_it); }
+        if (body.paragraph2_en !== undefined) { updates.push('paragraph2_en = ?'); values.push(body.paragraph2_en); }
+        if (body.paragraph2_es !== undefined) { updates.push('paragraph2_es = ?'); values.push(body.paragraph2_es); }
+        if (body.paragraph2_fr !== undefined) { updates.push('paragraph2_fr = ?'); values.push(body.paragraph2_fr); }
+        if (body.paragraph2_ja !== undefined) { updates.push('paragraph2_ja = ?'); values.push(body.paragraph2_ja); }
+        if (body.paragraph2_zh !== undefined) { updates.push('paragraph2_zh = ?'); values.push(body.paragraph2_zh); }
+        if (body.paragraph2_zh_tw !== undefined) { updates.push('paragraph2_zh_tw = ?'); values.push(body.paragraph2_zh_tw); }
+
+        if (body.paragraph3_it !== undefined) { updates.push('paragraph3_it = ?'); values.push(body.paragraph3_it); }
+        if (body.paragraph3_en !== undefined) { updates.push('paragraph3_en = ?'); values.push(body.paragraph3_en); }
+        if (body.paragraph3_es !== undefined) { updates.push('paragraph3_es = ?'); values.push(body.paragraph3_es); }
+        if (body.paragraph3_fr !== undefined) { updates.push('paragraph3_fr = ?'); values.push(body.paragraph3_fr); }
+        if (body.paragraph3_ja !== undefined) { updates.push('paragraph3_ja = ?'); values.push(body.paragraph3_ja); }
+        if (body.paragraph3_zh !== undefined) { updates.push('paragraph3_zh = ?'); values.push(body.paragraph3_zh); }
+        if (body.paragraph3_zh_tw !== undefined) { updates.push('paragraph3_zh_tw = ?'); values.push(body.paragraph3_zh_tw); }
+
+        if (body.paragraph4_it !== undefined) { updates.push('paragraph4_it = ?'); values.push(body.paragraph4_it); }
+        if (body.paragraph4_en !== undefined) { updates.push('paragraph4_en = ?'); values.push(body.paragraph4_en); }
+        if (body.paragraph4_es !== undefined) { updates.push('paragraph4_es = ?'); values.push(body.paragraph4_es); }
+        if (body.paragraph4_fr !== undefined) { updates.push('paragraph4_fr = ?'); values.push(body.paragraph4_fr); }
+        if (body.paragraph4_ja !== undefined) { updates.push('paragraph4_ja = ?'); values.push(body.paragraph4_ja); }
+        if (body.paragraph4_zh !== undefined) { updates.push('paragraph4_zh = ?'); values.push(body.paragraph4_zh); }
+        if (body.paragraph4_zh_tw !== undefined) { updates.push('paragraph4_zh_tw = ?'); values.push(body.paragraph4_zh_tw); }
+
+        // Image URL
+        if (body.image_url !== undefined) { updates.push('image_url = ?'); values.push(body.image_url); }
 
         if (updates.length === 0) {
           return jsonResponse({ error: 'No fields to update' }, 400);
@@ -1046,6 +1075,97 @@ export default {
         await updateVersioning(env.DB, 'biography', 1, body);
 
         return jsonResponse({ biography: result });
+      }
+
+      // ========== STUDIO ==========
+
+      // GET /api/studio - Get studio
+      if (path === '/api/studio' && method === 'GET') {
+        const studio = await env.DB.prepare(
+          'SELECT * FROM studio WHERE id = 1'
+        ).first();
+
+        if (!studio) {
+          return jsonResponse({ error: 'Studio not found' }, 404);
+        }
+
+        return jsonResponse({ studio });
+      }
+
+      // PUT /api/studio - Update studio
+      if (path === '/api/studio' && method === 'PUT') {
+        // Check authentication
+        if (!await isAuthenticated(request, env)) {
+          return jsonResponse({ error: 'Unauthorized' }, 401);
+        }
+
+        const body = await request.json() as any;
+
+        // Build SET clause dynamically
+        const updates: string[] = [];
+        const values: any[] = [];
+
+        if (body.text_it !== undefined) { updates.push('text_it = ?'); values.push(body.text_it); }
+        if (body.text_en !== undefined) { updates.push('text_en = ?'); values.push(body.text_en); }
+        if (body.text_es !== undefined) { updates.push('text_es = ?'); values.push(body.text_es); }
+        if (body.text_fr !== undefined) { updates.push('text_fr = ?'); values.push(body.text_fr); }
+        if (body.text_ja !== undefined) { updates.push('text_ja = ?'); values.push(body.text_ja); }
+        if (body.text_zh !== undefined) { updates.push('text_zh = ?'); values.push(body.text_zh); }
+        if (body.text_zh_tw !== undefined) { updates.push('text_zh_tw = ?'); values.push(body.text_zh_tw); }
+
+        if (body.paragraph1_it !== undefined) { updates.push('paragraph1_it = ?'); values.push(body.paragraph1_it); }
+        if (body.paragraph1_en !== undefined) { updates.push('paragraph1_en = ?'); values.push(body.paragraph1_en); }
+        if (body.paragraph1_es !== undefined) { updates.push('paragraph1_es = ?'); values.push(body.paragraph1_es); }
+        if (body.paragraph1_fr !== undefined) { updates.push('paragraph1_fr = ?'); values.push(body.paragraph1_fr); }
+        if (body.paragraph1_ja !== undefined) { updates.push('paragraph1_ja = ?'); values.push(body.paragraph1_ja); }
+        if (body.paragraph1_zh !== undefined) { updates.push('paragraph1_zh = ?'); values.push(body.paragraph1_zh); }
+        if (body.paragraph1_zh_tw !== undefined) { updates.push('paragraph1_zh_tw = ?'); values.push(body.paragraph1_zh_tw); }
+
+        if (body.paragraph2_it !== undefined) { updates.push('paragraph2_it = ?'); values.push(body.paragraph2_it); }
+        if (body.paragraph2_en !== undefined) { updates.push('paragraph2_en = ?'); values.push(body.paragraph2_en); }
+        if (body.paragraph2_es !== undefined) { updates.push('paragraph2_es = ?'); values.push(body.paragraph2_es); }
+        if (body.paragraph2_fr !== undefined) { updates.push('paragraph2_fr = ?'); values.push(body.paragraph2_fr); }
+        if (body.paragraph2_ja !== undefined) { updates.push('paragraph2_ja = ?'); values.push(body.paragraph2_ja); }
+        if (body.paragraph2_zh !== undefined) { updates.push('paragraph2_zh = ?'); values.push(body.paragraph2_zh); }
+        if (body.paragraph2_zh_tw !== undefined) { updates.push('paragraph2_zh_tw = ?'); values.push(body.paragraph2_zh_tw); }
+
+        if (body.paragraph3_it !== undefined) { updates.push('paragraph3_it = ?'); values.push(body.paragraph3_it); }
+        if (body.paragraph3_en !== undefined) { updates.push('paragraph3_en = ?'); values.push(body.paragraph3_en); }
+        if (body.paragraph3_es !== undefined) { updates.push('paragraph3_es = ?'); values.push(body.paragraph3_es); }
+        if (body.paragraph3_fr !== undefined) { updates.push('paragraph3_fr = ?'); values.push(body.paragraph3_fr); }
+        if (body.paragraph3_ja !== undefined) { updates.push('paragraph3_ja = ?'); values.push(body.paragraph3_ja); }
+        if (body.paragraph3_zh !== undefined) { updates.push('paragraph3_zh = ?'); values.push(body.paragraph3_zh); }
+        if (body.paragraph3_zh_tw !== undefined) { updates.push('paragraph3_zh_tw = ?'); values.push(body.paragraph3_zh_tw); }
+
+        if (body.paragraph4_it !== undefined) { updates.push('paragraph4_it = ?'); values.push(body.paragraph4_it); }
+        if (body.paragraph4_en !== undefined) { updates.push('paragraph4_en = ?'); values.push(body.paragraph4_en); }
+        if (body.paragraph4_es !== undefined) { updates.push('paragraph4_es = ?'); values.push(body.paragraph4_es); }
+        if (body.paragraph4_fr !== undefined) { updates.push('paragraph4_fr = ?'); values.push(body.paragraph4_fr); }
+        if (body.paragraph4_ja !== undefined) { updates.push('paragraph4_ja = ?'); values.push(body.paragraph4_ja); }
+        if (body.paragraph4_zh !== undefined) { updates.push('paragraph4_zh = ?'); values.push(body.paragraph4_zh); }
+        if (body.paragraph4_zh_tw !== undefined) { updates.push('paragraph4_zh_tw = ?'); values.push(body.paragraph4_zh_tw); }
+
+        if (body.image_url !== undefined) { updates.push('image_url = ?'); values.push(body.image_url); }
+
+        if (updates.length === 0) {
+          return jsonResponse({ error: 'No fields to update' }, 400);
+        }
+
+        // Add updated_at
+        updates.push('updated_at = CURRENT_TIMESTAMP');
+
+        const result = await env.DB.prepare(
+          `UPDATE studio SET ${updates.join(', ')} WHERE id = 1 RETURNING *`
+        ).bind(...values).first();
+
+        if (!result) {
+          return jsonResponse({ error: 'Studio not found' }, 404);
+        }
+
+        // Update versioning based on which fields are being modified
+        await updateVersioning(env.DB, 'studio', 1, body);
+
+        return jsonResponse({ studio: result });
       }
 
       // ========== PARALLAX ==========
@@ -1224,6 +1344,26 @@ export default {
 
       // GET /api/media - Lista tutte le immagini in R2
       if (path === '/api/media' && method === 'GET') {
+        if (!env.IMAGES) {
+          return jsonResponse({ error: 'R2 storage not configured' }, 503);
+        }
+
+        const listed = await env.IMAGES.list();
+        const images = listed.objects
+          .map(obj => ({
+            filename: obj.key,
+            url: `/images/${obj.key}`,
+            size: obj.size,
+            uploaded: obj.uploaded.toISOString()
+          }))
+          // Ordina per data di upload: dalla più recente alla meno recente
+          .sort((a, b) => new Date(b.uploaded).getTime() - new Date(a.uploaded).getTime());
+
+        return jsonResponse({ images });
+      }
+
+      // GET /api/storage/images - Lista tutte le immagini (for image picker)
+      if (path === '/api/storage/images' && method === 'GET') {
         if (!env.IMAGES) {
           return jsonResponse({ error: 'R2 storage not configured' }, 503);
         }

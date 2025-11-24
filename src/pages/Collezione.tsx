@@ -11,6 +11,7 @@ import { getCollections, type Collection } from '../services/collections-api';
 import { getExhibitions, type Exhibition, getCritics, type Critic } from '../services/content-api';
 import { getBiography, type Biography } from '../services/biography-api';
 import { getParallax, type Parallax } from '../services/parallax-api';
+import { getStudio, type Studio } from '../services/studio-api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTranslation } from '../i18n/useTranslation';
 import { Language } from '../i18n/translations';
@@ -437,10 +438,10 @@ const TestoCriticoItem: React.FC<TestoCriticoItemProps> = ({ nome, ruolo, testo,
   return (
     <button
       onClick={onClick}
-      className="w-[85vw] md:w-full flex-shrink-0 snap-center p-8 border border-white/20 text-left hover:bg-white/[0.035] transition-all group rounded-[12px] min-h-[280px] flex flex-col"
+      className="w-[85vw] md:w-full flex-shrink-0 snap-center p-6 border border-white/20 text-left hover:bg-white/[0.035] transition-all group rounded-[12px] min-h-[220px] flex flex-col"
     >
-      <h6 className="m-0 text-white font-body text-[20px] font-bold uppercase tracking-wide mb-4">{nome || ''}</h6>
-      <p className="m-0 text-white/70 font-body text-[15px] font-medium mb-4 leading-tight">{ruolo || ''}</p>
+      <h6 className="m-0 text-white font-body text-[16px] font-bold uppercase tracking-wide mb-1">{nome || ''}</h6>
+      <p className="m-0 text-white/70 font-body text-[14px] font-medium mb-4 leading-tight">{ruolo || ''}</p>
       <p className="m-0 text-white/50 font-body text-[14px] font-normal italic leading-relaxed flex-grow">&ldquo;{anteprima}&rdquo;</p>
     </button>
   );
@@ -482,6 +483,9 @@ const Collezione: React.FC = () => {
 
   // Parallax dal database
   const [parallaxData, setParallaxData] = useState<Parallax | null>(null);
+
+  // Studio dal database
+  const [studioData, setStudioData] = useState<Studio | null>(null);
 
   const openMostraModal = (mostra: any) => {
     setSelectedMostra(mostra);
@@ -634,7 +638,7 @@ const Collezione: React.FC = () => {
     loadData();
   }, []);
 
-  // Carica biografia e parallax dal database
+  // Carica biografia, parallax e studio dal database
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -643,6 +647,9 @@ const Collezione: React.FC = () => {
 
         const parallax = await getParallax();
         setParallaxData(parallax);
+
+        const studio = await getStudio();
+        setStudioData(studio);
       } catch (error) {
         console.error('Error loading data:', error);
       }
@@ -667,12 +674,34 @@ const Collezione: React.FC = () => {
       if (textBottom) setParallaxTextBottom(textBottom);
     }
 
-    // ALF e Studio immagini
-    const savedAlfImage = localStorage.getItem('alf-image');
-    const savedStudioImage = localStorage.getItem('studio-image');
+    // Studio immagine dal database
+    if (studioData?.image_url) {
+      setStudioImage(studioData.image_url);
+    } else {
+      const savedStudioImage = localStorage.getItem('studio-image');
+      if (savedStudioImage) setStudioImage(savedStudioImage);
+    }
 
+    // Studio paragrafi dal database
+    if (studioData) {
+      console.log('Loading studio data from DB:', studioData);
+      const paragraphs = [
+        getTranslatedField(studioData, 'paragraph1', language),
+        getTranslatedField(studioData, 'paragraph2', language),
+        getTranslatedField(studioData, 'paragraph3', language),
+        getTranslatedField(studioData, 'paragraph4', language)
+      ].filter(p => p); // Rimuovi paragrafi vuoti
+
+      console.log('Studio paragraphs constructed:', paragraphs);
+
+      if (paragraphs.length > 0) {
+        setStudioParagraphs(paragraphs);
+      }
+    }
+
+    // ALF immagine e paragrafi
+    const savedAlfImage = localStorage.getItem('alf-image');
     if (savedAlfImage) setAlfImage(savedAlfImage);
-    if (savedStudioImage) setStudioImage(savedStudioImage);
 
     // Biografia content - carica prima da localStorage per struttura multi-paragrafo
     const savedBioContent = localStorage.getItem('artist-bio-enhanced');
@@ -687,31 +716,22 @@ const Collezione: React.FC = () => {
         } else if (bioData.alf?.it?.paragraphs) {
           setAlfParagraphs(bioData.alf.it.paragraphs);
         }
-
-        if (bioData.studio?.[langKey]?.paragraphs) {
-          setStudioParagraphs(bioData.studio[langKey].paragraphs);
-        } else if (bioData.studio?.it?.paragraphs) {
-          setStudioParagraphs(bioData.studio.it.paragraphs);
-        }
       } catch (error) {
         console.error('Error parsing bio content:', error);
       }
     }
 
-    // Se non ci sono dati in localStorage, usa biografia dal database
+    // Se non ci sono dati in localStorage per ALF, usa biografia dal database
     if (!savedBioContent && biography) {
-      const langKey = language === 'zh-TW' ? 'zh_tw' : language;
-      const fieldName = `text_${langKey}`;
       const bioText = getTranslatedField(biography, 'text', language);
 
       // Dividi il testo in paragrafi (separati da doppio a capo)
       if (bioText) {
         const paragraphs = bioText.split('\n\n').filter(p => p.trim());
         setAlfParagraphs(paragraphs);
-        setStudioParagraphs(paragraphs);
       }
     }
-  }, [language, biography, parallaxData]);
+  }, [language, biography, parallaxData, studioData]);
 
   useEffect(() => {
     // Avvia le animazioni
@@ -1060,10 +1080,10 @@ const Collezione: React.FC = () => {
                 : 'opacity-0 -translate-x-8 scale-95 pointer-events-none absolute inset-0'
             }`}>
               <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
-                {/* Image Column */}
-                <div className="group w-full md:w-[380px] flex-shrink-0">
-                  <div className="border border-white/10 rounded-[12px] overflow-hidden bg-black aspect-[3/4] flex items-center justify-center">
-                    {alfImage ? (
+                {/* Image Column - Only show if image exists */}
+                {alfImage && (
+                  <div className="group w-full md:w-[380px] flex-shrink-0">
+                    <div className="border border-white/10 rounded-[12px] overflow-hidden bg-black aspect-[3/4] flex items-center justify-center">
                       <ImageWithFallback
                         src={getImageUrl(alfImage)}
                         alt="ALF"
@@ -1071,13 +1091,9 @@ const Collezione: React.FC = () => {
                         objectFit="cover"
                         className="w-full h-full"
                       />
-                    ) : (
-                      <svg className="w-20 h-20 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
                 {/* Text Column */}
                 <div className="flex flex-col gap-6 flex-1">
                   {alfParagraphs.filter(p => p.trim()).length > 0 ? (
@@ -1121,10 +1137,10 @@ const Collezione: React.FC = () => {
                 : 'opacity-0 translate-x-8 scale-95 pointer-events-none absolute inset-0'
             }`}>
               <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
-                {/* Image Column */}
-                <div className="group w-full md:w-[380px] flex-shrink-0">
-                  <div className="border border-white/10 rounded-[12px] overflow-hidden bg-black aspect-[3/4] flex items-center justify-center">
-                    {studioImage ? (
+                {/* Image Column - Only show if image exists */}
+                {studioImage && (
+                  <div className="group w-full md:w-[380px] flex-shrink-0">
+                    <div className="border border-white/10 rounded-[12px] overflow-hidden bg-black aspect-[3/4] flex items-center justify-center">
                       <ImageWithFallback
                         src={getImageUrl(studioImage)}
                         alt="Studio"
@@ -1132,14 +1148,9 @@ const Collezione: React.FC = () => {
                         objectFit="cover"
                         className="w-full h-full"
                       />
-                    ) : (
-                      <svg className="w-20 h-20 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                        <polyline strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} points="9 22 9 12 15 12 15 22" />
-                      </svg>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
                 {/* Text Column */}
                 <div className="flex flex-col gap-6 flex-1">
                   {studioParagraphs.filter(p => p.trim()).length > 0 ? (
