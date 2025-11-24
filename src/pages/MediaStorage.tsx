@@ -278,7 +278,10 @@ const MediaStorage: React.FC = () => {
       console.time('⏱️ Delete image');
 
       const deleteResponse = await fetch(`${API_BASE_URL}/api/images/${deleteConfirm.image.filename}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_API_KEY}`
+        }
       });
 
       if (!deleteResponse.ok) {

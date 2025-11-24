@@ -4,10 +4,12 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
 import { createCritic } from '../services/critics-api';
+import Toast from '../components/Toast';
 
 const NewCritic: React.FC = () => {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     role: '',
@@ -22,13 +24,13 @@ const NewCritic: React.FC = () => {
     e.preventDefault();
 
     if (!formData.name || !formData.role || !formData.text) {
-      alert('I campi obbligatori devono essere compilati');
+      setToast({ message: 'I campi obbligatori devono essere compilati', type: 'error' });
       return;
     }
 
     setSaving(true);
     try {
-      const newCritic = await createCritic({
+      await createCritic({
         name: formData.name,
         role: formData.role,
         text: formData.text,
@@ -38,10 +40,13 @@ const NewCritic: React.FC = () => {
         is_visible: formData.is_visible
       });
 
-      navigate(`/content/critico/${newCritic.id}`);
+      setToast({ message: 'Critico creato con successo!', type: 'success' });
+      setTimeout(() => {
+        navigate('/content?tab=critica');
+      }, 1500);
     } catch (error) {
       console.error('Error creating critic:', error);
-      alert('Errore nella creazione del critico');
+      setToast({ message: 'Errore nella creazione del critico', type: 'error' });
       setSaving(false);
     }
   };
@@ -283,6 +288,16 @@ const NewCritic: React.FC = () => {
           </ul>
         </div>
       </motion.div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+        />
+      )}
     </BackofficeLayout>
   );
 };

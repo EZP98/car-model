@@ -50,10 +50,11 @@ const Modal: React.FC<ModalProps> = ({
 
       {/* Modal Panel */}
       <div
-        className={`relative bg-secondary rounded-xl ${maxWidthClass} w-full border flex flex-col`}
+        className={`relative bg-secondary ${maxWidthClass} w-full flex flex-col border-2`}
         style={{
-          borderColor: 'rgba(255, 255, 255, 0.1)',
-          maxHeight
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          maxHeight,
+          borderRadius: '12px'
         }}
         onClick={(e) => e.stopPropagation()}
       >

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -6,6 +7,8 @@ import BackofficeLayout from '../components/BackofficeLayout';
 import Modal from '../components/Modal';
 import Toast from '../components/Toast';
 import ImageWithFallback from '../components/ImageWithFallback';
+import LoadingState from '../components/LoadingState';
+import ImagePickerModal from '../components/ImagePickerModal';
 import {
   getCollections,
   updateCollection,
@@ -26,15 +29,22 @@ import {
   deleteCritic,
   type Critic
 } from '../services/critics-api';
+import {
+  getParallax,
+  updateParallax,
+  type Parallax
+} from '../services/parallax-api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { getTranslatedField } from '../utils/translations';
+import { optimizeImageComplete } from '../utils/imageOptimization';
+import Paginator from '../components/Paginator';
 
 // Get API base URL for image URLs
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Helper function to convert relative image URLs to absolute
 const getImageUrl = (url: string | null | undefined): string => {
-  if (!url) return '/opera.png';
+  if (!url) return '';
 
   // If URL is already absolute, return as is
   if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -49,7 +59,7 @@ const getImageUrl = (url: string | null | undefined): string => {
   return url;
 };
 
-type TabType = 'collezioni' | 'critica' | 'biografia' | 'mostre';
+type TabType = 'collezioni' | 'critica' | 'biografia' | 'mostre' | 'parallax';
 
 const ContentWithCollections: React.FC = () => {
   const navigate = useNavigate();
@@ -85,7 +95,7 @@ const ContentWithCollections: React.FC = () => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   // Stati per biografia
-  const [selectedBioEditor, setSelectedBioEditor] = useState<'alf' | 'studio' | null>(null);
+  const [selectedBioEditor, setSelectedBioEditor] = useState<'alf' | 'studio' | 'parallax' | null>(null);
   const [bioContent, setBioContent] = useState({
     alf: {
       it: {
@@ -105,6 +115,45 @@ const ContentWithCollections: React.FC = () => {
     }
   });
 
+  // Stati per immagini (parallax, ALF, Studio)
+  const [parallaxImage, setParallaxImage] = useState<string>('');
+  const [alfImage, setAlfImage] = useState<string>('');
+  const [studioImage, setStudioImage] = useState<string>('');
+
+  // Stati per testi parallax
+  const [parallaxTextTop, setParallaxTextTop] = useState<string>('');
+  const [parallaxTextBottom, setParallaxTextBottom] = useState<string>('');
+
+  // Stati per Image Picker Modal
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [imagePickerTarget, setImagePickerTarget] = useState<'parallax' | 'alf' | 'studio' | null>(null);
+
+  // Carica i dati parallax dal database
+  useEffect(() => {
+    const loadParallaxData = async () => {
+      try {
+        const parallaxData = await getParallax();
+        if (parallaxData) {
+          if (parallaxData.image_url) setParallaxImage(parallaxData.image_url);
+
+          // Carica il testo italiano (source)
+          if (parallaxData.text_top_it) setParallaxTextTop(parallaxData.text_top_it);
+          if (parallaxData.text_bottom_it) setParallaxTextBottom(parallaxData.text_bottom_it);
+        }
+      } catch (error) {
+        console.error('Error loading parallax data:', error);
+      }
+    };
+
+    loadParallaxData();
+
+    // Carica immagini ALF e Studio da localStorage (per ora)
+    const savedAlf = localStorage.getItem('alf-image');
+    const savedStudio = localStorage.getItem('studio-image');
+    if (savedAlf) setAlfImage(savedAlf);
+    if (savedStudio) setStudioImage(savedStudio);
+  }, []);
+
   // Carica i dati all'avvio
   useEffect(() => {
     loadData();
@@ -122,7 +171,13 @@ const ContentWithCollections: React.FC = () => {
         setCritics(criticsData);
       } else if (activeTab === 'mostre') {
         const exhibitionsData = await getExhibitions(true); // Show all exhibitions in backoffice
-        setExhibitions(exhibitionsData);
+        // Ordina per anno (dal più recente al più vecchio)
+        const sortedExhibitions = exhibitionsData.sort((a, b) => {
+          const yearA = parseInt(a.date.match(/\d{4}/)?.[0] || '0');
+          const yearB = parseInt(b.date.match(/\d{4}/)?.[0] || '0');
+          return yearB - yearA; // Decrescente
+        });
+        setExhibitions(sortedExhibitions);
       } else if (activeTab === 'biografia') {
         // Carica contenuti biografia dal database o localStorage
         const savedBio = localStorage.getItem('artist-bio-enhanced');
@@ -345,7 +400,8 @@ const ContentWithCollections: React.FC = () => {
     return exhibitions.filter(e =>
       (e.title || '').toLowerCase().includes(searchLower) ||
       (e.subtitle || '').toLowerCase().includes(searchLower) ||
-      (e.location || '').toLowerCase().includes(searchLower)
+      (e.location || '').toLowerCase().includes(searchLower) ||
+      (e.date || '').toLowerCase().includes(searchLower)
     );
   };
 
@@ -434,6 +490,44 @@ const ContentWithCollections: React.FC = () => {
     const newContent = { ...bioContent };
     newContent[section][lang].paragraphs[index] = value;
     setBioContent(newContent);
+  };
+
+  // Handlers per Image Picker
+  const handleOpenImagePicker = (target: 'parallax' | 'alf' | 'studio') => {
+    setImagePickerTarget(target);
+    setShowImagePicker(true);
+  };
+
+  const handleSelectImage = async (imageUrl: string) => {
+    if (!imagePickerTarget) return;
+
+    // Update the appropriate state
+    switch (imagePickerTarget) {
+      case 'parallax':
+        setParallaxImage(imageUrl);
+        // Save to database
+        try {
+          await updateParallax({ image_url: imageUrl });
+          setToast({ message: 'Immagine parallax aggiornata!', type: 'success' });
+        } catch (error) {
+          console.error('Error updating parallax image:', error);
+          setToast({ message: 'Errore nel salvataggio immagine', type: 'error' });
+        }
+        break;
+      case 'alf':
+        setAlfImage(imageUrl);
+        localStorage.setItem('alf-image', imageUrl);
+        setToast({ message: 'Immagine ALF aggiornata!', type: 'success' });
+        break;
+      case 'studio':
+        setStudioImage(imageUrl);
+        localStorage.setItem('studio-image', imageUrl);
+        setToast({ message: 'Immagine Studio aggiornata!', type: 'success' });
+        break;
+    }
+
+    setShowImagePicker(false);
+    setImagePickerTarget(null);
   };
 
   // Handlers per Preview Modal & Drag and Drop
@@ -535,7 +629,7 @@ const ContentWithCollections: React.FC = () => {
               {activeTab === 'collezioni' ? 'Collezioni' :
                activeTab === 'critica' ? 'Critica' :
                activeTab === 'mostre' ? 'Mostre' :
-               'Biografia'}
+               'About'}
             </span>
           </h1>
           {activeTab === 'collezioni' && (
@@ -672,9 +766,15 @@ const ContentWithCollections: React.FC = () => {
         {/* Tab Content */}
         {activeTab === 'collezioni' && (
           loading ? (
-            <div className="min-h-[400px]" />
+            <LoadingState type="collection" itemCount={5} />
           ) : collections.length === 0 ? (
-            <div className="p-8 border text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
+            <motion.div
+              className="p-8 border text-center"
+              style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
               <p className="text-white text-lg mb-4">Nessuna collezione presente</p>
               <button
                 onClick={() => navigate('/content/collezione/new')}
@@ -683,10 +783,15 @@ const ContentWithCollections: React.FC = () => {
               >
                 Aggiungi la prima collezione
               </button>
-            </div>
+            </motion.div>
           ) : (
             <>
-              <div className="grid gap-6">
+              <motion.div
+                className="grid gap-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
                 {getPaginatedItems(filterCollections(collections), currentPageCollections).map((collection) => (
                 <div
                   key={collection.id}
@@ -695,13 +800,21 @@ const ContentWithCollections: React.FC = () => {
                   onClick={() => navigate(`/content/collezione/${collection.id}`)}
                 >
                   <div className="flex items-start gap-6 p-2">
-                    <div className="w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
-                      <ImageWithFallback
-                        src={getImageUrl(collection.image_url)}
-                        alt={getTranslatedField(collection, 'title', language)}
-                        objectFit="cover"
-                      />
-                    </div>
+                    {collection.image_url ? (
+                      <div className="w-48 h-32 rounded-lg overflow-hidden flex-shrink-0">
+                        <ImageWithFallback
+                          src={getImageUrl(collection.image_url)}
+                          alt={getTranslatedField(collection, 'title', language)}
+                          objectFit="cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-48 h-32 rounded-lg flex-shrink-0 bg-white/5 border border-white/10 flex items-center justify-center">
+                        <svg className="w-12 h-12 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
                     <div className="flex-1">
                       <h3 className="text-xl font-bold mb-2" style={{ color: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif' }}>
                         {getTranslatedField(collection, 'title', language)}
@@ -723,7 +836,7 @@ const ContentWithCollections: React.FC = () => {
                   </div>
                 </div>
                 ))}
-              </div>
+              </motion.div>
               <Paginator
                 currentPage={currentPageCollections}
                 totalItems={filterCollections(collections).length}
@@ -735,9 +848,15 @@ const ContentWithCollections: React.FC = () => {
 
         {activeTab === 'critica' && (
           loading ? (
-            <div className="min-h-[400px]" />
+            <LoadingState type="list" itemCount={5} />
           ) : critics.length === 0 ? (
-            <div className="p-8 border text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
+            <motion.div
+              className="p-8 border text-center"
+              style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
               <p className="text-white text-lg mb-4" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                 Nessun critico presente
               </p>
@@ -748,10 +867,15 @@ const ContentWithCollections: React.FC = () => {
               >
                 Aggiungi il primo critico
               </button>
-            </div>
+            </motion.div>
           ) : (
             <>
-              <div className="grid gap-6">
+              <motion.div
+                className="grid gap-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
                 {getPaginatedItems(filterCritics(critics), currentPageCritics).map((critic) => (
                   <div
                     key={critic.id}
@@ -777,7 +901,7 @@ const ContentWithCollections: React.FC = () => {
                     </div>
                   </div>
                 ))}
-              </div>
+              </motion.div>
               <Paginator
                 currentPage={currentPageCritics}
                 totalItems={filterCritics(critics).length}
@@ -789,9 +913,15 @@ const ContentWithCollections: React.FC = () => {
 
         {activeTab === 'mostre' && (
           loading ? (
-            <div className="min-h-[400px]" />
+            <LoadingState type="collection" itemCount={5} />
           ) : exhibitions.length === 0 ? (
-            <div className="p-8 border text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}>
+            <motion.div
+              className="p-8 border text-center"
+              style={{ borderColor: 'rgba(255, 255, 255, 0.2)' }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
               <p className="text-white text-lg mb-4">Nessuna mostra presente</p>
               <button
                 onClick={() => navigate('/content/mostra/new')}
@@ -800,10 +930,15 @@ const ContentWithCollections: React.FC = () => {
               >
                 Aggiungi la prima mostra
               </button>
-            </div>
+            </motion.div>
           ) : (
             <>
-              <div className="grid gap-6">
+              <motion.div
+                className="grid gap-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
                 {getPaginatedItems(filterExhibitions(exhibitions), currentPageExhibitions).map((exhibition) => (
                   <div
                     key={exhibition.id}
@@ -848,7 +983,7 @@ const ContentWithCollections: React.FC = () => {
                     </div>
                   </div>
                 ))}
-              </div>
+              </motion.div>
               <Paginator
                 currentPage={currentPageExhibitions}
                 totalItems={filterExhibitions(exhibitions).length}
@@ -862,7 +997,12 @@ const ContentWithCollections: React.FC = () => {
           <div className="max-w-5xl mx-auto space-y-6">
             {/* Choice Screen */}
             {!selectedBioEditor && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
                 {/* ALF Card */}
                 <button
                   onClick={() => setSelectedBioEditor('alf')}
@@ -918,15 +1058,49 @@ const ContentWithCollections: React.FC = () => {
                     </p>
                   </div>
                 </button>
-              </div>
+
+                {/* PARALLAX Card - Occupa 2 colonne */}
+                <button
+                  onClick={() => setSelectedBioEditor('parallax')}
+                  className="bg-secondary p-4 border rounded-xl hover:bg-white/5 cursor-pointer transition-all md:col-span-2"
+                  style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                >
+                  <div className="text-center p-8">
+                    <svg
+                      width="64"
+                      height="64"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="mx-auto mb-6 text-white/50"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    <h3 className="text-3xl font-bold text-white mb-3" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                      <span style={{ color: 'rgb(240, 45, 110)' }}>PARALLAX</span> Immagine
+                    </h3>
+                    <p className="text-white/60">
+                      Imposta l'immagine della sezione parallax
+                    </p>
+                  </div>
+                </button>
+              </motion.div>
             )}
 
             {/* ALF Editor */}
             {selectedBioEditor === 'alf' && (
-              <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="space-y-6"
+              >
                 <button
                   onClick={() => setSelectedBioEditor(null)}
-                  className="text-white/60 hover:text-white mb-6 flex items-center gap-2"
+                  className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M15 18l-6-6 6-6" />
@@ -934,52 +1108,88 @@ const ContentWithCollections: React.FC = () => {
                   Indietro
                 </button>
 
-                <div className="bg-secondary p-8 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  <h3 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                    <span style={{ color: 'rgb(240, 45, 110)' }}>ALF</span> Biografia
-                  </h3>
+                {/* Layout a 2 colonne: immagine sinistra, form destra */}
+                <div className="grid md:grid-cols-[300px_1fr] gap-6">
+                  {/* Image block - piccola a sinistra */}
+                  <div
+                    onClick={() => handleOpenImagePicker('alf')}
+                    className="relative cursor-pointer group rounded-xl overflow-hidden h-fit"
+                    style={{
+                      border: alfImage ? '2px solid rgba(255, 255, 255, 0.1)' : '2px dashed rgba(255, 255, 255, 0.3)',
+                      backgroundColor: alfImage ? 'transparent' : 'rgba(0, 0, 0, 0.3)'
+                    }}
+                  >
+                    {alfImage ? (
+                      <>
+                        <div className="aspect-[3/4] relative">
+                          <ImageWithFallback
+                            src={getImageUrl(alfImage)}
+                            alt="ALF Biografia"
+                            aspectRatio="aspect-[3/4]"
+                            objectFit="cover"
+                            loading="eager"
+                          />
+                          {/* Hover overlay with "Cambia Immagine" */}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="text-center text-white">
+                              <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <p className="font-bold text-xs">Cambia</p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="aspect-[3/4] flex flex-col items-center justify-center p-6">
+                          <svg className="w-12 h-12 text-white/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-white/60 font-bold text-sm text-center">Clicca per scegliere</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
 
-                  <div className="space-y-8">
-                    {/* Sezione Italiano */}
-                    <div>
-                      <h4 className="text-xl font-bold text-white mb-4">Italiano</h4>
+                  {/* Form box a destra */}
+                  <div className="bg-secondary p-8 rounded-xl border" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                    <h2 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                      <span style={{ color: 'rgb(240, 45, 110)' }}>ALF</span> Biografia
+                    </h2>
+
+                    <div className="space-y-6">
+                      <h4 className="text-xl font-bold text-white">Italiano</h4>
                       {bioContent.alf.it.paragraphs.map((paragraph, index) => (
                         <div key={index}>
+                          <label className="block text-white mb-2 font-bold">Paragrafo {index + 1}</label>
                           <textarea
                             value={paragraph}
                             onChange={(e) => updateBioParagraph('alf', 'it', index, e.target.value)}
                             rows={4}
-                            className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
+                            className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
                             style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                             placeholder={`Paragrafo ${index + 1} in italiano...`}
                           />
-                          {index < bioContent.alf.it.paragraphs.length - 1 && (
-                            <div className="h-px bg-white/20 my-4"></div>
-                          )}
                         </div>
                       ))}
                     </div>
-
-                    <div className="flex justify-center pt-6">
-                      <button
-                        onClick={handleSaveBio}
-                        className="px-8 py-3 font-bold uppercase text-white transition-all hover:scale-105"
-                        style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
-                      >
-                        Salva ALF
-                      </button>
-                    </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* STUDIO Editor */}
             {selectedBioEditor === 'studio' && (
-              <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="space-y-6"
+              >
                 <button
                   onClick={() => setSelectedBioEditor(null)}
-                  className="text-white/60 hover:text-white mb-6 flex items-center gap-2"
+                  className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M15 18l-6-6 6-6" />
@@ -987,49 +1197,206 @@ const ContentWithCollections: React.FC = () => {
                   Indietro
                 </button>
 
-                <div className="bg-secondary p-8 border rounded-xl" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
-                  <h3 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                    <span style={{ color: 'rgb(240, 45, 110)' }}>STUDIO</span> Descrizione
-                  </h3>
+                {/* Layout a 2 colonne: immagine sinistra, form destra */}
+                <div className="grid md:grid-cols-[300px_1fr] gap-6">
+                  {/* Image block - piccola a sinistra */}
+                  <div
+                    onClick={() => handleOpenImagePicker('studio')}
+                    className="relative cursor-pointer group rounded-xl overflow-hidden h-fit"
+                    style={{
+                      border: studioImage ? '2px solid rgba(255, 255, 255, 0.1)' : '2px dashed rgba(255, 255, 255, 0.3)',
+                      backgroundColor: studioImage ? 'transparent' : 'rgba(0, 0, 0, 0.3)'
+                    }}
+                  >
+                    {studioImage ? (
+                      <>
+                        <div className="aspect-[3/4] relative">
+                          <ImageWithFallback
+                            src={getImageUrl(studioImage)}
+                            alt="Studio"
+                            aspectRatio="aspect-[3/4]"
+                            objectFit="cover"
+                            loading="eager"
+                          />
+                          {/* Hover overlay with "Cambia Immagine" */}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="text-center text-white">
+                              <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              <p className="font-bold text-xs">Cambia</p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="aspect-[3/4] flex flex-col items-center justify-center p-6">
+                          <svg className="w-12 h-12 text-white/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-white/60 font-bold text-sm text-center">Clicca per scegliere</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
 
-                  <div className="space-y-8">
-                    {/* Sezione Italiano */}
-                    <div>
-                      <h4 className="text-xl font-bold text-white mb-4">Italiano</h4>
+                  {/* Form box a destra */}
+                  <div className="bg-secondary p-8 rounded-xl border" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                    <h2 className="text-2xl font-bold text-white mb-6" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                      <span style={{ color: 'rgb(240, 45, 110)' }}>STUDIO</span> Descrizione
+                    </h2>
+
+                    <div className="space-y-6">
+                      <h4 className="text-xl font-bold text-white">Italiano</h4>
                       {bioContent.studio.it.paragraphs.map((paragraph, index) => (
                         <div key={index}>
+                          <label className="block text-white mb-2 font-bold">Paragrafo {index + 1}</label>
                           <textarea
                             value={paragraph}
                             onChange={(e) => updateBioParagraph('studio', 'it', index, e.target.value)}
                             rows={4}
-                            className="w-full px-4 py-3 bg-background text-white border rounded-lg mb-2"
+                            className="w-full px-4 py-3 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
                             style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                             placeholder={`Paragrafo ${index + 1} in italiano...`}
                           />
-                          {index < bioContent.studio.it.paragraphs.length - 1 && (
-                            <div className="h-px bg-white/20 my-4"></div>
-                          )}
                         </div>
                       ))}
                     </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
-                    <div className="flex justify-center pt-6">
-                      <button
-                        onClick={handleSaveBio}
-                        className="px-8 py-3 font-bold uppercase text-white transition-all hover:scale-105"
-                        style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
-                      >
-                        Salva Studio
-                      </button>
+            {/* PARALLAX Editor */}
+            {selectedBioEditor === 'parallax' && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <button
+                  onClick={() => setSelectedBioEditor(null)}
+                  className="text-white/60 hover:text-white mb-4 flex items-center gap-2"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                  Indietro
+                </button>
+
+                {/* Immagine Background Parallax */}
+                <div
+                  onClick={() => handleOpenImagePicker('parallax')}
+                  className="relative cursor-pointer group rounded-xl overflow-hidden"
+                  style={{
+                    border: parallaxImage ? '2px solid rgba(255, 255, 255, 0.1)' : '2px dashed rgba(255, 255, 255, 0.3)',
+                    backgroundColor: parallaxImage ? 'transparent' : 'rgba(0, 0, 0, 0.3)'
+                  }}
+                >
+                  {parallaxImage ? (
+                    <>
+                      {/* Image with overlay */}
+                      <div className="aspect-video relative">
+                        <ImageWithFallback
+                          src={getImageUrl(parallaxImage)}
+                          alt="Parallax Background"
+                          aspectRatio="aspect-video"
+                          objectFit="cover"
+                          loading="eager"
+                        />
+                        {/* Hover overlay */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <div className="text-center text-white">
+                            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <p className="font-bold text-sm">Cambia Immagine</p>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Empty state */}
+                      <div className="aspect-video flex flex-col items-center justify-center p-8">
+                        <svg className="w-16 h-16 text-white/40 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-white/60 font-bold text-lg mb-1">Clicca per scegliere immagine</p>
+                        <p className="text-white/40 text-sm">Immagine di background per il parallax</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Testi Parallax */}
+                <div className="bg-secondary p-8 rounded-xl border" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
+                  <h2 className="text-2xl font-bold text-white mb-6">Testi Parallax</h2>
+
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-white mb-2 font-bold">Testo in alto a sinistra</label>
+                      <textarea
+                        value={parallaxTextTop}
+                        onChange={(e) => setParallaxTextTop(e.target.value)}
+                        rows={4}
+                        className="w-full px-4 py-2 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
+                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                        placeholder="Testo che apparirà in alto a sinistra sopra l'immagine..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-white mb-2 font-bold">Testo in basso a destra</label>
+                      <textarea
+                        value={parallaxTextBottom}
+                        onChange={(e) => setParallaxTextBottom(e.target.value)}
+                        rows={4}
+                        className="w-full px-4 py-2 bg-background text-white border rounded-lg focus:outline-none focus:border-pink-500 transition-colors"
+                        style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                        placeholder="Testo che apparirà in basso a destra sopra l'immagine..."
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
         )}
 
       </motion.div>
+
+      {/* Floating Buttons - Show when editing Parallax */}
+      {activeTab === 'biografia' && selectedBioEditor === 'parallax' && (
+        <div className="fixed bottom-6 right-6 flex gap-3 z-50">
+          <button
+            onClick={() => setSelectedBioEditor(null)}
+            className="px-6 py-3 font-bold uppercase text-white border hover:bg-white/5 transition-all shadow-lg"
+            style={{ borderColor: 'rgba(255, 255, 255, 0.2)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0, backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+          >
+            Annulla
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                await updateParallax({
+                  text_top_it: parallaxTextTop,
+                  text_bottom_it: parallaxTextBottom
+                });
+                setToast({ message: 'Testi salvati con successo!', type: 'success' });
+              } catch (error) {
+                console.error('Error updating parallax:', error);
+                setToast({ message: 'Errore nel salvataggio', type: 'error' });
+              }
+            }}
+            className="px-6 py-3 font-bold uppercase text-white transition-all hover:opacity-90 shadow-lg"
+            style={{ backgroundColor: 'rgb(240, 45, 110)', fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
+          >
+            Salva
+          </button>
+        </div>
+      )}
 
       {/* Preview Modal */}
       <Modal
@@ -1088,12 +1455,12 @@ const ContentWithCollections: React.FC = () => {
                 </div>
 
                 {/* Collection Card */}
-                <div className="aspect-[16/9] overflow-hidden rounded-lg border border-white/10 bg-background transition-all duration-300 group-hover:border-white/30">
+                <div className="aspect-[16/9] overflow-hidden bg-background transition-all duration-300" style={{ borderRadius: '12px', border: '2px solid rgba(255, 255, 255, 0.1)' }}>
                   <ImageWithFallback
                     src={getImageUrl(collection.image_url)}
                     alt={getTranslatedField(collection, 'title', language)}
                     objectFit="cover"
-                    className="transition-transform duration-700 group-hover:scale-110"
+                    className="transition-transform duration-700 group-hover:scale-110 w-full h-full"
                   />
                 </div>
               </motion.div>
@@ -1150,6 +1517,16 @@ const ContentWithCollections: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Image Picker Modal */}
+      <ImagePickerModal
+        isOpen={showImagePicker}
+        onClose={() => {
+          setShowImagePicker(false);
+          setImagePickerTarget(null);
+        }}
+        onSelectImage={handleSelectImage}
+      />
 
       {/* Toast Notification */}
       {toast && (

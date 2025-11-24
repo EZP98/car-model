@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
 import { createExhibition } from '../services/exhibitions-api';
 import ImageWithFallback from '../components/ImageWithFallback';
+import Toast from '../components/Toast';
 
 // In development, use empty string to leverage Vite proxy
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -25,6 +26,7 @@ const getImageUrl = (path: string): string => {
 const NewExhibition: React.FC = () => {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
@@ -43,13 +45,13 @@ const NewExhibition: React.FC = () => {
     e.preventDefault();
 
     if (!formData.title || !formData.slug || !formData.location || !formData.date) {
-      alert('I campi obbligatori devono essere compilati');
+      setToast({ message: 'I campi obbligatori devono essere compilati', type: 'error' });
       return;
     }
 
     setSaving(true);
     try {
-      const newExhibition = await createExhibition({
+      await createExhibition({
         title: formData.title,
         subtitle: formData.subtitle || undefined,
         location: formData.location,
@@ -63,10 +65,13 @@ const NewExhibition: React.FC = () => {
         is_visible: formData.is_visible
       });
 
-      navigate(`/content/mostra/${newExhibition.id}`);
+      setToast({ message: 'Mostra creata con successo!', type: 'success' });
+      setTimeout(() => {
+        navigate('/content?tab=mostre');
+      }, 1500);
     } catch (error) {
       console.error('Error creating exhibition:', error);
-      alert('Errore nella creazione della mostra');
+      setToast({ message: 'Errore nella creazione della mostra', type: 'error' });
       setSaving(false);
     }
   };
@@ -385,6 +390,16 @@ const NewExhibition: React.FC = () => {
           </ul>
         </div>
       </motion.div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={!!toast}
+          onClose={() => setToast(null)}
+        />
+      )}
     </BackofficeLayout>
   );
 };

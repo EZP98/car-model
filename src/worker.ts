@@ -506,6 +506,7 @@ export default {
           title: string;
           slug: string;
           description?: string;
+          detailed_description?: string;
           image_url?: string;
           order_index?: number;
           is_visible?: boolean;
@@ -523,9 +524,19 @@ export default {
           description_ja?: string;
           description_zh?: string;
           description_zh_tw?: string;
+          detailed_description_it?: string;
+          detailed_description_en?: string;
+          detailed_description_es?: string;
+          detailed_description_fr?: string;
+          detailed_description_ja?: string;
+          detailed_description_zh?: string;
+          detailed_description_zh_tw?: string;
         };
 
-        const { title, slug, description, image_url, order_index, is_visible } = body;
+        // Use title_it as primary title if title is not provided (new collections)
+        const title = body.title || body.title_it;
+        const description = body.description || body.description_it;
+        const { slug, image_url, order_index, is_visible } = body;
 
         if (!title || !slug) {
           return jsonResponse({ error: 'Title and slug are required' }, 400);
@@ -1035,6 +1046,87 @@ export default {
         await updateVersioning(env.DB, 'biography', 1, body);
 
         return jsonResponse({ biography: result });
+      }
+
+      // ========== PARALLAX ==========
+
+      // GET /api/parallax - Get parallax
+      if (path === '/api/parallax' && method === 'GET') {
+        const parallax = await env.DB.prepare(
+          'SELECT * FROM parallax WHERE id = 1'
+        ).first();
+
+        if (!parallax) {
+          return jsonResponse({ error: 'Parallax not found' }, 404);
+        }
+
+        return jsonResponse({ parallax });
+      }
+
+      // PUT /api/parallax - Update parallax
+      if (path === '/api/parallax' && method === 'PUT') {
+        // Check authentication
+        if (!await isAuthenticated(request, env)) {
+          return jsonResponse({ error: 'Unauthorized' }, 401);
+        }
+
+        const body = await request.json() as {
+          image_url?: string;
+          text_top_it?: string;
+          text_top_en?: string;
+          text_top_es?: string;
+          text_top_fr?: string;
+          text_top_ja?: string;
+          text_top_zh?: string;
+          text_top_zh_tw?: string;
+          text_bottom_it?: string;
+          text_bottom_en?: string;
+          text_bottom_es?: string;
+          text_bottom_fr?: string;
+          text_bottom_ja?: string;
+          text_bottom_zh?: string;
+          text_bottom_zh_tw?: string;
+        };
+
+        // Build SET clause dynamically
+        const updates: string[] = [];
+        const values: any[] = [];
+
+        if (body.image_url !== undefined) { updates.push('image_url = ?'); values.push(body.image_url); }
+        if (body.text_top_it !== undefined) { updates.push('text_top_it = ?'); values.push(body.text_top_it); }
+        if (body.text_top_en !== undefined) { updates.push('text_top_en = ?'); values.push(body.text_top_en); }
+        if (body.text_top_es !== undefined) { updates.push('text_top_es = ?'); values.push(body.text_top_es); }
+        if (body.text_top_fr !== undefined) { updates.push('text_top_fr = ?'); values.push(body.text_top_fr); }
+        if (body.text_top_ja !== undefined) { updates.push('text_top_ja = ?'); values.push(body.text_top_ja); }
+        if (body.text_top_zh !== undefined) { updates.push('text_top_zh = ?'); values.push(body.text_top_zh); }
+        if (body.text_top_zh_tw !== undefined) { updates.push('text_top_zh_tw = ?'); values.push(body.text_top_zh_tw); }
+        if (body.text_bottom_it !== undefined) { updates.push('text_bottom_it = ?'); values.push(body.text_bottom_it); }
+        if (body.text_bottom_en !== undefined) { updates.push('text_bottom_en = ?'); values.push(body.text_bottom_en); }
+        if (body.text_bottom_es !== undefined) { updates.push('text_bottom_es = ?'); values.push(body.text_bottom_es); }
+        if (body.text_bottom_fr !== undefined) { updates.push('text_bottom_fr = ?'); values.push(body.text_bottom_fr); }
+        if (body.text_bottom_ja !== undefined) { updates.push('text_bottom_ja = ?'); values.push(body.text_bottom_ja); }
+        if (body.text_bottom_zh !== undefined) { updates.push('text_bottom_zh = ?'); values.push(body.text_bottom_zh); }
+        if (body.text_bottom_zh_tw !== undefined) { updates.push('text_bottom_zh_tw = ?'); values.push(body.text_bottom_zh_tw); }
+
+        if (updates.length === 0) {
+          return jsonResponse({ error: 'No fields to update' }, 400);
+        }
+
+        // Add updated_at
+        updates.push('updated_at = CURRENT_TIMESTAMP');
+
+        const result = await env.DB.prepare(
+          `UPDATE parallax SET ${updates.join(', ')} WHERE id = 1 RETURNING *`
+        ).bind(...values).first();
+
+        if (!result) {
+          return jsonResponse({ error: 'Parallax not found' }, 404);
+        }
+
+        // Update versioning based on which fields are being modified
+        await updateVersioning(env.DB, 'parallax', 1, body);
+
+        return jsonResponse({ parallax: result });
       }
 
       // ========== CONTENT BLOCKS ==========

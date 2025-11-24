@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
+import ConfirmModal from '../components/ConfirmModal';
 import { getCollections, getCollectionArtworks, Collection, Artwork } from '../services/collections-api';
 import ImageWithFallback from '../components/ImageWithFallback';
 
@@ -17,6 +18,8 @@ const CollectionArtworks: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [artworkToDelete, setArtworkToDelete] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     year: '',
@@ -107,16 +110,17 @@ const CollectionArtworks: React.FC = () => {
     }
   };
 
-  const handleDeleteArtwork = async (id: number) => {
-    if (!window.confirm('Sei sicuro di voler eliminare questa opera?')) return;
+  const handleDeleteArtwork = async () => {
+    if (!artworkToDelete) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/artworks/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/artworks/${artworkToDelete}`, {
         method: 'DELETE'
       });
 
       if (response.ok) {
         loadData();
+        setArtworkToDelete(null);
       }
     } catch (error) {
       console.error('Error deleting artwork:', error);
@@ -491,7 +495,10 @@ const CollectionArtworks: React.FC = () => {
                         </svg>
                       </button>
                       <button
-                        onClick={() => handleDeleteArtwork(artwork.id)}
+                        onClick={() => {
+                          setArtworkToDelete(artwork.id);
+                          setShowDeleteModal(true);
+                        }}
                         className="p-2 text-white border rounded-lg hover:text-red-400 hover:border-red-400 transition-colors"
                         style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
                         title="Elimina"
@@ -510,6 +517,21 @@ const CollectionArtworks: React.FC = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setArtworkToDelete(null);
+        }}
+        onConfirm={handleDeleteArtwork}
+        title="Elimina Opera"
+        message="Sei sicuro di voler eliminare questa opera?"
+        confirmText="Ok"
+        cancelText="Annulla"
+        confirmButtonColor="rgb(240, 45, 110)"
+      />
     </BackofficeLayout>
   );
 };

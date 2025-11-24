@@ -1,24 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
+import { Language } from '../i18n/translations';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { language, setLanguage } = useLanguage();
-
-  const languages = [
-    { code: 'it', label: 'IT', flag: '🇮🇹' },
-    { code: 'en', label: 'EN', flag: '🇬🇧' },
-    { code: 'es', label: 'ES', flag: '🇪🇸' },
-    { code: 'fr', label: 'FR', flag: '🇫🇷' },
-    { code: 'ja', label: 'JP', flag: '🇯🇵' },
-    { code: 'zh', label: 'CN', flag: '🇨🇳' },
-    { code: 'zh-TW', label: 'TW', flag: '🇹🇼' },
-  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,19 +18,6 @@ const Navbar: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Close language menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (isLanguageMenuOpen && !target.closest('.language-selector')) {
-        setIsLanguageMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [isLanguageMenuOpen]);
 
   // Scroll to section when landing on homepage with hash
   useEffect(() => {
@@ -72,6 +49,16 @@ const Navbar: React.FC = () => {
     { href: '#mostre', label: 'MOSTRE' },
     { href: '#bio', label: 'CRITICA' },
     { href: '#about', label: 'ABOUT' },
+  ];
+
+  const languages: Array<{ code: Language; label: string; flag: string }> = [
+    { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+    { code: 'en', label: 'English', flag: '🇬🇧' },
+    { code: 'es', label: 'Español', flag: '🇪🇸' },
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'ja', label: '日本語', flag: '🇯🇵' },
+    { code: 'zh', label: '简体中文', flag: '🇨🇳' },
+    { code: 'zh-TW', label: '繁體中文', flag: '🇹🇼' },
   ];
 
   const handleNavClick = (href: string, e?: React.MouseEvent) => {
@@ -123,39 +110,6 @@ const Navbar: React.FC = () => {
             </a>
           ))}
 
-          {/* Desktop Language Selector */}
-          <div className="hidden md:block relative language-selector">
-            <button
-              onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
-              className="text-base font-bold uppercase text-accent hover:text-white transition-colors flex items-center gap-2"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
-            >
-              <span>{languages.find(l => l.code === language)?.flag}</span>
-              <span>{languages.find(l => l.code === language)?.label}</span>
-            </button>
-
-            {isLanguageMenuOpen && (
-              <div className="absolute right-0 top-full mt-2 bg-secondary border border-white/10 rounded-lg py-2 shadow-xl z-[1001]">
-                {languages.map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => {
-                      setLanguage(lang.code);
-                      setIsLanguageMenuOpen(false);
-                    }}
-                    className={`w-full px-4 py-2 text-left hover:bg-white/10 transition-colors flex items-center gap-2 ${
-                      language === lang.code ? 'text-accent' : 'text-white'
-                    }`}
-                    style={{ fontFamily: 'Montserrat, sans-serif' }}
-                  >
-                    <span>{lang.flag}</span>
-                    <span className="font-bold">{lang.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Mobile Hamburger Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -193,17 +147,6 @@ const Navbar: React.FC = () => {
           transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
       >
-        {/* Close Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(false)}
-          className="absolute top-6 right-6 text-accent hover:text-white transition-colors z-[1002]"
-          aria-label="Close menu"
-        >
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </button>
-
         <div className="flex flex-col items-center justify-center gap-6">
           {navItems.map((item, index) => (
             <a
@@ -225,28 +168,31 @@ const Navbar: React.FC = () => {
             </a>
           ))}
 
-          {/* Mobile Language Selector */}
-          <div className="flex gap-3 flex-wrap justify-center mt-4">
-            {languages.map((lang, index) => (
+          {/* Language Selector - Mobile Only */}
+          <div
+            className="flex flex-wrap gap-2 mt-4 justify-center max-w-xs"
+            style={{
+              opacity: isMobileMenuOpen ? 1 : 0,
+              transform: isMobileMenuOpen ? 'translateY(0)' : 'translateY(20px)',
+              transition: `all 0.6s ease-out ${navItems.length * 0.1}s`,
+            }}
+          >
+            {languages.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => {
                   setLanguage(lang.code);
                   setIsMobileMenuOpen(false);
                 }}
-                className={`px-4 py-2 rounded-lg font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-full border transition-all duration-300 flex items-center gap-1.5 text-xs ${
                   language === lang.code
-                    ? 'bg-accent text-black'
-                    : 'bg-white/10 text-white hover:bg-white/20'
+                    ? 'border-accent bg-accent/20 text-accent'
+                    : 'border-white/20 text-white hover:border-accent hover:bg-accent/10'
                 }`}
-                style={{
-                  fontFamily: 'Montserrat, sans-serif',
-                  opacity: isMobileMenuOpen ? 1 : 0,
-                  transition: `all 0.6s ease-out ${(navItems.length + index) * 0.1}s`
-                }}
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
               >
-                <span className="mr-2">{lang.flag}</span>
-                {lang.label}
+                <span className="text-base">{lang.flag}</span>
+                <span className="font-semibold">{lang.label}</span>
               </button>
             ))}
           </div>

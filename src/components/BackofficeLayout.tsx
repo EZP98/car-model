@@ -52,7 +52,7 @@ const BackofficeLayout: React.FC<BackofficeLayoutProps> = ({ children }) => {
     },
     {
       id: 'biografia',
-      label: 'Biografia',
+      label: 'About',
       path: '/content?tab=biografia',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

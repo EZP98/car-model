@@ -9,6 +9,8 @@ import { ReactComponent as AdeleSVG } from '../assets/images/adele.svg';
 import { getArtworks, subscribeToNewsletter, type Artwork } from '../services/api';
 import { getCollections, type Collection } from '../services/collections-api';
 import { getExhibitions, type Exhibition, getCritics, type Critic } from '../services/content-api';
+import { getBiography, type Biography } from '../services/biography-api';
+import { getParallax, type Parallax } from '../services/parallax-api';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTranslation } from '../i18n/useTranslation';
 import { Language } from '../i18n/translations';
@@ -20,15 +22,15 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Helper function to convert relative image URLs to absolute
 const getImageUrl = (url: string | null | undefined): string => {
-  if (!url) return '/opera.png';
+  if (!url) return '';
 
   // If URL is already absolute, return as is
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
 
-  // If URL is relative, prepend API base URL
-  if (url.startsWith('/images/')) {
+  // If URL starts with /, prepend API base URL
+  if (url.startsWith('/')) {
     return `${API_BASE_URL}${url}`;
   }
 
@@ -362,10 +364,10 @@ const TestoCriticoModal: React.FC<TestoCriticoModalProps> = ({ isOpen, onClose, 
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-6xl max-h-[90vh] md:h-[85vh] bg-background/95 backdrop-blur rounded-3xl flex flex-col border border-white/10"
+        className="relative w-full max-w-3xl max-h-[90vh] md:h-[85vh] bg-background/95 backdrop-blur rounded-3xl flex flex-col border border-white/10"
         style={{
           fontFamily: 'Montserrat, sans-serif',
-          boxShadow: '0 25px 50px -12px rgba(240, 45, 110, 0.25)'
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -396,17 +398,17 @@ const TestoCriticoModal: React.FC<TestoCriticoModalProps> = ({ isOpen, onClose, 
           </div>
 
           {/* Text Content */}
-          <div className="space-y-6 max-w-4xl mx-auto">
+          <div className="space-y-6">
             {paragraphs.length > 1 ? (
               paragraphs.map((paragraph: string, index: number) => (
-                <p key={index} className="text-[16px] md:text-[17px] leading-relaxed text-white/85 font-light" style={{ lineHeight: '1.8' }}>
+                <p key={index} className="text-[16px] md:text-[18px] leading-relaxed text-white/85 font-light" style={{ lineHeight: '1.9' }}>
                   {index === 0 && <span className="text-accent text-[24px] mr-1">"</span>}
                   {paragraph}
                   {index === paragraphs.length - 1 && <span className="text-accent text-[24px] ml-1">"</span>}
                 </p>
               ))
             ) : (
-              <p className="text-[16px] md:text-[17px] leading-relaxed text-white/85 font-light italic" style={{ lineHeight: '1.8' }}>
+              <p className="text-[16px] md:text-[18px] leading-relaxed text-white/85 font-light italic" style={{ lineHeight: '1.9' }}>
                 <span className="text-accent text-[32px] leading-none align-text-top">"</span>
                 {critico.testo}
                 <span className="text-accent text-[32px] leading-none align-text-bottom">"</span>
@@ -435,14 +437,9 @@ const TestoCriticoItem: React.FC<TestoCriticoItemProps> = ({ nome, ruolo, testo,
   return (
     <button
       onClick={onClick}
-      className="w-[85vw] md:w-full flex-shrink-0 snap-center p-8 border border-white/20 text-left hover:border-white/40 hover:bg-white/[0.035] transition-all group rounded-[12px] min-h-[280px] flex flex-col"
+      className="w-[85vw] md:w-full flex-shrink-0 snap-center p-8 border border-white/20 text-left hover:bg-white/[0.035] transition-all group rounded-[12px] min-h-[280px] flex flex-col"
     >
-      <div className="flex items-start justify-between mb-4">
-        <h6 className="m-0 text-white font-body text-[20px] font-bold uppercase tracking-wide">{nome || ''}</h6>
-        <svg className="flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity ml-4" width="24" height="24" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" fill="rgb(153, 153, 153)"/>
-        </svg>
-      </div>
+      <h6 className="m-0 text-white font-body text-[20px] font-bold uppercase tracking-wide mb-4">{nome || ''}</h6>
       <p className="m-0 text-white/70 font-body text-[15px] font-medium mb-4 leading-tight">{ruolo || ''}</p>
       <p className="m-0 text-white/50 font-body text-[14px] font-normal italic leading-relaxed flex-grow">&ldquo;{anteprima}&rdquo;</p>
     </button>
@@ -469,6 +466,23 @@ const Collezione: React.FC = () => {
   const [aboutView, setAboutView] = useState<'alf' | 'studio'>('alf');
   const [loadingCollections, setLoadingCollections] = useState(true);
 
+  // Stati per Parallax (caricati da localStorage)
+  const [parallaxImage, setParallaxImage] = useState<string>('');
+  const [parallaxTextTop, setParallaxTextTop] = useState<string>('');
+  const [parallaxTextBottom, setParallaxTextBottom] = useState<string>('');
+
+  // Stati per About ALF e Studio (caricati da localStorage)
+  const [alfImage, setAlfImage] = useState<string>('');
+  const [studioImage, setStudioImage] = useState<string>('');
+  const [alfParagraphs, setAlfParagraphs] = useState<string[]>(['', '', '', '']);
+  const [studioParagraphs, setStudioParagraphs] = useState<string[]>(['', '', '', '']);
+
+  // Biografia dal database
+  const [biography, setBiography] = useState<Biography | null>(null);
+
+  // Parallax dal database
+  const [parallaxData, setParallaxData] = useState<Parallax | null>(null);
+
   const openMostraModal = (mostra: any) => {
     setSelectedMostra(mostra);
     setIsModalOpen(true);
@@ -480,7 +494,13 @@ const Collezione: React.FC = () => {
   };
 
   const openCriticoModal = (critico: any) => {
-    setSelectedCritico(critico);
+    // Create translated version of critic data
+    const translatedCritico = {
+      nome: critico.name,
+      ruolo: getTranslatedField(critico, 'role', language),
+      testo: getTranslatedField(critico, 'text', language)
+    };
+    setSelectedCritico(translatedCritico);
     setIsCriticoModalOpen(true);
   };
 
@@ -488,6 +508,19 @@ const Collezione: React.FC = () => {
     setIsCriticoModalOpen(false);
     setTimeout(() => setSelectedCritico(null), 300);
   };
+
+  // Block body scroll when critic modal is open
+  useEffect(() => {
+    if (isCriticoModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isCriticoModalOpen]);
 
   const mostraAltre = () => {
     const previousCount = mostreVisibili;
@@ -601,6 +634,85 @@ const Collezione: React.FC = () => {
     loadData();
   }, []);
 
+  // Carica biografia e parallax dal database
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const bioData = await getBiography();
+        setBiography(bioData);
+
+        const parallax = await getParallax();
+        setParallaxData(parallax);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Carica dati About da localStorage E parallax/biografia dal database
+  useEffect(() => {
+    // Parallax - carica dal database con supporto multilingua
+    if (parallaxData) {
+      // Immagine
+      if (parallaxData.image_url) {
+        setParallaxImage(parallaxData.image_url);
+      }
+
+      // Testi con getTranslatedField
+      const textTop = getTranslatedField(parallaxData, 'text_top', language);
+      const textBottom = getTranslatedField(parallaxData, 'text_bottom', language);
+
+      if (textTop) setParallaxTextTop(textTop);
+      if (textBottom) setParallaxTextBottom(textBottom);
+    }
+
+    // ALF e Studio immagini
+    const savedAlfImage = localStorage.getItem('alf-image');
+    const savedStudioImage = localStorage.getItem('studio-image');
+
+    if (savedAlfImage) setAlfImage(savedAlfImage);
+    if (savedStudioImage) setStudioImage(savedStudioImage);
+
+    // Biografia content - carica prima da localStorage per struttura multi-paragrafo
+    const savedBioContent = localStorage.getItem('artist-bio-enhanced');
+    if (savedBioContent) {
+      try {
+        const bioData = JSON.parse(savedBioContent);
+        // Usa la lingua corrente per recuperare i paragrafi giusti
+        const langKey = language === 'zh-TW' ? 'it' : language;
+
+        if (bioData.alf?.[langKey]?.paragraphs) {
+          setAlfParagraphs(bioData.alf[langKey].paragraphs);
+        } else if (bioData.alf?.it?.paragraphs) {
+          setAlfParagraphs(bioData.alf.it.paragraphs);
+        }
+
+        if (bioData.studio?.[langKey]?.paragraphs) {
+          setStudioParagraphs(bioData.studio[langKey].paragraphs);
+        } else if (bioData.studio?.it?.paragraphs) {
+          setStudioParagraphs(bioData.studio.it.paragraphs);
+        }
+      } catch (error) {
+        console.error('Error parsing bio content:', error);
+      }
+    }
+
+    // Se non ci sono dati in localStorage, usa biografia dal database
+    if (!savedBioContent && biography) {
+      const langKey = language === 'zh-TW' ? 'zh_tw' : language;
+      const fieldName = `text_${langKey}`;
+      const bioText = getTranslatedField(biography, 'text', language);
+
+      // Dividi il testo in paragrafi (separati da doppio a capo)
+      if (bioText) {
+        const paragraphs = bioText.split('\n\n').filter(p => p.trim());
+        setAlfParagraphs(paragraphs);
+        setStudioParagraphs(paragraphs);
+      }
+    }
+  }, [language, biography, parallaxData]);
+
   useEffect(() => {
     // Avvia le animazioni
 
@@ -704,8 +816,8 @@ const Collezione: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>Adele Lo Feudo - L'Artista Italiana</title>
-        <meta name="description" content="Adele Lo Feudo - L'artista italiana che esplora l'anima attraverso la materia. Scopri le opere d'arte contemporanea." />
+        <title>{t('seoTitle')}</title>
+        <meta name="description" content={t('seoDescription')} />
       </Helmet>
 
 
@@ -744,20 +856,20 @@ const Collezione: React.FC = () => {
       {/* Collection Section */}
       <section id="collection" className="py-20 px-6" style={{ scrollSnapAlign: 'start', minHeight: '100vh' }}>
         <div className="w-full">
-          <h2 className="text-[42px] font-bold text-accent uppercase mb-8" style={{fontFamily: 'Montserrat, sans-serif'}}>Collezioni</h2>
+          <h2 className="text-[42px] font-bold text-accent uppercase mb-8" style={{fontFamily: 'Montserrat, sans-serif'}}>{t('collections')}</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {loadingCollections ? (
               <div className="col-span-2 text-center py-12">
-                <p className="text-white text-xl">Caricamento collezioni...</p>
+                <p className="text-white text-xl">{t('loadingCollections')}</p>
               </div>
             ) : collections.length === 0 ? (
               <div className="col-span-2 text-center py-12">
-                <p className="text-white/60">Nessuna collezione disponibile</p>
+                <p className="text-white/60">{t('noCollectionsAvailable')}</p>
               </div>
             ) : (
               collections
-                .filter(collection => collection.is_visible)
+                .filter(collection => collection.is_visible && collection.image_url)
                 .sort((a, b) => a.order_index - b.order_index)
                 .map((collection, index) => (
                   <motion.div
@@ -776,15 +888,17 @@ const Collezione: React.FC = () => {
                           {getTranslatedField(collection, 'description', language)}
                         </p>
                       </div>
-                      <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                        <ImageWithFallback
-                          src={getImageUrl(collection.image_url)}
-                          alt={getTranslatedField(collection, 'title', language)}
-                          aspectRatio="aspect-[3/2]"
-                          objectFit="cover"
-                          className="group-hover:scale-110 transition-transform duration-700"
-                        />
-                      </div>
+                      {collection.image_url && (
+                        <div className="border border-white/10 rounded-[12px] overflow-hidden">
+                          <ImageWithFallback
+                            src={getImageUrl(collection.image_url)}
+                            alt={getTranslatedField(collection, 'title', language)}
+                            aspectRatio="aspect-[3/2]"
+                            objectFit="cover"
+                            className="group-hover:scale-110 transition-transform duration-700"
+                          />
+                        </div>
+                      )}
                     </Link>
                   </motion.div>
                 ))
@@ -796,7 +910,7 @@ const Collezione: React.FC = () => {
       {/* Mostre Section */}
       <section id="mostre" className="py-20 px-6" style={{ scrollSnapAlign: 'start', minHeight: '100vh' }}>
         <div className="w-full">
-          <h2 className="text-[42px] font-bold text-accent uppercase mb-8" style={{fontFamily: 'Montserrat, sans-serif'}}>Mostre</h2>
+          <h2 className="text-[42px] font-bold text-accent uppercase mb-8" style={{fontFamily: 'Montserrat, sans-serif'}}>{t('exhibitions')}</h2>
 
           <div className="border-t border-white/20">
             {exhibitionsOrdered.slice(0, mostreVisibili).map((mostra, index) => {
@@ -827,7 +941,7 @@ const Collezione: React.FC = () => {
                 onClick={mostraAltre}
                 className="px-8 py-4 border border-white/40 text-white hover:border-accent hover:text-accent transition-colors font-body text-[16px] uppercase tracking-wide"
               >
-                Mostra Altre
+                {t('showMore')}
               </button>
             </div>
           )}
@@ -840,7 +954,7 @@ const Collezione: React.FC = () => {
         style={{
           height: '100vh',
           scrollSnapAlign: 'start',
-          backgroundImage: 'url(/parallax-image.jpg)',
+          backgroundImage: parallaxImage ? `url(${getImageUrl(parallaxImage)})` : 'url(/parallax-image.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center center',
           backgroundAttachment: 'fixed'
@@ -852,7 +966,7 @@ const Collezione: React.FC = () => {
               className="text-white text-[20px] md:text-[28px] font-bold leading-relaxed uppercase tracking-wide"
               style={{ fontFamily: 'Montserrat, sans-serif' }}
             >
-              Parto da un'immagine per stimolare l'osservatore a porsi delle domande, andando oltre
+              {parallaxTextTop || "Parto da un'immagine per stimolare l'osservatore a porsi delle domande, andando oltre"}
             </p>
           </div>
         </div>
@@ -861,14 +975,20 @@ const Collezione: React.FC = () => {
             className="text-white text-[20px] md:text-[28px] font-bold leading-relaxed uppercase tracking-wide text-right"
             style={{ fontFamily: 'Montserrat, sans-serif' }}
           >
-            <span className="md:block">Giustizia attraverso</span>
-            <span className="md:block">conoscenza e memoria</span>
+            {parallaxTextBottom ? (
+              parallaxTextBottom
+            ) : (
+              <>
+                <span className="md:block">Giustizia attraverso</span>
+                <span className="md:block">conoscenza e memoria</span>
+              </>
+            )}
           </p>
         </div>
       </section>
 
       {/* Bio & Testi Critici Section */}
-      <section id="bio" className="py-20 md:px-6" style={{ scrollSnapAlign: 'start', minHeight: 'auto' }}>
+      <section id="bio" className="py-20 px-6" style={{ scrollSnapAlign: 'start', minHeight: 'auto' }}>
         <div className="w-full">
           <h2 className="text-[42px] font-bold text-accent uppercase mb-8" style={{fontFamily: 'Montserrat, sans-serif'}}>
             {t('critique')}
@@ -890,11 +1010,7 @@ const Collezione: React.FC = () => {
                       nome={critic.name_it || critic.name}
                       ruolo={critic.role}
                       testo={criticText}
-                      onClick={() => openCriticoModal({
-                        nome: critic.name_it || critic.name,
-                        ruolo: critic.role,
-                        testo: criticText
-                      })}
+                      onClick={() => openCriticoModal(critic)}
                     />
                   );
                 })
@@ -946,33 +1062,54 @@ const Collezione: React.FC = () => {
               <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
                 {/* Image Column */}
                 <div className="group w-full md:w-[380px] flex-shrink-0">
-                  <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                    <ImageWithFallback
-                      src="/adele.jpg"
-                      alt="Adele Lo Feudo"
-                      aspectRatio="aspect-[3/4]"
-                      objectFit="cover"
-                      className="grayscale group-hover:scale-105 transition-transform duration-500"
-                    />
+                  <div className="border border-white/10 rounded-[12px] overflow-hidden bg-black aspect-[3/4] flex items-center justify-center">
+                    {alfImage ? (
+                      <ImageWithFallback
+                        src={getImageUrl(alfImage)}
+                        alt="ALF"
+                        aspectRatio="aspect-[3/4]"
+                        objectFit="cover"
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      <svg className="w-20 h-20 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    )}
                   </div>
                 </div>
                 {/* Text Column */}
                 <div className="flex flex-col gap-6 flex-1">
-                  <p className="font-body text-[16px] text-white/80 leading-loose">
-                    {t('bioText1')}
-                  </p>
-                  <div className="h-px bg-white/20"></div>
-                  <p className="font-body text-[16px] text-white/80 leading-loose">
-                    {t('bioText2')}
-                  </p>
-                  <div className="h-px bg-white/20"></div>
-                  <p className="font-body text-[16px] text-white/80 leading-loose">
-                    {t('bioText3')}
-                  </p>
-                  <div className="h-px bg-white/20"></div>
-                  <p className="font-body text-[16px] text-white/80 leading-loose">
-                    {t('bioText4')}
-                  </p>
+                  {alfParagraphs.filter(p => p.trim()).length > 0 ? (
+                    alfParagraphs.filter(p => p.trim()).map((paragraph, index) => (
+                      <React.Fragment key={index}>
+                        <p className="font-body text-[16px] text-white/80 leading-loose">
+                          {paragraph}
+                        </p>
+                        {index < alfParagraphs.filter(p => p.trim()).length - 1 && (
+                          <div className="h-px bg-white/20"></div>
+                        )}
+                      </React.Fragment>
+                    ))
+                  ) : (
+                    <>
+                      <p className="font-body text-[16px] text-white/80 leading-loose">
+                        {t('bioText1')}
+                      </p>
+                      <div className="h-px bg-white/20"></div>
+                      <p className="font-body text-[16px] text-white/80 leading-loose">
+                        {t('bioText2')}
+                      </p>
+                      <div className="h-px bg-white/20"></div>
+                      <p className="font-body text-[16px] text-white/80 leading-loose">
+                        {t('bioText3')}
+                      </p>
+                      <div className="h-px bg-white/20"></div>
+                      <p className="font-body text-[16px] text-white/80 leading-loose">
+                        {t('bioText4')}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -986,43 +1123,55 @@ const Collezione: React.FC = () => {
               <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-start">
                 {/* Image Column */}
                 <div className="group w-full md:w-[380px] flex-shrink-0">
-                  <div className="border border-white/10 rounded-[12px] overflow-hidden">
-                    <ImageWithFallback
-                      src="/parallax-image.jpg"
-                      alt="ALF Studio"
-                      aspectRatio="aspect-[3/4]"
-                      objectFit="cover"
-                      className="grayscale group-hover:scale-105 transition-transform duration-500"
-                    />
+                  <div className="border border-white/10 rounded-[12px] overflow-hidden bg-black aspect-[3/4] flex items-center justify-center">
+                    {studioImage ? (
+                      <ImageWithFallback
+                        src={getImageUrl(studioImage)}
+                        alt="Studio"
+                        aspectRatio="aspect-[3/4]"
+                        objectFit="cover"
+                        className="w-full h-full"
+                      />
+                    ) : (
+                      <svg className="w-20 h-20 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                        <polyline strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} points="9 22 9 12 15 12 15 22" />
+                      </svg>
+                    )}
                   </div>
                 </div>
                 {/* Text Column */}
                 <div className="flex flex-col gap-6 flex-1">
-                  <p className="font-body text-[16px] text-white/80 leading-loose">
-                    Lo studio di Adele Lo Feudo è un laboratorio creativo dove l'arte prende forma attraverso
-                    un processo di ricerca continua. Situato nel cuore della città, lo spazio si configura come
-                    un ambiente di sperimentazione dove tecniche tradizionali e approcci contemporanei si fondono
-                    per dare vita a opere uniche.
-                  </p>
-                  <div className="h-px bg-white/20"></div>
-                  <p className="font-body text-[16px] text-white/80 leading-loose">
-                    Ogni progetto nasce da un'attenta analisi del contesto e da un dialogo costante con il committente,
-                    garantendo risultati che non solo soddisfano le aspettative estetiche, ma che raccontano anche una
-                    storia, evocano emozioni e creano connessioni profonde con lo spazio circostante.
-                  </p>
-                  <div className="h-px bg-white/20"></div>
-                  <p className="font-body text-[16px] text-white/80 leading-loose">
-                    Lo studio offre servizi di consulenza artistica, progettazione di opere su commissione,
-                    restauro conservativo e workshop formativi. La filosofia che guida ogni intervento è quella
-                    di creare non solo oggetti d'arte, ma esperienze che arricchiscono l'ambiente e la vita di
-                    chi le vive quotidianamente.
-                  </p>
-                  <div className="h-px bg-white/20"></div>
-                  <p className="font-body text-[16px] text-white/80 leading-loose">
-                    Con oltre vent'anni di esperienza nel settore, lo studio ha realizzato progetti per collezioni
-                    private, spazi pubblici e istituzioni culturali, sempre mantenendo un approccio artigianale e
-                    una cura meticolosa per ogni dettaglio.
-                  </p>
+                  {studioParagraphs.filter(p => p.trim()).length > 0 ? (
+                    studioParagraphs.filter(p => p.trim()).map((paragraph, index) => (
+                      <React.Fragment key={index}>
+                        <p className="font-body text-[16px] text-white/80 leading-loose">
+                          {paragraph}
+                        </p>
+                        {index < studioParagraphs.filter(p => p.trim()).length - 1 && (
+                          <div className="h-px bg-white/20"></div>
+                        )}
+                      </React.Fragment>
+                    ))
+                  ) : (
+                    <>
+                      <p className="font-body text-[16px] text-white/80 leading-loose">
+                        {t('studioText1')}
+                      </p>
+                      <div className="h-px bg-white/20"></div>
+                      <p className="font-body text-[16px] text-white/80 leading-loose">
+                        {t('studioText2')}
+                      </p>
+                      <div className="h-px bg-white/20"></div>
+                      <p className="font-body text-[16px] text-white/80 leading-loose">
+                        {t('studioText3')}
+                      </p>
+                      <div className="h-px bg-white/20"></div>
+                      <p className="font-body text-[16px] text-white/80 leading-loose">
+                        {t('studioText4')}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -1035,17 +1184,17 @@ const Collezione: React.FC = () => {
         <div className="flex flex-col gap-12 px-5 pb-10">
           {/* CTA Section */}
           <div className="flex w-full flex-col gap-8 md:gap-10 items-center md:items-start">
-            <p className="text-[16px] md:text-[18px] font-bold text-white uppercase tracking-wider" style={{fontFamily: 'Montserrat, sans-serif'}}>
+            <p className="text-[16px] md:text-[18px] font-bold text-white uppercase tracking-wider" style={{fontFamily: language === 'zh' || language === 'zh_tw' || language === 'ja' ? '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Noto Sans TC", "Noto Sans JP", sans-serif' : 'Montserrat, sans-serif'}}>
               Adele Lo Feudo
             </p>
-            <h2 className="text-[28px] md:text-[48px] font-bold text-white uppercase leading-[1.1] text-center md:text-left -mt-4" style={{fontFamily: 'Montserrat, sans-serif'}}>
-              Trasforma la Tua<br />Visione in Realtà
+            <h2 className="text-[28px] md:text-[48px] font-bold text-white uppercase leading-[1.1] text-center md:text-left -mt-4" style={{fontFamily: language === 'zh' || language === 'zh_tw' || language === 'ja' ? '-apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Noto Sans TC", "Noto Sans JP", sans-serif' : 'Montserrat, sans-serif'}}>
+              {t('footerCTA')}
             </h2>
             <a
               href="mailto:adelelofeudo@gmail.com"
               className="px-8 py-4 border border-white/40 text-white hover:border-accent hover:text-accent transition-colors font-body text-[16px] uppercase tracking-wide"
             >
-              Contattami
+              {t('contactMe')}
             </a>
           </div>
 

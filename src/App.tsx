@@ -27,6 +27,7 @@ import TranslationManagement from './pages/TranslationManagement';
 import Navbar from './components/Navbar';
 import SmoothScroll from './components/SmoothScroll';
 import ProtectedRoute from './components/ProtectedRoute';
+import LanguageSelector from './components/LanguageSelector';
 
 // Import i18n
 import { LanguageProvider } from './i18n/LanguageContext';
@@ -190,6 +191,8 @@ function AppContent() {
               </Routes>
             </AnimatePresence>
           </main>
+          {/* Language Selector - shown on all frontend pages, hidden in backoffice */}
+          {showNavbar && <LanguageSelector />}
         </div>
       </SmoothScroll>
     </>

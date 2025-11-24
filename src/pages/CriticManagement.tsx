@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
 import Toast from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 import { getCritic, updateCritic, deleteCritic } from '../services/critics-api';
 
 const CriticManagement: React.FC = () => {
@@ -12,6 +13,7 @@ const CriticManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [formData, setFormData] = useState({
     name_it: '',
     role_it: '',
@@ -82,13 +84,10 @@ const CriticManagement: React.FC = () => {
   const handleDelete = async () => {
     if (!criticId) return;
 
-    if (!window.confirm('Sei sicuro di voler eliminare questo critico? Questa azione non può essere annullata.')) {
-      return;
-    }
-
     try {
       await deleteCritic(parseInt(criticId));
-      navigate('/content');
+      setToast({ message: 'Critico eliminato con successo', type: 'success' });
+      setTimeout(() => navigate('/content'), 1000);
     } catch (error) {
       console.error('Error deleting critic:', error);
       setToast({ message: 'Errore nell\'eliminazione del critico', type: 'error' });
@@ -263,7 +262,7 @@ const CriticManagement: React.FC = () => {
           <div className="mt-8 pt-8 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
             <button
               type="button"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteModal(true)}
               className="px-8 py-3 font-bold uppercase text-red-400 border border-red-400 hover:bg-red-400/10 transition-colors"
               style={{ fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
             >
@@ -304,6 +303,18 @@ const CriticManagement: React.FC = () => {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="Elimina Critico"
+        message="Sei sicuro di voler eliminare questo critico? Questa azione non può essere annullata."
+        confirmText="Ok"
+        cancelText="Annulla"
+        confirmButtonColor="rgb(240, 45, 110)"
+      />
     </BackofficeLayout>
   );
 };

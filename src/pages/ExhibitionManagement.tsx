@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import BackofficeLayout from '../components/BackofficeLayout';
 import Toast from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 import { getExhibition, updateExhibition, deleteExhibition } from '../services/exhibitions-api';
 
 const ExhibitionManagement: React.FC = () => {
@@ -12,6 +13,7 @@ const ExhibitionManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [formData, setFormData] = useState({
     title_it: '',
     subtitle_it: '',
@@ -88,16 +90,13 @@ const ExhibitionManagement: React.FC = () => {
   const handleDelete = async () => {
     if (!exhibitionId) return;
 
-    if (!window.confirm('Sei sicuro di voler eliminare questa mostra? Questa azione non può essere annullata.')) {
-      return;
-    }
-
     try {
       await deleteExhibition(parseInt(exhibitionId));
-      navigate('/content');
+      setToast({ message: 'Mostra eliminata con successo', type: 'success' });
+      setTimeout(() => navigate('/content'), 1000);
     } catch (error) {
       console.error('Error deleting exhibition:', error);
-      alert('Errore nell\'eliminazione della mostra');
+      setToast({ message: 'Errore nell\'eliminazione della mostra', type: 'error' });
     }
   };
 
@@ -334,7 +333,7 @@ const ExhibitionManagement: React.FC = () => {
             <div className="md:col-span-2 pt-8 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}>
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={() => setShowDeleteModal(true)}
                 className="px-8 py-3 font-bold uppercase text-red-400 border border-red-400 hover:bg-red-400/10 transition-colors"
                 style={{ fontFamily: 'Montserrat, sans-serif', borderRadius: 0 }}
               >
@@ -376,6 +375,18 @@ const ExhibitionManagement: React.FC = () => {
           onClose={() => setToast(null)}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="Elimina Mostra"
+        message="Sei sicuro di voler eliminare questa mostra? Questa azione non può essere annullata."
+        confirmText="Ok"
+        cancelText="Annulla"
+        confirmButtonColor="rgb(240, 45, 110)"
+      />
     </BackofficeLayout>
   );
 };

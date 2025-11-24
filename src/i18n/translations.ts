@@ -19,11 +19,16 @@ export const translations = {
 
     // Sections
     nameSeries: "Name series",
+    collections: "Collezioni",
     exhibitions: "Mostre",
     showMore: "Mostra Altre",
     biography: "Biografia",
     criticalTexts: "Testi Critici",
     critique: "Critica",
+
+    // Loading & Empty States
+    loadingCollections: "Caricamento collezioni...",
+    noCollectionsAvailable: "Nessuna collezione disponibile",
 
     // Bio & Work
     aboutMe: "Chi Sono",
@@ -34,6 +39,24 @@ export const translations = {
     bioText3: "Il suo debutto avviene nel 2010 con la mostra personale \"Ali per volare\" a Perugia, cui seguono numerose esposizioni in spazi prestigiosi tra Italia, Stati Uniti e Europa. Nel 2017 partecipa al Columbus Day Gala a New York, portando la sua arte oltreoceano. La sua produzione artistica si è evoluta attraverso serie tematiche che indagano la complessità dell'animo umano, dalle maschere sociali alla ricerca di autenticità.",
     bioText4: "Oltre alla pratica artistica, ALF è attivamente impegnata nel sociale. Ha curato e partecipato al progetto \"Un petalo rosa\", un'iniziativa collettiva che ha riunito 65 artiste donne per sensibilizzare contro la violenza di genere. Questo impegno riflette la sua visione dell'arte come strumento di dialogo e trasformazione sociale, capace di dare voce alle esperienze e alle lotte delle donne nel panorama culturale contemporaneo.",
     readMore: "leggi di più",
+
+    // Parallax Section
+    parallaxQuote1: "Parto da un'immagine per stimolare l'osservatore a porsi delle domande, andando oltre",
+    parallaxQuote2: "Giustizia attraverso conoscenza e memoria",
+
+    // Studio Section
+    studioText1: "Lo studio di Adele Lo Feudo è un laboratorio creativo dove l'arte prende forma attraverso un processo di ricerca continua. Situato nel cuore della città, lo spazio si configura come un ambiente di sperimentazione dove tecniche tradizionali e approcci contemporanei si fondono per dare vita a opere uniche.",
+    studioText2: "Ogni progetto nasce da un'attenta analisi del contesto e da un dialogo costante con il committente, garantendo risultati che non solo soddisfano le aspettative estetiche, ma che raccontano anche una storia, evocano emozioni e creano connessioni profonde con lo spazio circostante.",
+    studioText3: "Lo studio offre servizi di consulenza artistica, progettazione di opere su commissione, restauro conservativo e workshop formativi. La filosofia che guida ogni intervento è quella di creare non solo oggetti d'arte, ma esperienze che arricchiscono l'ambiente e la vita di chi le vive quotidianamente.",
+    studioText4: "Con oltre vent'anni di esperienza nel settore, lo studio ha realizzato progetti per collezioni private, spazi pubblici e istituzioni culturali, sempre mantenendo un approccio artigianale e una cura meticolosa per ogni dettaglio.",
+
+    // Footer CTA
+    footerCTA: "Trasforma la Tua Visione in Realtà",
+    contactMe: "Contattami",
+
+    // SEO
+    seoTitle: "Adele Lo Feudo - L'Artista Italiana",
+    seoDescription: "Adele Lo Feudo - L'artista italiana che esplora l'anima attraverso la materia. Scopri le opere d'arte contemporanea.",
 
     // Critical Texts
     critics: {
@@ -108,11 +131,16 @@ export const translations = {
 
     // Sections
     nameSeries: "Name series",
+    collections: "Collections",
     exhibitions: "Exhibitions",
     showMore: "Show More",
     biography: "Biography",
     criticalTexts: "Critical Texts",
     critique: "Critique",
+
+    // Loading & Empty States
+    loadingCollections: "Loading collections...",
+    noCollectionsAvailable: "No collections available",
 
     // Bio & Work
     aboutMe: "About Me",
@@ -123,6 +151,24 @@ export const translations = {
     bioText3: "Her debut came in 2010 with the solo exhibition \"Wings to Fly\" in Perugia, followed by numerous exhibitions in prestigious spaces between Italy, the United States and Europe. In 2017 she participated in the Columbus Day Gala in New York, bringing her art overseas. Her artistic production has evolved through thematic series that investigate the complexity of the human soul, from social masks to the search for authenticity.",
     bioText4: "In addition to her artistic practice, ALF is actively engaged in social issues. She curated and participated in the project \"A Pink Petal\", a collective initiative that brought together 65 women artists to raise awareness against gender-based violence. This commitment reflects her vision of art as an instrument of dialogue and social transformation, capable of giving voice to the experiences and struggles of women in the contemporary cultural landscape.",
     readMore: "read more",
+
+    // Parallax Section
+    parallaxQuote1: "I start from an image to stimulate the observer to ask questions, going beyond",
+    parallaxQuote2: "Justice through knowledge and memory",
+
+    // Studio Section
+    studioText1: "Adele Lo Feudo's studio is a creative laboratory where art takes shape through a process of continuous research. Located in the heart of the city, the space is configured as an environment of experimentation where traditional techniques and contemporary approaches merge to give life to unique works.",
+    studioText2: "Each project is born from a careful analysis of the context and a constant dialogue with the client, ensuring results that not only meet aesthetic expectations, but also tell a story, evoke emotions and create deep connections with the surrounding space.",
+    studioText3: "The studio offers artistic consultancy services, commissioned work design, conservative restoration and training workshops. The philosophy that guides each intervention is to create not only art objects, but experiences that enrich the environment and the life of those who live them daily.",
+    studioText4: "With over twenty years of experience in the sector, the studio has realized projects for private collections, public spaces and cultural institutions, always maintaining a craftsmanship approach and meticulous care for every detail.",
+
+    // Footer CTA
+    footerCTA: "Transform Your Vision Into Reality",
+    contactMe: "Contact Me",
+
+    // SEO
+    seoTitle: "Adele Lo Feudo - The Italian Artist",
+    seoDescription: "Adele Lo Feudo - The Italian artist exploring the soul through matter. Discover contemporary art works.",
 
     // Critical Texts
     critics: {
@@ -240,6 +286,10 @@ export const translations = {
     signUp: "Suscribirse",
     signedUp: "¡Suscrito!",
 
+    // Footer CTA
+    footerCTA: "Transforma Tu Visión en Realidad",
+    contactMe: "Contáctame",
+
     // Footer
     allRights: "Adele Lo Feudo - Todos los derechos reservados 2025",
     terms: "Términos y Condiciones",
@@ -308,6 +358,10 @@ export const translations = {
     emailPlaceholder: "Entrez votre email",
     signUp: "S'inscrire",
     signedUp: "Inscrit !",
+
+    // Footer CTA
+    footerCTA: "Transformez Votre Vision en Réalité",
+    contactMe: "Contactez-moi",
 
     // Footer
     allRights: "Adele Lo Feudo - Tous droits réservés 2025",
@@ -378,6 +432,10 @@ export const translations = {
     signUp: "登録",
     signedUp: "登録完了！",
 
+    // Footer CTA
+    footerCTA: "あなたのビジョンを現実に変える",
+    contactMe: "お問い合わせ",
+
     // Footer
     allRights: "Adele Lo Feudo - すべての権利予約 2025",
     terms: "利用規約",
@@ -447,6 +505,10 @@ export const translations = {
     signUp: "注册",
     signedUp: "已注册！",
 
+    // Footer CTA
+    footerCTA: "将您的愿景变为现实",
+    contactMe: "联系我",
+
     // Footer
     allRights: "阿黛尔·洛·费乌多 - 版权所有 2025",
     terms: "条款和条件",
@@ -515,6 +577,10 @@ export const translations = {
     emailPlaceholder: "輸入您的電子郵件",
     signUp: "註冊",
     signedUp: "已註冊！",
+
+    // Footer CTA
+    footerCTA: "將您的願景變為現實",
+    contactMe: "聯繫我",
 
     // Footer
     allRights: "阿黛爾·洛·費烏多 - 版權所有 2025",

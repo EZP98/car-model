@@ -7,6 +7,7 @@ import { getCritics, updateCritic, type Critic } from '../services/critics-api';
 import { getExhibitions, updateExhibition, type Exhibition } from '../services/exhibitions-api';
 import Toast from '../components/Toast';
 import ImageWithFallback from '../components/ImageWithFallback';
+import LoadingState from '../components/LoadingState';
 import { translateText } from '../services/translation-api';
 
 // Get API base URL for image URLs
@@ -14,7 +15,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Helper function to convert relative image URLs to absolute
 const getImageUrl = (url: string | null | undefined): string => {
-  if (!url) return '/opera.png';
+  if (!url) return '';
 
   // If URL is already absolute, return as is
   if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -416,7 +417,7 @@ const TranslationManagement: React.FC = () => {
         </motion.div>
 
           {loading ? (
-            <div className="min-h-[400px]" />
+            <LoadingState type="table" itemCount={5} />
           ) : (
             <>
               {/* Tab Navigation */}

@@ -443,8 +443,11 @@ const CollectionManagement: React.FC = () => {
       });
 
       if (response.ok) {
+        // Update state directly instead of reloading all data
+        setArtworks(prev => prev.map(a =>
+          a.id === artwork.id ? { ...a, is_visible: !a.is_visible } : a
+        ));
         setToast({ message: `Opera ${!artwork.is_visible ? 'visibile' : 'nascosta'} con successo`, type: 'success' });
-        loadData();
       }
     } catch (error) {
       console.error('Error toggling artwork visibility:', error);
