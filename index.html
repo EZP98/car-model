@@ -9,23 +9,76 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
+    <!-- Security: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://alf-portfolio-api.eziopappalardo98.workers.dev https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self';" />
+
     <!-- Preconnect to Google Fonts for faster loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
+    <!-- SEO Meta Tags -->
     <meta
       name="description"
-      content="Adele Lo Feudo - Portfolio Artistico. Opere d'arte contemporanea, dipinti e creazioni originali."
+      content="Adele Lo Feudo (ALF) - Artista contemporanea italiana. Scopri le collezioni, mostre e opere d'arte originali. Nata a Cosenza nel 1967, diplomata interior designer e maestra d'arte."
     />
-    <meta property="og:title" content="Adele Lo Feudo - Portfolio Artistico" />
-    <meta property="og:description" content="Scopri le opere d'arte contemporanea di Adele Lo Feudo" />
+    <meta name="keywords" content="Adele Lo Feudo, ALF, artista contemporanea, arte italiana, opere d'arte, pittura, Cosenza, mostre d'arte" />
+    <meta name="author" content="Adele Lo Feudo" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://adelelofeudo.art" />
+
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://adelelofeudo.art" />
+    <meta property="og:title" content="Adele Lo Feudo (ALF) - Artista Contemporanea" />
+    <meta property="og:description" content="Scopri le opere d'arte contemporanea di Adele Lo Feudo. Collezioni, mostre e progetti artistici." />
+    <meta property="og:image" content="https://adelelofeudo.art/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="it_IT" />
+    <meta property="og:site_name" content="Adele Lo Feudo Art" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://adelelofeudo.art" />
+    <meta name="twitter:title" content="Adele Lo Feudo (ALF) - Artista Contemporanea" />
+    <meta name="twitter:description" content="Scopri le opere d'arte contemporanea di Adele Lo Feudo. Collezioni, mostre e progetti artistici." />
+    <meta name="twitter:image" content="https://adelelofeudo.art/og-image.jpg" />
+
     <link rel="manifest" href="/manifest.json" />
-    <title>Adele Lo Feudo - Portfolio Artistico</title>
+    <title>Adele Lo Feudo (ALF) - Artista Contemporanea | Portfolio</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+
+    <!-- JSON-LD Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Adele Lo Feudo",
+      "alternateName": "ALF",
+      "description": "Artista contemporanea italiana specializzata in opere d'arte originali, pittura e installazioni. Diplomata interior designer e maestra d'arte.",
+      "birthPlace": {
+        "@type": "Place",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Cosenza",
+          "addressCountry": "IT"
+        }
+      },
+      "birthDate": "1967",
+      "jobTitle": "Artista Contemporanea",
+      "url": "https://adelelofeudo.art",
+      "image": "https://adelelofeudo.art/og-image.jpg",
+      "knowsAbout": ["Arte Contemporanea", "Pittura", "Interior Design", "Arte Visiva"],
+      "nationality": {
+        "@type": "Country",
+        "name": "Italia"
+      }
+    }
+    </script>
+
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

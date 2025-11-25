@@ -74,7 +74,7 @@
     scrollbar-width: none;
   }
 
-  /* Remove blue focus outline from all interactive elements */
+  /* Accessibility: Remove default focus outline but add visible focus for keyboard navigation */
   button:focus,
   a:focus,
   input:focus,
@@ -82,6 +82,18 @@
   select:focus,
   [role="button"]:focus {
     outline: none;
+  }
+
+  /* Focus-visible: Only show outline for keyboard navigation (not mouse clicks) */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid #F02D6E;
+    outline-offset: 2px;
+    transition: outline 0.2s ease;
   }
 }
 
